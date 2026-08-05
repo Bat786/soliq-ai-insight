@@ -14,16 +14,149 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      community_posts: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          tags: string[]
+          user_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          tags?: string[]
+          user_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          tags?: string[]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          alert_id: string | null
+          body: string
+          created_at: string
+          id: string
+          read: boolean
+          title: string
+          user_id: string
+        }
+        Insert: {
+          alert_id?: string | null
+          body: string
+          created_at?: string
+          id?: string
+          read?: boolean
+          title: string
+          user_id: string
+        }
+        Update: {
+          alert_id?: string | null
+          body?: string
+          created_at?: string
+          id?: string
+          read?: boolean
+          title?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_alert_id_fkey"
+            columns: ["alert_id"]
+            isOneToOne: false
+            referencedRelation: "watchlist_alerts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          display_name: string
+          handle: string | null
+          id: string
+          member_since: string | null
+          membership_tier: Database["public"]["Enums"]["membership_tier"]
+          renews_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string
+          handle?: string | null
+          id: string
+          member_since?: string | null
+          membership_tier?: Database["public"]["Enums"]["membership_tier"]
+          renews_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string
+          handle?: string | null
+          id?: string
+          member_since?: string | null
+          membership_tier?: Database["public"]["Enums"]["membership_tier"]
+          renews_at?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      watchlist_alerts: {
+        Row: {
+          active: boolean
+          asset_id: string
+          asset_symbol: string
+          created_at: string
+          direction: string
+          id: string
+          last_triggered_at: string | null
+          list_name: string
+          threshold: number
+          user_id: string
+        }
+        Insert: {
+          active?: boolean
+          asset_id: string
+          asset_symbol: string
+          created_at?: string
+          direction?: string
+          id?: string
+          last_triggered_at?: string | null
+          list_name?: string
+          threshold: number
+          user_id: string
+        }
+        Update: {
+          active?: boolean
+          asset_id?: string
+          asset_symbol?: string
+          created_at?: string
+          direction?: string
+          id?: string
+          last_triggered_at?: string | null
+          list_name?: string
+          threshold?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_paid_member: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
-      [_ in never]: never
+      membership_tier: "free" | "pro" | "elite"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +283,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      membership_tier: ["free", "pro", "elite"],
+    },
   },
 } as const
