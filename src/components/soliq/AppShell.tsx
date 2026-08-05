@@ -1,18 +1,35 @@
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
+import { useQueryClient } from "@tanstack/react-query";
 import {
+  BadgeCheck,
   Bot,
   Compass,
+  Crown,
   LayoutDashboard,
   ListChecks,
+  LogOut,
   Radar,
+  Sparkles,
   Users,
   Wallet,
   Zap,
 } from "lucide-react";
 import type { ReactNode } from "react";
 
+import { NotificationBell } from "@/components/soliq/NotificationBell";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useProfile } from "@/hooks/use-soliq-account";
+import { supabase } from "@/integrations/supabase/client";
 import { assets, fmtPct } from "@/lib/market-data";
+import { isPaid, planByTier, type Tier } from "@/lib/membership";
 
 const nav = [
   { to: "/", label: "Home", icon: LayoutDashboard },
@@ -39,6 +56,21 @@ export function Logo({ compact = false }: { compact?: boolean }) {
   );
 }
 
+export function MemberBadge({ tier, className = "" }: { tier: Tier; className?: string }) {
+  if (!isPaid(tier)) return null;
+  const elite = tier === "elite";
+  return (
+    <span
+      className={`inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[9px] font-semibold tracking-wide ${
+        elite ? "bg-warn/15 text-warn" : "bg-primary/15 text-primary"
+      } ${className}`}
+    >
+      {elite ? <Crown className="size-2.5" /> : <BadgeCheck className="size-2.5" />}
+      {elite ? "ELITE" : "PRO"}
+    </span>
+  );
+}
+
 function Ticker() {
   const row = [...assets, ...assets];
   return (
@@ -52,6 +84,97 @@ function Ticker() {
           </span>
         ))}
       </div>
+    </div>
+  );
+}
+
+function AccountMenu() {
+  const { data: profile, tier, isSignedIn } = useProfile();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
+  if (!isSignedIn) {
+    return (
+      <Button asChild size="sm" variant="hero">
+        <Link to="/auth">Sign in</Link>
+      </Button>
+    );
+  }
+
+  const name = profile?.display_name ?? "Member";
+
+  const signOut = async () => {
+    await queryClient.cancelQueries();
+    queryClient.clear();
+    await supabase.auth.signOut();
+    navigate({ to: "/auth", replace: true });
+  };
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="subtle" size="sm" className="gap-2">
+          <span className="grid size-5 place-items-center rounded-full bg-primary/20 text-[9px] font-semibold text-primary">
+            {name.slice(0, 2).toUpperCase()}
+          </span>
+          <span className="hidden max-w-24 truncate sm:inline">{name}</span>
+          <MemberBadge tier={tier} />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-56">
+        <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
+          {planByTier(tier).name} plan
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem asChild>
+          <Link to="/pricing">
+            <Sparkles className="size-4" /> {isPaid(tier) ? "Manage membership" : "Upgrade to Premium"}
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link to="/lists">
+            <ListChecks className="size-4" /> My alerts
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={signOut}>
+          <LogOut className="size-4" /> Sign out
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+function SidebarFooter() {
+  const { tier, isSignedIn } = useProfile();
+
+  if (isSignedIn && isPaid(tier)) {
+    return (
+      <div className="m-3 rounded-xl border border-primary/30 bg-primary/8 p-4">
+        <p className="flex items-center gap-1.5 text-xs font-medium">
+          <MemberBadge tier={tier} /> membership active
+        </p>
+        <p className="mt-1 text-[11px] text-muted-foreground">
+          Unlimited alerts, community posting and your verified badge are unlocked.
+        </p>
+        <Button asChild variant="subtle" size="sm" className="mt-3 w-full">
+          <Link to="/pricing">Manage plan</Link>
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="m-3 rounded-xl border border-border bg-surface-2/60 p-4">
+      <p className="text-xs font-medium">{isSignedIn ? "Explorer plan" : "Guest preview mode"}</p>
+      <p className="mt-1 text-[11px] text-muted-foreground">
+        {isSignedIn
+          ? "Upgrade for unlimited alerts, a member badge and posting rights."
+          : "Create an account to sync watchlists, alerts and portfolios."}
+      </p>
+      <Button asChild variant="hero" size="sm" className="mt-3 w-full">
+        <Link to={isSignedIn ? "/pricing" : "/auth"}>{isSignedIn ? "Go Premium" : "Explore SOLIQ Free"}</Link>
+      </Button>
     </div>
   );
 }
@@ -83,16 +206,19 @@ export function AppShell({ children }: { children: ReactNode }) {
               </Link>
             );
           })}
+          <Link
+            to="/pricing"
+            className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors ${
+              pathname.startsWith("/pricing")
+                ? "bg-primary/12 text-primary"
+                : "text-muted-foreground hover:bg-sidebar-accent hover:text-foreground"
+            }`}
+          >
+            <Sparkles className="size-4.5" />
+            Premium
+          </Link>
         </nav>
-        <div className="m-3 rounded-xl border border-border bg-surface-2/60 p-4">
-          <p className="text-xs font-medium">Guest preview mode</p>
-          <p className="mt-1 text-[11px] text-muted-foreground">
-            Demo data. Create an account to sync watchlists and portfolios.
-          </p>
-          <Button asChild variant="hero" size="sm" className="mt-3 w-full">
-            <Link to="/auth">Explore SOLIQ Free</Link>
-          </Button>
-        </div>
+        <SidebarFooter />
       </div>
 
       <div className="lg:pl-60">
@@ -109,9 +235,8 @@ export function AppShell({ children }: { children: ReactNode }) {
               <Button asChild size="sm" variant="ghost" className="hidden sm:inline-flex">
                 <Link to="/assistant">Ask SOLIQ AI</Link>
               </Button>
-              <Button asChild size="sm" variant="hero">
-                <Link to="/auth">Sign in</Link>
-              </Button>
+              <NotificationBell />
+              <AccountMenu />
             </div>
           </div>
         </header>
