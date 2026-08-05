@@ -10,7 +10,10 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as CommunityRouteImport } from './routes/community'
+import { Route as DiscoverRouteImport } from './routes/discover'
 import { Route as ListsRouteImport } from './routes/lists'
+import { Route as PortfolioRouteImport } from './routes/portfolio'
 import { Route as ScannerRouteImport } from './routes/scanner'
 
 const IndexRoute = IndexRouteImport.update({
@@ -18,9 +21,24 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CommunityRoute = CommunityRouteImport.update({
+  id: '/community',
+  path: '/community',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DiscoverRoute = DiscoverRouteImport.update({
+  id: '/discover',
+  path: '/discover',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ListsRoute = ListsRouteImport.update({
   id: '/lists',
   path: '/lists',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PortfolioRoute = PortfolioRouteImport.update({
+  id: '/portfolio',
+  path: '/portfolio',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ScannerRoute = ScannerRouteImport.update({
@@ -31,31 +49,51 @@ const ScannerRoute = ScannerRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/community': typeof CommunityRoute
+  '/discover': typeof DiscoverRoute
   '/lists': typeof ListsRoute
+  '/portfolio': typeof PortfolioRoute
   '/scanner': typeof ScannerRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/community': typeof CommunityRoute
+  '/discover': typeof DiscoverRoute
   '/lists': typeof ListsRoute
+  '/portfolio': typeof PortfolioRoute
   '/scanner': typeof ScannerRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/community': typeof CommunityRoute
+  '/discover': typeof DiscoverRoute
   '/lists': typeof ListsRoute
+  '/portfolio': typeof PortfolioRoute
   '/scanner': typeof ScannerRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/lists' | '/scanner'
+  fullPaths:
+    '/' | '/community' | '/discover' | '/lists' | '/portfolio' | '/scanner'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/lists' | '/scanner'
-  id: '__root__' | '/' | '/lists' | '/scanner'
+  to: '/' | '/community' | '/discover' | '/lists' | '/portfolio' | '/scanner'
+  id:
+    | '__root__'
+    | '/'
+    | '/community'
+    | '/discover'
+    | '/lists'
+    | '/portfolio'
+    | '/scanner'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  CommunityRoute: typeof CommunityRoute
+  DiscoverRoute: typeof DiscoverRoute
   ListsRoute: typeof ListsRoute
+  PortfolioRoute: typeof PortfolioRoute
   ScannerRoute: typeof ScannerRoute
 }
 
@@ -68,11 +106,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/community': {
+      id: '/community'
+      path: '/community'
+      fullPath: '/community'
+      preLoaderRoute: typeof CommunityRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/discover': {
+      id: '/discover'
+      path: '/discover'
+      fullPath: '/discover'
+      preLoaderRoute: typeof DiscoverRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/lists': {
       id: '/lists'
       path: '/lists'
       fullPath: '/lists'
       preLoaderRoute: typeof ListsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/portfolio': {
+      id: '/portfolio'
+      path: '/portfolio'
+      fullPath: '/portfolio'
+      preLoaderRoute: typeof PortfolioRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/scanner': {
@@ -87,7 +146,10 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  CommunityRoute: CommunityRoute,
+  DiscoverRoute: DiscoverRoute,
   ListsRoute: ListsRoute,
+  PortfolioRoute: PortfolioRoute,
   ScannerRoute: ScannerRoute,
 }
 export const routeTree = rootRouteImport
