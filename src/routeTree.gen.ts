@@ -10,6 +10,8 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AssistantRouteImport } from './routes/assistant'
+import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CommunityRouteImport } from './routes/community'
 import { Route as DiscoverRouteImport } from './routes/discover'
 import { Route as ListsRouteImport } from './routes/lists'
@@ -19,6 +21,16 @@ import { Route as ScannerRouteImport } from './routes/scanner'
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AssistantRoute = AssistantRouteImport.update({
+  id: '/assistant',
+  path: '/assistant',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CommunityRoute = CommunityRouteImport.update({
@@ -49,6 +61,8 @@ const ScannerRoute = ScannerRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/assistant': typeof AssistantRoute
+  '/auth': typeof AuthRoute
   '/community': typeof CommunityRoute
   '/discover': typeof DiscoverRoute
   '/lists': typeof ListsRoute
@@ -57,6 +71,8 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/assistant': typeof AssistantRoute
+  '/auth': typeof AuthRoute
   '/community': typeof CommunityRoute
   '/discover': typeof DiscoverRoute
   '/lists': typeof ListsRoute
@@ -66,6 +82,8 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/assistant': typeof AssistantRoute
+  '/auth': typeof AuthRoute
   '/community': typeof CommunityRoute
   '/discover': typeof DiscoverRoute
   '/lists': typeof ListsRoute
@@ -75,12 +93,29 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/community' | '/discover' | '/lists' | '/portfolio' | '/scanner'
+    | '/'
+    | '/assistant'
+    | '/auth'
+    | '/community'
+    | '/discover'
+    | '/lists'
+    | '/portfolio'
+    | '/scanner'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/community' | '/discover' | '/lists' | '/portfolio' | '/scanner'
+  to:
+    | '/'
+    | '/assistant'
+    | '/auth'
+    | '/community'
+    | '/discover'
+    | '/lists'
+    | '/portfolio'
+    | '/scanner'
   id:
     | '__root__'
     | '/'
+    | '/assistant'
+    | '/auth'
     | '/community'
     | '/discover'
     | '/lists'
@@ -90,6 +125,8 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AssistantRoute: typeof AssistantRoute
+  AuthRoute: typeof AuthRoute
   CommunityRoute: typeof CommunityRoute
   DiscoverRoute: typeof DiscoverRoute
   ListsRoute: typeof ListsRoute
@@ -104,6 +141,20 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/assistant': {
+      id: '/assistant'
+      path: '/assistant'
+      fullPath: '/assistant'
+      preLoaderRoute: typeof AssistantRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/community': {
@@ -146,6 +197,8 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AssistantRoute: AssistantRoute,
+  AuthRoute: AuthRoute,
   CommunityRoute: CommunityRoute,
   DiscoverRoute: DiscoverRoute,
   ListsRoute: ListsRoute,
