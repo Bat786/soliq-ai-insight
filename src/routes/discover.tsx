@@ -19,7 +19,7 @@ export const Route = createFileRoute("/discover")({
       { property: "og:description", content: "Trending coins, AI picks, new launches, forecasts and education." },
     ],
   }),
-  component: Discover;
+  component: Discover,
 });
 
 function Discover() {
