@@ -1,0 +1,116 @@
+import { TrendingDown, TrendingUp } from "lucide-react";
+import type { ReactNode } from "react";
+
+import { type Asset, fmtPct, fmtUsd } from "@/lib/market-data";
+
+export function Sparkline({ data, up, className = "" }: { data: number[]; up: boolean; className?: string }) {
+  const min = Math.min(...data);
+  const max = Math.max(...data);
+  const span = max - min || 1;
+  const pts = data
+    .map((v, i) => `${(i / (data.length - 1)) * 100},${28 - ((v - min) / span) * 26}`)
+    .join(" ");
+  const stroke = up ? "var(--bull)" : "var(--bear)";
+  return (
+    <svg viewBox="0 0 100 30" preserveAspectRatio="none" className={`h-8 w-full ${className}`}>
+      <polyline points={pts} fill="none" stroke={stroke} strokeWidth="1.6" vectorEffect="non-scaling-stroke" />
+    </svg>
+  );
+}
+
+export function SectionTitle({
+  title,
+  subtitle,
+  action,
+}: {
+  title: string;
+  subtitle?: string;
+  action?: ReactNode;
+}) {
+  return (
+    <div className="mb-3 flex items-end justify-between gap-3">
+      <div>
+        <h2 className="font-display text-base font-semibold">{title}</h2>
+        {subtitle && <p className="text-xs text-muted-foreground">{subtitle}</p>}
+      </div>
+      {action}
+    </div>
+  );
+}
+
+export function Delta({ value, className = "" }: { value: number; className?: string }) {
+  const up = value >= 0;
+  return (
+    <span
+      className={`num inline-flex items-center gap-1 text-xs font-medium ${up ? "text-bull" : "text-bear"} ${className}`}
+    >
+      {up ? <TrendingUp className="size-3.5" /> : <TrendingDown className="size-3.5" />}
+      {fmtPct(value)}
+    </span>
+  );
+}
+
+export function ScoreRing({ score }: { score: number }) {
+  const tone = score >= 85 ? "text-bull" : score >= 70 ? "text-primary" : score >= 55 ? "text-warn" : "text-bear";
+  return (
+    <div className="flex items-baseline gap-1">
+      <span className={`num font-display text-lg font-bold ${tone}`}>{score}</span>
+      <span className="text-[10px] text-muted-foreground">/100</span>
+    </div>
+  );
+}
+
+export function RiskBar({ risk }: { risk: number }) {
+  const tone = risk > 70 ? "bg-bear" : risk > 45 ? "bg-warn" : "bg-bull";
+  return (
+    <div className="flex items-center gap-2">
+      <div className="h-1.5 w-16 overflow-hidden rounded-full bg-muted">
+        <div className={`h-full rounded-full ${tone}`} style={{ width: `${risk}%` }} />
+      </div>
+      <span className="num text-[10px] text-muted-foreground">risk {risk}</span>
+    </div>
+  );
+}
+
+export function AssetPill({ asset }: { asset: Asset }) {
+  return (
+    <div className="flex items-center gap-2.5">
+      <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-surface-2 text-[10px] font-semibold">
+        {asset.symbol.slice(0, 3)}
+      </span>
+      <div className="min-w-0">
+        <p className="truncate text-sm font-medium">{asset.name}</p>
+        <p className="num text-[11px] text-muted-foreground">
+          {asset.symbol} · {fmtUsd(asset.marketCap)}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+export function AssetRow({ asset }: { asset: Asset }) {
+  return (
+    <div className="flex items-center gap-3 border-b border-border/60 py-3 last:border-0">
+      <div className="flex-1 min-w-0">
+        <AssetPill asset={asset} />
+      </div>
+      <div className="w-20 shrink-0">
+        <Sparkline data={asset.series} up={asset.change24h >= 0} />
+      </div>
+      <div className="w-24 shrink-0 text-right">
+        <p className="num text-sm">{fmtUsd(asset.price)}</p>
+        <Delta value={asset.change24h} />
+      </div>
+    </div>
+  );
+}
+
+export function StatCard({ label, value, delta }: { label: string; value: string; delta?: number }) {
+  return (
+    <div className="panel p-4">
+      <p className="text-[11px] tracking-wide text-muted-foreground uppercase">{label}</p>
+      <p className="num mt-1.5 font-display text-xl font-semibold">{value}</p>
+      {delta !== undefined && <Delta value={delta} className="mt-1" />}
+    </div>
+  );
+}
