@@ -91,10 +91,10 @@ export function AssetPill({ asset }: { asset: Asset }) {
 export function AssetRow({ asset }: { asset: Asset }) {
   return (
     <div className="flex items-center gap-3 border-b border-border/60 py-3 last:border-0">
-      <div className="flex-1 min-w-0">
+      <div className="min-w-0 flex-1">
         <AssetPill asset={asset} />
       </div>
-      <div className="w-20 shrink-0">
+      <div className="hidden w-16 shrink-0 sm:block">
         <Sparkline data={asset.series} up={asset.change24h >= 0} />
       </div>
       <div className="w-24 shrink-0 text-right">
@@ -104,6 +104,7 @@ export function AssetRow({ asset }: { asset: Asset }) {
     </div>
   );
 }
+
 
 export function StatCard({ label, value, delta }: { label: string; value: string; delta?: number }) {
   return (
