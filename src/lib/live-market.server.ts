@@ -74,7 +74,7 @@ function rsi(values: number[], period = 14): number {
   let gain = 0;
   let loss = 0;
   for (let i = values.length - period; i < values.length; i++) {
-    const d = values[i] - values[i - 1];
+    const d = (values[i] ?? 0) - (values[i - 1] ?? 0);
     if (d >= 0) gain += d;
     else loss -= d;
   }
@@ -102,7 +102,7 @@ function computeIndicators(series: number[], price: number): Indicators {
   const s = series.length > 20 ? series : [price, price, price];
   const e12 = ema(s, 12);
   const e26 = ema(s, 26);
-  const macdLine = e12.map((v, i) => v - e26[i]);
+  const macdLine = e12.map((v, i) => v - (e26[i] ?? 0));
   const signalLine = ema(macdLine, 9);
   const macd = macdLine[macdLine.length - 1] ?? 0;
   const macdSignal = signalLine[signalLine.length - 1] ?? 0;
@@ -110,9 +110,9 @@ function computeIndicators(series: number[], price: number): Indicators {
   const sd = stdev(window);
   const mid = sma(s, 20);
   const recent = s.slice(-48);
-  const diffs = recent.slice(1).map((v, i) => Math.abs(v - recent[i]));
+  const diffs = recent.slice(1).map((v, i) => Math.abs(v - (recent[i] ?? v)));
   const atr = diffs.reduce((a, b) => a + b, 0) / (diffs.length || 1);
-  const ups = recent.slice(1).filter((v, i) => v > recent[i]).length;
+  const ups = recent.slice(1).filter((v, i) => v > (recent[i] ?? v)).length;
   const adx = clamp(Math.abs(ups / Math.max(1, recent.length - 1) - 0.5) * 200, 4, 68);
   const support = Math.min(...s.slice(-72));
   const resistance = Math.max(...s.slice(-72));
@@ -346,9 +346,9 @@ export async function loadGlobal() {
       };
     }>("/global");
     return {
-      marketCap: g.data.total_market_cap.usd,
-      volume: g.data.total_volume.usd,
-      btcDominance: g.data.market_cap_percentage.btc,
+      marketCap: g.data.total_market_cap['usd'] ?? 0,
+      volume: g.data.total_volume['usd'] ?? 0,
+      btcDominance: g.data.market_cap_percentage['btc'] ?? 0,
       change24h: g.data.market_cap_change_percentage_24h_usd,
     };
   });
@@ -372,7 +372,7 @@ export function forecast(asset: LiveAsset, history: { t: number; p: number }[]) 
   const last = closes[closes.length - 1] ?? asset.price;
   const n = Math.min(30, closes.length);
   const recent = closes.slice(-n);
-  const slope = n > 1 ? (recent[n - 1] - recent[0]) / (n - 1) : 0;
+  const slope = n > 1 ? ((recent[n - 1] ?? last) - (recent[0] ?? last)) / (n - 1) : 0;
   const meanRev = (sma(recent, n) - last) * 0.15;
   const vol = stdev(recent.map((v) => v / last)) * last;
   const horizons = [
