@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { Bell, BellRing, Check } from "lucide-react";
+import { Bell, BellRing, Check, Zap } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -7,7 +7,7 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useNotifications } from "@/hooks/use-soliq-account";
+import { useNotifications, usePushPermission } from "@/hooks/use-soliq-account";
 
 function timeAgo(iso: string) {
   const secs = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 1000));
@@ -19,8 +19,10 @@ function timeAgo(iso: string) {
 
 export function NotificationBell() {
   const { items, unread, markRead, isSignedIn } = useNotifications();
+  const push = usePushPermission();
 
   if (!isSignedIn) return null;
+
 
   return (
     <DropdownMenu>
