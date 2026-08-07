@@ -48,6 +48,24 @@ export function NotificationBell() {
             </button>
           )}
         </div>
+        {push.supported && (
+          <div className="flex items-center justify-between gap-2 border-b border-border/60 bg-surface-2/30 px-3 py-2.5">
+            <p className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+              <Zap className="size-3 text-primary" />
+              {push.enabled ? "Desktop push notifications on" : "Get pushed when a threshold hits"}
+            </p>
+            {push.enabled ? (
+              <button onClick={push.disable} className="text-[11px] text-muted-foreground hover:underline">
+                Turn off
+              </button>
+            ) : (
+              <button onClick={() => void push.request()} className="text-[11px] text-primary hover:underline">
+                {push.permission === "denied" ? "Blocked in browser" : "Enable push"}
+              </button>
+            )}
+          </div>
+        )}
+
         <div className="max-h-80 overflow-y-auto">
           {items.length === 0 && (
             <div className="px-3 py-8 text-center text-xs text-muted-foreground">
