@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { Apple, Chrome, Mail, ShieldCheck } from "lucide-react";
+import { Apple, Check, Chrome, Mail, ShieldCheck, Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -85,12 +85,42 @@ function Auth() {
   };
 
   return (
-    <div className="hero-bg flex min-h-screen items-center justify-center px-4 py-10">
-      <div className="w-full max-w-md">
-        <div className="flex justify-center">
+    <div className="hero-bg relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-4 py-12">
+      <div className="pointer-events-none absolute -top-32 left-1/2 size-[520px] -translate-x-1/2 rounded-full bg-primary/12 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-40 right-0 size-[420px] rounded-full bg-glow/10 blur-3xl" />
+
+      <div className="relative w-full max-w-md">
+        <div className="flex flex-col items-center text-center">
           <Logo />
+          <span className="mt-5 inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-[11px] font-medium text-primary">
+            <Sparkles className="size-3" /> 12,480 traders joined this month
+          </span>
+          <h1 className="mt-3 font-display text-3xl font-bold tracking-tight">
+            {mode === "signup" ? (
+              <>
+                Trade with the <span className="text-gradient">edge</span>
+              </>
+            ) : (
+              <>
+                Welcome back to <span className="text-gradient">SOLIQ</span>
+              </>
+            )}
+          </h1>
+          <p className="mt-2 max-w-sm text-sm text-muted-foreground">
+            Live Solana-native intelligence: AI conviction scores, whale flow, unusual activity alerts and pro charting —
+            free to start.
+          </p>
+          <div className="mt-4 flex flex-wrap justify-center gap-x-4 gap-y-1.5 text-[11px] text-muted-foreground">
+            {["Live on-chain flow", "AI price targets", "Real-time alerts", "Pro candles & signals"].map((f) => (
+              <span key={f} className="flex items-center gap-1">
+                <Check className="size-3 text-bull" /> {f}
+              </span>
+            ))}
+          </div>
         </div>
+
         <div className="panel mt-6 p-6">
+
           <div className="flex rounded-lg border border-border bg-surface-2/50 p-1">
             {(["signup", "signin"] as const).map((m) => (
               <button

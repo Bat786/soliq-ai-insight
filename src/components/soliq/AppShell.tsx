@@ -16,7 +16,9 @@ import {
 } from "lucide-react";
 import type { ReactNode } from "react";
 
+import { AppearanceMenu } from "@/components/soliq/AppearanceMenu";
 import { NotificationBell } from "@/components/soliq/NotificationBell";
+
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -235,9 +237,11 @@ export function AppShell({ children }: { children: ReactNode }) {
               <Button asChild size="sm" variant="ghost" className="hidden sm:inline-flex">
                 <Link to="/assistant">Ask SOLIQ AI</Link>
               </Button>
+              <AppearanceMenu />
               <NotificationBell />
               <AccountMenu />
             </div>
+
           </div>
         </header>
 
