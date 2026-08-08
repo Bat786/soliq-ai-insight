@@ -181,7 +181,6 @@ export default function CandleChart({
       wickDownColor: bear,
     });
     candleSeries.setData(candles);
-    (window as unknown as Record<string, unknown>)["__c"] = candles.length;
 
     const closes = candles.map((c) => c.close);
 
