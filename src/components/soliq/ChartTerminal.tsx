@@ -39,12 +39,12 @@ export function ChartTerminal({
   loading = false,
 }: {
   points: Point[];
-  volumes?: VolPoint[];
+  volumes?: VolPoint[] | undefined;
   price: number;
   symbol: string;
   days: number;
   onDaysChange: (d: number) => void;
-  loading?: boolean;
+  loading?: boolean | undefined;
 }) {
   const { formatDate } = useTheme();
   const [overlays, setOverlays] = useState<Overlays>({

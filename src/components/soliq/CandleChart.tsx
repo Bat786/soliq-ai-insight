@@ -100,11 +100,11 @@ export default function CandleChart({
   onHover,
 }: {
   points: Point[];
-  volumes?: VolPoint[];
+  volumes?: VolPoint[] | undefined;
   interval: IntervalId;
   overlays: Overlays;
-  height?: number;
-  onHover?: (c: Candle | null) => void;
+  height?: number | undefined;
+  onHover?: ((c: Candle | null) => void) | undefined;
 }) {
   const holder = useRef<HTMLDivElement | null>(null);
   const chartRef = useRef<IChartApi | null>(null);
