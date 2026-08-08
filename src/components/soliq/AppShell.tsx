@@ -16,7 +16,9 @@ import {
 } from "lucide-react";
 import type { ReactNode } from "react";
 
+import { AppearanceMenu } from "@/components/soliq/AppearanceMenu";
 import { NotificationBell } from "@/components/soliq/NotificationBell";
+
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
