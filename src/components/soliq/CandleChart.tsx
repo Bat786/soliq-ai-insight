@@ -89,6 +89,7 @@ function rsiSeries(values: number[], period = 14) {
  */
 const palettes = {
   dark: {
+    bg: "#0b0b14",
     text: "#9a97b8",
     grid: "rgba(150,150,190,0.12)",
     bull: "#14f195",
@@ -98,6 +99,7 @@ const palettes = {
     info: "#4ea8ff",
   },
   light: {
+    bg: "#ffffff",
     text: "#5d5a75",
     grid: "rgba(90,80,130,0.14)",
     bull: "#0fa876",
@@ -146,12 +148,12 @@ export default function CandleChart({
     const el = holder.current;
     if (!el || candles.length === 0) return;
 
-    const { text, grid, bull, bear, primary, warn, info } = palette();
+    const { bg, text, grid, bull, bear, primary, warn, info } = palette();
 
     const chart = createChart(el, {
       height,
       layout: {
-        background: { color: "transparent" },
+        background: { color: bg },
         textColor: text,
         fontFamily: "JetBrains Mono, monospace",
         attributionLogo: false,
