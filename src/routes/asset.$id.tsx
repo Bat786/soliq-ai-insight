@@ -1,13 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
-import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 import { AppShell } from "@/components/soliq/AppShell";
-import { Delta, RiskBar, ScoreRing } from "@/components/soliq/primitives";
-import { Button } from "@/components/ui/button";
+import { BullBearGauge } from "@/components/soliq/BullBearGauge";
+import { ChartTerminal } from "@/components/soliq/ChartTerminal";
+import { RiskBar, ScoreRing } from "@/components/soliq/primitives";
+import { Delta } from "@/components/soliq/primitives";
 import { useAssetDetail } from "@/hooks/use-market";
 import { fmtPctc, fmtUsdc, sectorLabels, signalLabels } from "@/lib/market-types";
+
 
 export const Route = createFileRoute("/asset/$id")({
   head: ({ params }) => {
