@@ -151,6 +151,7 @@ export default function CandleChart({
     const { bg, text, grid, bull, bear, primary, warn, info } = palette();
 
     const chart = createChart(el, {
+      autoSize: true,
       height,
       layout: {
         background: { color: bg },
@@ -289,12 +290,9 @@ export default function CandleChart({
       });
     }
 
-    const ro = new ResizeObserver(() => chart.applyOptions({ width: el.clientWidth }));
-    ro.observe(el);
-    chart.applyOptions({ width: el.clientWidth });
+    chart.resize(el.clientWidth, height);
 
     return () => {
-      ro.disconnect();
       chart.remove();
       chartRef.current = null;
     };
