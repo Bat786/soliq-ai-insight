@@ -93,49 +93,41 @@ function AssetPage() {
           </div>
         </div>
 
-        <div className="panel p-4">
-          <div className="mb-3 flex items-center justify-between gap-2">
-            <p className="text-xs font-medium">Price history</p>
-            <div className="flex gap-1">
-              {ranges.map((r) => (
-                <Button key={r.days} size="sm" variant={days === r.days ? "subtle" : "ghost"} onClick={() => setDays(r.days)}>
-                  {r.label}
-                </Button>
-              ))}
+        <div className="grid gap-4 lg:grid-cols-[1fr_300px]">
+          <ChartTerminal
+            points={history.prices}
+            volumes={history.volumes}
+            price={asset.price}
+            symbol={asset.symbol}
+            days={days}
+            onDaysChange={setDays}
+          />
+          <div className="space-y-4">
+            <BullBearGauge bull={asset.bullScore} bear={asset.bearScore} confidence={asset.aiConfidence} />
+            <div className="panel p-4">
+              <p className="text-[10px] tracking-wide text-muted-foreground uppercase">Flow &amp; pressure</p>
+              <div className="mt-2 space-y-2 text-xs">
+                <p className="flex justify-between">
+                  <span className="text-muted-foreground">Buy pressure</span>
+                  <span className="num text-bull">{asset.buyPressure}%</span>
+                </p>
+                <p className="flex justify-between">
+                  <span className="text-muted-foreground">Sell pressure</span>
+                  <span className="num text-bear">{asset.sellPressure}%</span>
+                </p>
+                <p className="flex justify-between">
+                  <span className="text-muted-foreground">Rel volume</span>
+                  <span className="num">{asset.relVolume}x</span>
+                </p>
+                <p className="flex justify-between">
+                  <span className="text-muted-foreground">Smart money</span>
+                  <span className="num">{asset.onchain.smartMoney}/100</span>
+                </p>
+              </div>
             </div>
           </div>
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={chart}>
-                <defs>
-                  <linearGradient id="pg" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="var(--primary)" stopOpacity={0.45} />
-                    <stop offset="100%" stopColor="var(--primary)" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid stroke="var(--border)" vertical={false} />
-                <XAxis
-                  dataKey="t"
-                  tick={{ fontSize: 10, fill: "var(--muted-foreground)" }}
-                  tickFormatter={(t: number) => new Date(t).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
-                  minTickGap={40}
-                />
-                <YAxis
-                  tick={{ fontSize: 10, fill: "var(--muted-foreground)" }}
-                  domain={["auto", "auto"]}
-                  tickFormatter={(v: number) => fmtUsdc(v)}
-                  width={64}
-                />
-                <Tooltip
-                  contentStyle={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 12, fontSize: 12 }}
-                  labelFormatter={(t) => new Date(Number(t)).toLocaleString()}
-                  formatter={(v: number) => [fmtUsdc(v), "Price"]}
-                />
-                <Area type="monotone" dataKey="price" stroke="var(--primary)" strokeWidth={2} fill="url(#pg)" />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
         </div>
+
 
         <div className="panel p-4">
           <p className="text-xs font-medium">AI projection</p>
