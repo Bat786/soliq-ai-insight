@@ -61,7 +61,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<Ctx>(() => {
     const resolvedZone =
-      timeZone === "auto" ? Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC" : timeZone;
+      timeZone === "auto" ? Intl.DateTimeFormat("en-US").resolvedOptions().timeZone || "UTC" : timeZone;
     return {
       theme,
       setTheme,
@@ -70,13 +70,13 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       setTimeZone,
       resolvedZone,
       formatTime: (v) =>
-        new Intl.DateTimeFormat(undefined, {
+        new Intl.DateTimeFormat("en-US", {
           hour: "2-digit",
           minute: "2-digit",
           timeZone: resolvedZone,
         }).format(new Date(v)),
       formatDate: (v) =>
-        new Intl.DateTimeFormat(undefined, {
+        new Intl.DateTimeFormat("en-US", {
           month: "short",
           day: "numeric",
           hour: "2-digit",
