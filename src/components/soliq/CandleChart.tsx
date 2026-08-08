@@ -83,10 +83,34 @@ function rsiSeries(values: number[], period = 14) {
   return out;
 }
 
-function cssVar(name: string, fallback: string) {
-  if (typeof window === "undefined") return fallback;
-  const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-  return v || fallback;
+/**
+ * lightweight-charts cannot parse oklch(), so chart colours are hex literals
+ * mirroring the design tokens for each theme.
+ */
+const palettes = {
+  dark: {
+    text: "#9a97b8",
+    grid: "rgba(150,150,190,0.12)",
+    bull: "#14f195",
+    bear: "#ff5470",
+    primary: "#9945ff",
+    warn: "#f5c542",
+    info: "#4ea8ff",
+  },
+  light: {
+    text: "#5d5a75",
+    grid: "rgba(90,80,130,0.14)",
+    bull: "#0fa876",
+    bear: "#e0344f",
+    primary: "#7b2ff7",
+    warn: "#c98b12",
+    info: "#2b7fd4",
+  },
+} as const;
+
+function palette() {
+  const light = typeof document !== "undefined" && document.documentElement.classList.contains("light");
+  return light ? palettes.light : palettes.dark;
 }
 
 export type Overlays = { ma20: boolean; ma50: boolean; vwap: boolean; rsi: boolean; volume: boolean; signals: boolean };
@@ -122,12 +146,7 @@ export default function CandleChart({
     const el = holder.current;
     if (!el || candles.length === 0) return;
 
-    const text = cssVar("--muted-foreground", "#8b8ba7");
-    const grid = "rgba(140,140,180,0.12)";
-    const bull = cssVar("--bull", "#14f195");
-    const bear = cssVar("--bear", "#ff5470");
-    const primary = cssVar("--primary", "#9945ff");
-    const warn = cssVar("--warn", "#f5c542");
+    const { text, grid, bull, bear, primary, warn, info } = palette();
 
     const chart = createChart(el, {
       height,
@@ -180,7 +199,7 @@ export default function CandleChart({
     }
     if (overlays.vwap) {
       const s = chart.addSeries(LineSeries, {
-        color: cssVar("--chart-5", "#5eb0ff"),
+        color: info,
         lineWidth: 2,
         lineStyle: 2,
         priceLineVisible: false,
