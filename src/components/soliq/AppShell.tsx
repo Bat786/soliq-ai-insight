@@ -5,6 +5,7 @@ import {
   Bot,
   Compass,
   Crown,
+  FlaskConical,
   LayoutDashboard,
   ListChecks,
   LogOut,
@@ -40,6 +41,7 @@ const nav = [
   { to: "/portfolio", label: "Portfolio", icon: Wallet },
   { to: "/discover", label: "Discover", icon: Compass },
   { to: "/community", label: "Community", icon: Users },
+  { to: "/backtest", label: "Backtest", icon: FlaskConical },
   { to: "/assistant", label: "AI Assistant", icon: Bot },
 ] as const;
 
