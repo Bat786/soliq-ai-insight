@@ -331,6 +331,7 @@ export default function CandleChart({
     }
 
     chart.timeScale().fitContent();
+    setTimeout(() => console.log("DBG", candleSeries.data().length, JSON.stringify(chart.timeScale().getVisibleLogicalRange()), JSON.stringify(candles[0]), el.clientWidth, el.clientHeight), 1500);
 
     // Crosshair readout: report the hovered bar, and clear when the pointer
     // leaves the plot so the header falls back to the live price.
