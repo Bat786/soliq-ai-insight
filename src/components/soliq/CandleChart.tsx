@@ -200,6 +200,10 @@ export default function CandleChart({
     const chart = createChart(el, {
       width: el.clientWidth || 600,
       height,
+      // Some runtimes report a non-standard system locale (e.g. "en-US@posix")
+      // which makes the library's Intl formatters throw mid-draw and leaves the
+      // canvas blank. Pin the locale so axis/price formatting always works.
+      localization: { locale: "en-US" },
       layout: {
         background: { color: bg },
         textColor: text,
@@ -331,7 +335,6 @@ export default function CandleChart({
     }
 
     chart.timeScale().fitContent();
-    setTimeout(() => console.log("DBG", candleSeries.data().length, JSON.stringify(chart.timeScale().getVisibleLogicalRange()), JSON.stringify(candles[0]), el.clientWidth, el.clientHeight), 1500);
 
     // Crosshair readout: report the hovered bar, and clear when the pointer
     // leaves the plot so the header falls back to the live price.
