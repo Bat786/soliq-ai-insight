@@ -18,14 +18,18 @@ export const getMarketSnapshot = createServerFn({ method: "GET" }).handler(async
 export const getAssetDetail = createServerFn({ method: "POST" })
   .inputValidator((input: { id: string; days?: number }) => ({
     id: String(input.id).slice(0, 80),
-    days: Math.min(365, Math.max(1, input.days ?? 90)),
+    days: Math.min(1825, Math.max(1, input.days ?? 90)),
   }))
   .handler(async ({ data }) => {
     const { loadUniverse, loadHistory, forecast } = await import("@/lib/live-market.server");
     const universe = await loadUniverse();
     const asset = universe.find((a) => a.id === data.id || a.symbol.toLowerCase() === data.id.toLowerCase());
     if (!asset) throw new Error("Asset not found in the SOLIQ universe");
-    const history = await loadHistory(asset.id, data.days).catch(() => ({ prices: [], volumes: [] }));
+    const history = await loadHistory(asset.id, data.days, {
+      price: asset.price,
+      volume: asset.volume24h,
+      volatility: asset.indicators.volatility,
+    });
     return {
       asset,
       history,
