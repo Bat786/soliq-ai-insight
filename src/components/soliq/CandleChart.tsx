@@ -12,7 +12,14 @@ import {
 export type Point = { t: number; p: number };
 export type VolPoint = { t: number; v: number };
 
-export type Candle = { time: UTCTimestamp; open: number; high: number; low: number; close: number };
+export type Candle = {
+  time: UTCTimestamp;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
+};
 
 export const intervals = [
   { id: "1m", label: "1m", ms: 60_000 },
@@ -27,28 +34,65 @@ export const intervals = [
 
 export type IntervalId = (typeof intervals)[number]["id"];
 
-function bucketMs(id: IntervalId) {
+export function bucketMs(id: IntervalId) {
   return intervals.find((i) => i.id === id)?.ms ?? 86_400_000;
 }
 
-/** Aggregate a price series into OHLC candles at the requested interval. */
-export function toCandles(points: Point[], interval: IntervalId): Candle[] {
+/**
+ * Aggregate a price series into OHLC candles at the requested interval.
+ * Volume is bucketed on the same grid so histogram bars always line up with
+ * their candle instead of being matched by array index.
+ */
+export function toCandles(points: Point[], interval: IntervalId, volumes?: VolPoint[]): Candle[] {
+  if (points.length === 0) return [];
+  const sorted = [...points].sort((a, b) => a.t - b.t);
   const size = bucketMs(interval);
-  const out: Candle[] = [];
-  let bucket = -1;
-  for (const { t, p } of points) {
+
+  const volByBucket = new Map<number, number>();
+  for (const { t, v } of volumes ?? []) {
     const key = Math.floor(t / size) * size;
-    const last = out[out.length - 1];
-    if (key !== bucket || !last) {
-      out.push({ time: (key / 1000) as UTCTimestamp, open: p, high: p, low: p, close: p });
-      bucket = key;
+    volByBucket.set(key, (volByBucket.get(key) ?? 0) + v);
+  }
+
+  const byBucket = new Map<number, Candle>();
+  for (const { t, p } of sorted) {
+    if (!Number.isFinite(p)) continue;
+    const key = Math.floor(t / size) * size;
+    const existing = byBucket.get(key);
+    if (!existing) {
+      byBucket.set(key, {
+        time: (key / 1000) as UTCTimestamp,
+        open: p,
+        high: p,
+        low: p,
+        close: p,
+        volume: volByBucket.get(key) ?? 0,
+      });
     } else {
-      last.high = Math.max(last.high, p);
-      last.low = Math.min(last.low, p);
-      last.close = p;
+      existing.high = Math.max(existing.high, p);
+      existing.low = Math.min(existing.low, p);
+      existing.close = p;
     }
   }
-  return out;
+  return [...byBucket.values()].sort((a, b) => (a.time as number) - (b.time as number));
+}
+
+/**
+ * Pick the finest interval that still produces a usable number of candles for
+ * the data we actually have — prevents a blank pane when the provider returns
+ * coarser data than the selected interval.
+ */
+export function resolveInterval(points: Point[], requested: IntervalId, min = 8): IntervalId {
+  if (points.length === 0) return requested;
+  const span = (points[points.length - 1]?.t ?? 0) - (points[0]?.t ?? 0);
+  if (span <= 0) return requested;
+  const order = intervals.map((i) => i.id);
+  const start = Math.max(0, order.indexOf(requested));
+  for (let i = start; i >= 0; i--) {
+    const id = order[i] as IntervalId;
+    if (span / bucketMs(id) >= min) return id;
+  }
+  return order[0] as IntervalId;
 }
 
 function sma(values: number[], period: number) {
@@ -134,9 +178,12 @@ export default function CandleChart({
 }) {
   const holder = useRef<HTMLDivElement | null>(null);
   const chartRef = useRef<IChartApi | null>(null);
+  const hoverRef = useRef(onHover);
+  hoverRef.current = onHover;
   const [themeKey, setThemeKey] = useState(0);
 
-  const candles = useMemo(() => toCandles(points, interval), [points, interval]);
+  const effective = useMemo(() => resolveInterval(points, interval), [points, interval]);
+  const candles = useMemo(() => toCandles(points, effective, volumes), [points, effective, volumes]);
 
   useEffect(() => {
     const obs = new MutationObserver(() => setThemeKey((k) => k + 1));
@@ -151,8 +198,12 @@ export default function CandleChart({
     const { bg, text, grid, bull, bear, primary, warn, info } = palette();
 
     const chart = createChart(el, {
-      autoSize: true,
+      width: el.clientWidth || 600,
       height,
+      // Some runtimes report a non-standard system locale (e.g. "en-US@posix")
+      // which makes the library's Intl formatters throw mid-draw and leaves the
+      // canvas blank. Pin the locale so axis/price formatting always works.
+      localization: { locale: "en-US" },
       layout: {
         background: { color: bg },
         textColor: text,
@@ -162,7 +213,9 @@ export default function CandleChart({
       },
       grid: { vertLines: { color: grid }, horzLines: { color: grid } },
       rightPriceScale: { borderColor: grid },
-      timeScale: { borderColor: grid, timeVisible: true, secondsVisible: false },
+      timeScale: { borderColor: grid, timeVisible: true, secondsVisible: false, rightOffset: 4 },
+      handleScroll: true,
+      handleScale: true,
       crosshair: {
         mode: 0,
         vertLine: { color: primary, width: 1, style: 2, labelBackgroundColor: primary },
@@ -173,7 +226,7 @@ export default function CandleChart({
 
     // Hollow candles: transparent bodies, coloured borders/wicks.
     const candleSeries = chart.addSeries(CandlestickSeries, {
-      upColor: "transparent",
+      upColor: "rgba(0,0,0,0)",
       downColor: bear,
       borderUpColor: bull,
       borderDownColor: bear,
@@ -210,9 +263,9 @@ export default function CandleChart({
       });
       let pv = 0;
       let vv = 0;
-      const data = candles.map((c, i) => {
+      const data = candles.map((c) => {
         const typical = (c.high + c.low + c.close) / 3;
-        const vol = volumes?.[i]?.v ?? 1;
+        const vol = c.volume > 0 ? c.volume : 1;
         pv += typical * vol;
         vv += vol;
         return { time: c.time, value: pv / Math.max(1e-9, vv) };
@@ -227,9 +280,9 @@ export default function CandleChart({
         1,
       );
       vol.setData(
-        candles.map((c, i) => ({
+        candles.map((c) => ({
           time: c.time,
-          value: volumes?.[i]?.v ?? Math.abs(c.close - c.open) * 1000,
+          value: c.volume > 0 ? c.volume : Math.abs(c.close - c.open) * 1000,
           color: c.close >= c.open ? `${bull}66` : `${bear}66`,
         })),
       );
@@ -283,20 +336,42 @@ export default function CandleChart({
 
     chart.timeScale().fitContent();
 
-    if (onHover) {
-      chart.subscribeCrosshairMove((param) => {
-        const bar = param.seriesData.get(candleSeries) as Candle | undefined;
-        onHover(bar ?? null);
-      });
-    }
+    // Crosshair readout: report the hovered bar, and clear when the pointer
+    // leaves the plot so the header falls back to the live price.
+    chart.subscribeCrosshairMove((param) => {
+      const cb = hoverRef.current;
+      if (!cb) return;
+      if (!param.time || !param.point) {
+        cb(null);
+        return;
+      }
+      const bar = param.seriesData.get(candleSeries) as Candle | undefined;
+      cb(bar ? { ...bar, time: param.time as UTCTimestamp } : null);
+    });
+    const leave = () => hoverRef.current?.(null);
+    el.addEventListener("mouseleave", leave);
 
-    chart.resize(el.clientWidth, height);
+    const ro = new ResizeObserver(() => {
+      const w = el.clientWidth;
+      if (w > 0) chart.resize(w, height);
+    });
+    ro.observe(el);
 
     return () => {
+      ro.disconnect();
+      el.removeEventListener("mouseleave", leave);
       chart.remove();
       chartRef.current = null;
     };
-  }, [candles, volumes, overlays, height, onHover, themeKey]);
+  }, [candles, overlays, height, themeKey]);
 
-  return <div ref={holder} className="w-full" />;
+  if (candles.length === 0) {
+    return (
+      <div className="grid w-full place-items-center text-xs text-muted-foreground" style={{ height }}>
+        No price history available for this range yet.
+      </div>
+    );
+  }
+
+  return <div ref={holder} className="w-full" style={{ height }} />;
 }

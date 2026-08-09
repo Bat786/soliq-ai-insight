@@ -354,16 +354,59 @@ export async function loadGlobal() {
   });
 }
 
-export async function loadHistory(id: string, days: number) {
-  return cached(`hist:${id}:${days}`, 300_000, async () => {
+type History = { prices: { t: number; p: number }[]; volumes: { t: number; v: number }[]; synthetic?: boolean };
+
+/** Deterministic OHLC-able series used when the provider is rate limited or returns too few points. */
+export function synthHistory(id: string, days: number, price: number, volume: number, vol = 3): History {
+  const step = days <= 1 ? 300_000 : days <= 7 ? 900_000 : days <= 30 ? 3_600_000 : days <= 90 ? 4 * 3_600_000 : 86_400_000;
+  const count = Math.max(60, Math.min(1200, Math.round((days * 86_400_000) / step)));
+  let seed = 0;
+  for (let i = 0; i < id.length; i++) seed = (seed * 31 + id.charCodeAt(i)) % 2147483647;
+  const rand = () => ((seed = (seed * 1103515245 + 12345) % 2147483647) / 2147483647 - 0.5) * 2;
+  const end = Date.now();
+  const amp = Math.max(0.004, vol / 100);
+  const prices: { t: number; p: number }[] = [];
+  const volumes: { t: number; v: number }[] = [];
+  let level = 1;
+  for (let i = count - 1; i >= 0; i--) {
+    const t = end - i * step;
+    level += rand() * amp * 0.6;
+    const wave = Math.sin((count - i) / 9) * amp * 1.5 + Math.sin((count - i) / 37) * amp * 3;
+    const p = price * Math.max(0.25, level + wave - (i / count) * amp * 6);
+    prices.push({ t, p: Number(p.toPrecision(8)) });
+    volumes.push({ t, v: Math.max(0, volume * (0.5 + Math.abs(rand()) * 0.9)) / count });
+  }
+  return { prices, volumes, synthetic: true };
+}
+
+export async function loadHistory(
+  id: string,
+  days: number,
+  fallback?: { price: number; volume: number; volatility?: number },
+): Promise<History> {
+  const load = async (): Promise<History> => {
     const data = await cgFetch<{ prices: [number, number][]; total_volumes: [number, number][] }>(
       `/coins/${id}/market_chart?vs_currency=usd&days=${days}`,
     );
     return {
-      prices: data.prices.map(([t, p]) => ({ t, p })),
-      volumes: data.total_volumes.map(([t, v]) => ({ t, v })),
+      prices: (data.prices ?? []).map(([t, p]) => ({ t, p })),
+      volumes: (data.total_volumes ?? []).map(([t, v]) => ({ t, v })),
     };
-  });
+  };
+
+  let history: History = { prices: [], volumes: [] };
+  try {
+    history = await cached(`hist:${id}:${days}`, 300_000, load);
+  } catch {
+    history = { prices: [], volumes: [] };
+  }
+
+  // A chart needs enough points to aggregate into candles; fall back when the
+  // provider throttles us or hands back a near-empty series.
+  if (history.prices.length < 20 && fallback) {
+    return synthHistory(id, days, fallback.price, fallback.volume, fallback.volatility ?? 3);
+  }
+  return history;
 }
 
 /** Simple, transparent projection: trend + mean-reversion blend with ATR bands. */
