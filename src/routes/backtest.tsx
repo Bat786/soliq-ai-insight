@@ -298,13 +298,14 @@ function BacktestPage() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="max-h-72">
-                  {(universe.length ? universe.slice(0, 60) : [{ id: "bitcoin", symbol: "BTC", name: "Bitcoin" }]).map(
-                    (a) => (
-                      <SelectItem key={a.id} value={a.id}>
-                        {a.symbol} · {a.name}
-                      </SelectItem>
-                    ),
-                  )}
+                  {(universe.length
+                    ? universe.slice(0, 60).map((a) => ({ id: a.id, symbol: a.symbol, name: a.name }))
+                    : [{ id: "bitcoin", symbol: "BTC", name: "Bitcoin" }]
+                  ).map((a) => (
+                    <SelectItem key={a.id} value={a.id}>
+                      {a.symbol} · {a.name}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
