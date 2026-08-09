@@ -181,6 +181,7 @@ export default function CandleChart({
       wickDownColor: bear,
     });
     candleSeries.setData(candles);
+    console.log("DBG candles", candles.length, JSON.stringify(candles.slice(0,2)), JSON.stringify(candles.slice(-1)));
 
     const closes = candles.map((c) => c.close);
 
