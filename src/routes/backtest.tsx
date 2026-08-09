@@ -246,7 +246,7 @@ function Metric({ label, value, tone }: { label: string; value: string; tone?: "
 
 function BacktestPage() {
   const { data: snapshot } = useMarket();
-  const universe = snapshot?.assets ?? [];
+  const universe = snapshot?.rows ?? [];
 
   const [assetId, setAssetId] = useState("bitcoin");
   const [rangeIdx, setRangeIdx] = useState(2);
