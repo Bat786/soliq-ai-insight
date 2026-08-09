@@ -1,12 +1,13 @@
 import { ClientOnly } from "@tanstack/react-router";
 import { Activity, BarChart3, Crosshair, LineChart, Sigma } from "lucide-react";
-import { lazy, Suspense, useCallback, useMemo, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from "react";
 
 import { useTheme } from "@/components/soliq/ThemeProvider";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Toggle } from "@/components/ui/toggle";
 import { fmtUsdc } from "@/lib/market-types";
+import { resolveInterval } from "@/components/soliq/CandleChart";
 import type { Candle, IntervalId, Overlays, Point, VolPoint } from "@/components/soliq/CandleChart";
 
 const CandleChart = lazy(() => import("@/components/soliq/CandleChart"));
@@ -56,12 +57,23 @@ export function ChartTerminal({
     signals: true,
   });
   const range = useMemo(() => chartRanges.find((r) => r.days === days) ?? chartRanges[2], [days]);
-  const [interval, setInterval] = useState<IntervalId>(range.intervals[1] ?? "1d");
+  const [interval, setInterval] = useState<IntervalId>((range.intervals[1] ?? "1d") as IntervalId);
   const [hover, setHover] = useState<Candle | null>(null);
 
-  const activeInterval = (range.intervals as readonly string[]).includes(interval)
+  // Keep the interval valid whenever the range changes.
+  useEffect(() => {
+    setInterval((prev) =>
+      (range.intervals as readonly string[]).includes(prev)
+        ? prev
+        : ((range.intervals[1] ?? range.intervals[0]) as IntervalId),
+    );
+    setHover(null);
+  }, [range]);
+
+  const requested = ((range.intervals as readonly string[]).includes(interval)
     ? interval
-    : ((range.intervals[1] ?? range.intervals[0]) as IntervalId);
+    : (range.intervals[1] ?? range.intervals[0])) as IntervalId;
+  const effective = useMemo(() => resolveInterval(points, requested), [points, requested]);
 
   const onHover = useCallback((c: Candle | null) => setHover(c), []);
   const shown = hover;
@@ -73,11 +85,14 @@ export function ChartTerminal({
         <p className="num text-sm font-semibold">
           {symbol} <span className="text-muted-foreground">·</span> {fmtUsdc(shown?.close ?? price)}
         </p>
-        {shown && (
+        {shown ? (
           <p className={`num text-[11px] ${up ? "text-bull" : "text-bear"}`}>
-            O {fmtUsdc(shown.open)} H {fmtUsdc(shown.high)} L {fmtUsdc(shown.low)} C {fmtUsdc(shown.close)} ·{" "}
+            O {fmtUsdc(shown.open)} H {fmtUsdc(shown.high)} L {fmtUsdc(shown.low)} C {fmtUsdc(shown.close)}
+            {shown.volume > 0 ? ` V ${fmtUsdc(shown.volume)}` : ""} ·{" "}
             {formatDate((shown.time as unknown as number) * 1000)}
           </p>
+        ) : (
+          <p className="num text-[11px] text-muted-foreground">live · hover the chart for OHLC</p>
         )}
         <div className="ml-auto flex flex-wrap items-center gap-1">
           {chartRanges.map((r) => (
@@ -96,7 +111,7 @@ export function ChartTerminal({
             <Button
               key={iv}
               size="sm"
-              variant={activeInterval === iv ? "subtle" : "ghost"}
+              variant={requested === iv ? "subtle" : "ghost"}
               onClick={() => setInterval(iv as IntervalId)}
               className="h-7 px-2 text-[11px]"
             >
@@ -119,7 +134,8 @@ export function ChartTerminal({
           </Toggle>
         ))}
         <span className="ml-auto self-center text-[10px] text-muted-foreground">
-          Hollow candles · drag to pan · scroll to zoom · hover for live OHLC
+          {effective !== requested ? `Showing ${effective.toUpperCase()} candles (data granularity) · ` : ""}
+          drag to pan · scroll to zoom
         </span>
       </div>
 
@@ -132,7 +148,7 @@ export function ChartTerminal({
               <CandleChart
                 points={points}
                 volumes={volumes}
-                interval={activeInterval}
+                interval={requested}
                 overlays={overlays}
                 onHover={onHover}
               />
