@@ -38,11 +38,7 @@ const price = (n: number) =>
 
 function LiveRow({ row }: { row: MarketRow }) {
   return (
-    <Link
-      to="/asset/$id"
-      params={{ id: row.key }}
-      className="flex items-center gap-3 border-b border-border/50 py-2.5 last:border-0"
-    >
+    <div className="flex items-center gap-3 border-b border-border/50 py-2.5 last:border-0">
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-medium">{row.code}</p>
         <p className="truncate text-[11px] text-muted-foreground">{row.name}</p>
@@ -52,7 +48,7 @@ function LiveRow({ row }: { row: MarketRow }) {
         <p className="num text-sm">{price(row.last)}</p>
         <p className={`num text-[11px] ${row.changePct >= 0 ? "text-bull" : "text-bear"}`}>{pct(row.changePct)}</p>
       </div>
-    </Link>
+    </div>
   );
 }
 
