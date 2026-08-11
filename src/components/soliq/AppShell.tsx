@@ -105,7 +105,7 @@ function Ticker() {
     ...(crypto.data?.rows ?? []),
     ...(stocks.data?.rows ?? []),
     ...(futures.data?.rows ?? []),
-  ].filter((r) => Number.isFinite(r.price) && r.price > 0);
+  ].filter((r) => Number.isFinite(r.last) && r.last > 0);
 
   const loading = !rows.length;
   const loop = loading ? [] : [...rows, ...rows];
@@ -119,7 +119,7 @@ function Ticker() {
           {loop.map((r, i) => (
             <span key={`${r.key}-${i}`} className="num flex items-center gap-2 text-[11px] whitespace-nowrap">
               <span className="text-muted-foreground">{r.code}</span>
-              <span>{r.price < 1 ? r.price.toPrecision(4) : r.price.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
+              <span>{r.last < 1 ? r.last.toPrecision(4) : r.last.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
               <span className={r.changePct >= 0 ? "text-bull" : "text-bear"}>{fmtPct(r.changePct)}</span>
             </span>
           ))}
