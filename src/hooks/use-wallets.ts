@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { useSession } from "@/hooks/use-soliq-account";
 import { linkWallet, listWallets, setPrimaryWallet, unlinkWallet, walletBalances } from "@/lib/wallets.functions";
 
-export type WalletProviderId = "phantom" | "solflare" | "backpack" | "metamask";
+export type WalletProviderId = "phantom" | "solflare" | "backpack" | "metamask" | "walletconnect";
 
 export type WalletProviderMeta = {
   id: WalletProviderId;
@@ -14,14 +14,27 @@ export type WalletProviderMeta = {
   chain: "solana" | "evm";
   blurb: string;
   site: string;
+  /** WalletConnect works without an extension (QR / mobile deep link). */
+  universal?: boolean;
 };
+
+export const WALLETCONNECT_PROJECT_ID = "3107d184dd8ba1e8a4d698c20ea61dbe";
 
 export const walletProviders: WalletProviderMeta[] = [
   { id: "phantom", name: "Phantom", chain: "solana", blurb: "Solana · the default power wallet", site: "https://phantom.app" },
   { id: "solflare", name: "Solflare", chain: "solana", blurb: "Solana · staking native", site: "https://solflare.com" },
   { id: "backpack", name: "Backpack", chain: "solana", blurb: "Solana · xNFT terminal", site: "https://backpack.app" },
   { id: "metamask", name: "MetaMask", chain: "evm", blurb: "Ethereum & EVM chains", site: "https://metamask.io" },
+  {
+    id: "walletconnect",
+    name: "WalletConnect",
+    chain: "evm",
+    blurb: "Any EVM wallet · scan a QR from mobile",
+    site: "https://walletconnect.network",
+    universal: true,
+  },
 ];
+
 
 type SolanaProvider = {
   isPhantom?: boolean;
@@ -57,6 +70,7 @@ export function useDetectedWallets() {
     solflare: false,
     backpack: false,
     metamask: false,
+    walletconnect: true,
   });
 
   useEffect(() => {
@@ -66,6 +80,7 @@ export function useDetectedWallets() {
         solflare: !!injected("solflare"),
         backpack: !!injected("backpack"),
         metamask: !!injected("metamask"),
+        walletconnect: true,
       });
     scan();
     const id = setTimeout(scan, 800);
@@ -75,7 +90,29 @@ export function useDetectedWallets() {
   return available;
 }
 
+/** WalletConnect (Reown) session — works with any mobile or desktop EVM wallet. */
+async function connectWalletConnect(): Promise<string> {
+  const { EthereumProvider } = await import("@walletconnect/ethereum-provider");
+  const provider = await EthereumProvider.init({
+    projectId: WALLETCONNECT_PROJECT_ID,
+    chains: [1],
+    optionalChains: [8453, 42161, 137, 10],
+    showQrModal: true,
+    metadata: {
+      name: "SOLIQ",
+      description: "SOLIQ — powered by SOLIQ, Solana Blockchain Intelligence Engine",
+      url: typeof window === "undefined" ? "https://soliq.app" : window.location.origin,
+      icons: [`${typeof window === "undefined" ? "" : window.location.origin}/favicon.ico`],
+    },
+  });
+  await provider.connect();
+  const address = provider.accounts?.[0];
+  if (!address) throw new Error("No account returned");
+  return address;
+}
+
 async function connectProvider(id: WalletProviderId): Promise<string> {
+  if (id === "walletconnect") return connectWalletConnect();
   const provider = injected(id);
   if (!provider) throw new Error("wallet-missing");
   if (id === "metamask") {
@@ -87,6 +124,7 @@ async function connectProvider(id: WalletProviderId): Promise<string> {
   const res = await (provider as SolanaProvider).connect();
   return res.publicKey.toString();
 }
+
 
 export function useWallets() {
   const { isSignedIn } = useSession();
@@ -141,6 +179,34 @@ export function useWallets() {
     onSuccess: invalidate,
   });
 
+  /** Track any public address read-only, no wallet app required. */
+  const watch = useMutation({
+    mutationFn: async (address: string) => {
+      const value = address.trim();
+      const isEvm = /^0x[a-fA-F0-9]{40}$/.test(value);
+      const isSol = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(value);
+      if (!isEvm && !isSol) throw new Error("bad-address");
+      return runLink({
+        data: {
+          chain: isEvm ? "evm" : "solana",
+          provider: "Watch",
+          address: value,
+          label: "Watched address",
+        },
+      });
+    },
+    onSuccess: () => {
+      invalidate();
+      toast.success("Address added to your watch list");
+    },
+    onError: (error) =>
+      toast.error(
+        error instanceof Error && error.message === "bad-address"
+          ? "That doesn't look like a Solana or EVM address"
+          : "Could not track that address",
+      ),
+  });
+
   const balanceFor = (address: string) => balances.data?.find((b) => b.address === address);
   const totalUsd = (balances.data ?? []).reduce((sum, b) => sum + b.usd, 0);
 
@@ -152,7 +218,9 @@ export function useWallets() {
     balanceFor,
     totalUsd,
     connect,
+    watch,
     remove,
     makePrimary,
+
   };
 }

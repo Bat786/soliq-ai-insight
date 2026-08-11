@@ -13,13 +13,13 @@ import { setMembership } from "@/lib/soliq.functions";
 export const Route = createFileRoute("/pricing")({
   head: () => ({
     meta: [
-      { title: "AETHRON Access — Pro $20 & Elite $30 Plans" },
+      { title: "SOLIQ Access — Pro $20 & Elite $30 Plans" },
       {
         name: "description",
         content:
           "Unlock the AETHRON engine: unlimited real-time alerts, whale flow, community posting and AI deep research from $20/month.",
       },
-      { property: "og:title", content: "AETHRON Access — Pro & Elite" },
+      { property: "og:title", content: "SOLIQ Access — Pro & Elite" },
       {
         property: "og:description",
         content: "Unlimited alerts, whale flow, verified badge and AI deep research from $20/month.",
@@ -65,7 +65,7 @@ function Pricing() {
       <div className="mx-auto max-w-5xl">
         <div className="text-center">
           <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-[11px] text-primary">
-            <Sparkles className="size-3.5" /> AETHRON Access
+            <Sparkles className="size-3.5" /> SOLIQ Access
           </span>
           <h1 className="font-display mt-4 text-2xl font-bold lg:text-3xl">
             Run the engine at <span className="text-gradient">full power</span>

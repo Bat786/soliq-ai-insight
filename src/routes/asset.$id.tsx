@@ -18,12 +18,12 @@ export const Route = createFileRoute("/asset/$id")({
     const label = params.id.replace(/-/g, " ");
     return {
       meta: [
-        { title: `${label} analysis & AI forecast — AETHRON` },
+        { title: `${label} analysis & AI forecast — SOLIQ` },
         {
           name: "description",
-          content: `Live ${label} price chart, RSI, MACD, moving averages, volume flow, whale activity and AETHRON AI price projection.`,
+          content: `Live ${label} price chart, RSI, MACD, moving averages, volume flow, whale activity and SOLIQ AI price projection.`,
         },
-        { property: "og:title", content: `${label} analysis — AETHRON` },
+        { property: "og:title", content: `${label} analysis — SOLIQ` },
         { property: "og:description", content: `Live chart, indicators and AI projection for ${label}.` },
         { property: "og:type", content: "article" },
         { name: "twitter:card", content: "summary_large_image" },

@@ -10,13 +10,13 @@ import { aiPicks, education, newProjects, predictions, trending } from "@/lib/ma
 export const Route = createFileRoute("/discover")({
   head: () => ({
     meta: [
-      { title: "Discover — Trending, AI Picks & Prediction Markets | AETHRON" },
+      { title: "Discover — Trending, AI Picks & Prediction Markets | SOLIQ" },
       {
         name: "description",
         content:
-          "Discover trending assets, AI-selected opportunities, newly launched projects, prediction markets and investing education on AETHRON.",
+          "Discover trending assets, AI-selected opportunities, newly launched projects, prediction markets and investing education on SOLIQ.",
       },
-      { property: "og:title", content: "Discover — AETHRON" },
+      { property: "og:title", content: "Discover — SOLIQ" },
       { property: "og:description", content: "Trending coins, AI picks, new launches, forecasts and education." },
     ],
   }),
@@ -41,7 +41,7 @@ function Discover() {
         </section>
 
         <section className="panel p-5">
-          <SectionTitle title="AI Picks" subtitle="Highest AETHRON Scores today" action={<Sparkles className="size-4 text-primary" />} />
+          <SectionTitle title="AI Picks" subtitle="Highest SOLIQ Scores today" action={<Sparkles className="size-4 text-primary" />} />
           <div className="space-y-3">
             {aiPicks.map((a) => (
               <div key={a.id} className="rounded-xl border border-border bg-surface-2/40 p-3">

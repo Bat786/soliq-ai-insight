@@ -1,4 +1,4 @@
-// Client-safe membership metadata for AETHRON access tiers.
+// Client-safe membership metadata for SOLIQ access tiers.
 export type Tier = "free" | "pro" | "elite";
 
 export type Plan = {
@@ -21,7 +21,7 @@ export const plans: Plan[] = [
     cadence: "forever",
     tagline: "Get inside the engine and track a few ideas.",
     features: [
-      "Multi-asset desks & AETHRON Scores",
+      "Multi-asset desks & SOLIQ Scores",
       "Portfolio & wallet tracking",
       `${FREE_ALERT_LIMIT} watchlist alerts`,
       "Read the community terminal",

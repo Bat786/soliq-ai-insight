@@ -17,13 +17,13 @@ import type { Bar, Timeframe, TfSignal } from "@/lib/futures.server";
 export const Route = createFileRoute("/futures")({
   head: () => ({
     meta: [
-      { title: "Futures Desk — live ES, NQ, gold, oil & bitcoin signals | AETHRON" },
+      { title: "Futures Desk — live ES, NQ, gold, oil & bitcoin signals | SOLIQ" },
       {
         name: "description",
         content:
           "Live futures and benchmark tape: S&P 500, Nasdaq, crude oil, gold, silver, copper and bitcoin with 1m/5m/15m/1h bullish-bearish signal gauges, volume and charts.",
       },
-      { property: "og:title", content: "AETHRON Futures Desk" },
+      { property: "og:title", content: "SOLIQ Futures Desk" },
       {
         property: "og:description",
         content: "Multi-timeframe futures sentiment, volume and charting across index, energy, metals and crypto.",

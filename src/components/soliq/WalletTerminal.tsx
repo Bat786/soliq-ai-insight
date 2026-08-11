@@ -1,16 +1,20 @@
 import { Link } from "@tanstack/react-router";
-import { Copy, ExternalLink, Link2Off, Star, Wallet } from "lucide-react";
+import { Copy, ExternalLink, Eye, Link2Off, Star, Wallet } from "lucide-react";
+import { useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useDetectedWallets, useWallets, walletProviders } from "@/hooks/use-wallets";
 
 const short = (a: string) => `${a.slice(0, 5)}…${a.slice(-4)}`;
 const usd = (n: number) => `$${n.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
 
 export function WalletTerminal() {
-  const { isSignedIn, wallets, balances, balanceFor, totalUsd, connect, remove, makePrimary } = useWallets();
+  const { isSignedIn, wallets, balances, balanceFor, totalUsd, connect, watch, remove, makePrimary } = useWallets();
   const detected = useDetectedWallets();
+  const [watchAddress, setWatchAddress] = useState("");
+
 
   if (!isSignedIn) {
     return (
@@ -18,7 +22,7 @@ export function WalletTerminal() {
         <Wallet className="mx-auto size-6 text-primary" />
         <p className="mt-3 text-sm font-medium">Sign in to link wallets</p>
         <p className="mt-1 text-xs text-muted-foreground">
-          Wallet links are read-only and stored privately on your account — AETHRON never requests transactions.
+          Wallet links are read-only and stored privately on your account — SOLIQ never requests transactions.
         </p>
         <Button asChild variant="hero" size="sm" className="mt-4">
           <Link to="/auth">Create free account</Link>
@@ -44,11 +48,12 @@ export function WalletTerminal() {
       <div className="panel p-5">
         <p className="text-sm font-semibold">Connect a wallet</p>
         <p className="mt-1 text-xs text-muted-foreground">
-          Approve the connection request in your extension. AETHRON only reads your public address.
+          Approve the connection request in your wallet. SOLIQ only reads your public address — never a signature that
+          moves funds.
         </p>
         <div className="mt-4 grid gap-2 sm:grid-cols-2">
           {walletProviders.map((p) => {
-            const ready = detected[p.id];
+            const ready = p.universal || detected[p.id];
             return (
               <div
                 key={p.id}
@@ -62,7 +67,7 @@ export function WalletTerminal() {
                         ready ? "bg-bull/15 text-bull" : "bg-muted text-muted-foreground"
                       }`}
                     >
-                      {ready ? "DETECTED" : "NOT FOUND"}
+                      {p.universal ? "QR READY" : ready ? "DETECTED" : "NOT FOUND"}
                     </span>
                   </p>
                   <p className="truncate text-[11px] text-muted-foreground">{p.blurb}</p>
@@ -82,7 +87,33 @@ export function WalletTerminal() {
             );
           })}
         </div>
+
+        <form
+          className="mt-4 flex flex-wrap items-center gap-2 border-t border-border pt-4"
+          onSubmit={(event) => {
+            event.preventDefault();
+            if (!watchAddress.trim()) return;
+            watch.mutate(watchAddress, { onSuccess: () => setWatchAddress("") });
+          }}
+        >
+          <div className="min-w-0 flex-1">
+            <label className="text-[11px] font-medium text-muted-foreground" htmlFor="watch-address">
+              Or track any public address (Solana or EVM)
+            </label>
+            <Input
+              id="watch-address"
+              value={watchAddress}
+              onChange={(event) => setWatchAddress(event.target.value)}
+              placeholder="So1111… or 0xabc…"
+              className="num mt-1"
+            />
+          </div>
+          <Button type="submit" size="sm" variant="subtle" className="mt-5" disabled={watch.isPending}>
+            <Eye className="size-3.5" /> Track
+          </Button>
+        </form>
       </div>
+
 
       <div className="panel p-5">
         <p className="text-sm font-semibold">Linked wallets</p>
@@ -131,7 +162,27 @@ export function WalletTerminal() {
                       <Link2Off className="size-3.5" />
                     </Button>
                   </div>
+                  {!!bal?.tokens?.length && (
+                    <div className="mt-1 w-full border-t border-border/60 pt-2">
+                      <p className="text-[10px] font-semibold tracking-wide text-muted-foreground">TOKEN HOLDINGS</p>
+                      <div className="mt-1.5 flex flex-wrap gap-1.5">
+                        {bal.tokens.slice(0, 8).map((t) => (
+                          <span
+                            key={`${w.id}-${t.symbol}-${t.amount}`}
+                            className="num rounded-lg border border-border bg-surface-2/60 px-2 py-1 text-[10px]"
+                            title={t.name}
+                          >
+                            {t.symbol}{" "}
+                            <span className="text-muted-foreground">
+                              {t.amount.toLocaleString(undefined, { maximumFractionDigits: 4 })}
+                            </span>
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
+
               );
             })}
           </div>

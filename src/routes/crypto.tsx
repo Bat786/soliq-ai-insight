@@ -7,13 +7,13 @@ import { SectionTitle } from "@/components/soliq/primitives";
 export const Route = createFileRoute("/crypto")({
   head: () => ({
     meta: [
-      { title: "Crypto Desk — live Solana DEX flow & token signals | AETHRON" },
+      { title: "Crypto Desk — live Solana DEX flow & token signals | SOLIQ" },
       {
         name: "description",
         content:
           "Live Solana and multi-chain DEX intelligence: Jupiter organic-flow scoring, buy/sell pressure gauges, trending metas, fresh launches and DexScreener pair search.",
       },
-      { property: "og:title", content: "AETHRON Crypto Desk" },
+      { property: "og:title", content: "SOLIQ Crypto Desk" },
       {
         property: "og:description",
         content: "Jupiter + DexScreener powered on-chain flow, liquidity and bullish-bearish signals for every token.",

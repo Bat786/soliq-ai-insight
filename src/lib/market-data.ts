@@ -1,4 +1,4 @@
-// Deterministic mock market data for AETHRON.
+// Deterministic mock market data for SOLIQ.
 // Replace with live market APIs + Lovable Cloud tables later.
 
 export type Category = "crypto" | "memecoin" | "defi" | "nft";
@@ -133,7 +133,7 @@ export const portfolioSeries = seededSeries(4242, 1.4, 40);
 export const news = [
   {
     title: "Spot Solana ETF sees record weekly inflows",
-    source: "AETHRON Wire",
+    source: "SOLIQ Wire",
     time: "18m ago",
     tag: "Flows",
   },
