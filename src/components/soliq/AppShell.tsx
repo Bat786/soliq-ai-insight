@@ -45,6 +45,7 @@ const nav = [
   { to: "/scanner", label: "Scanner", icon: Radar },
   { to: "/lists", label: "Lists", icon: ListChecks },
   { to: "/portfolio", label: "Portfolio", icon: Wallet },
+  { to: "/wallets", label: "Wallets", icon: Wallet },
   { to: "/discover", label: "Discover", icon: Compass },
   { to: "/whales", label: "Whale Flow", icon: Waves },
   { to: "/stocks", label: "Stocks", icon: BarChart3 },
@@ -63,13 +64,19 @@ export function Logo({ compact = false }: { compact?: boolean }) {
         <Zap className="size-4.5" />
       </span>
       {!compact && (
-        <span className="font-display text-lg font-bold tracking-tight">
-          SOL<span className="text-gradient">IQ</span>
+        <span className="flex flex-col leading-none">
+          <span className="font-display text-lg font-bold tracking-tight">
+            AETH<span className="text-gradient">RON</span>
+          </span>
+          <span className="mt-0.5 text-[9px] font-medium tracking-[0.22em] text-muted-foreground">
+            INTELLIGENCE ENGINE
+          </span>
         </span>
       )}
     </Link>
   );
 }
+
 
 export function MemberBadge({ tier, className = "" }: { tier: Tier; className?: string }) {
   if (!isPaid(tier)) return null;
