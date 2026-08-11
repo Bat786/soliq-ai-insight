@@ -40,6 +40,7 @@ const TFS: { id: Timeframe; label: string }[] = [
   { id: "5m", label: "5m" },
   { id: "15m", label: "15m" },
   { id: "1h", label: "1H" },
+  { id: "4h", label: "4H" },
 ];
 
 const overlays: Overlays = { ma20: true, ma50: false, vwap: true, rsi: true, volume: true, signals: true };
