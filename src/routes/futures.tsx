@@ -107,7 +107,7 @@ function TfSignalRow({ signals, active, onSelect }: { signals: TfSignal[]; activ
 function FuturesPage() {
   const { data, isLoading, isError, error } = useFuturesBoard();
   const [tf, setTf] = useState<Timeframe>("5m");
-  const [tab, setTab] = useState<"board" | "search">("board");
+  const [tab, setTab] = useState<"board" | "fx" | "search">("board");
   const [selected, setSelected] = useState("SPY");
   const [query, setQuery] = useState("");
   const [symbol, setSymbol] = useState("SPY");
