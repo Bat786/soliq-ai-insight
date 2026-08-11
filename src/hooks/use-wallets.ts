@@ -208,12 +208,14 @@ export function useWallets() {
         toast.error("Sign in first", { description: "Wallets are linked to your SOLIQ account." });
         return;
       }
+      if (code === "wallet-deeplink") return;
       if (code === "wallet-missing") {
         toast.error("Wallet extension not detected", {
-          description: "Install the extension, then reload and try again.",
+          description: "Unlock the extension (or open SOLIQ in the wallet's browser on mobile) and try again.",
         });
         return;
       }
+
       const rejected = /reject|denied|4001|closed/i.test(code);
       toast.error(rejected ? "Connection cancelled in your wallet" : "Could not link that wallet", {
         description: rejected ? undefined : code.slice(0, 140) || undefined,
