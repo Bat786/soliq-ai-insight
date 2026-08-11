@@ -117,7 +117,7 @@ export function useNotifications() {
           void queryClient.invalidateQueries({ queryKey: ["notifications"] });
           void queryClient.invalidateQueries({ queryKey: ["alerts"] });
           toast.info(row.title ?? "Alert triggered", { description: row.body });
-          pushNotify(row.title ?? "SOLIQ alert triggered", row.body ?? "");
+          pushNotify(row.title ?? "AETHRON alert triggered", row.body ?? "");
         },
       )
       .subscribe();

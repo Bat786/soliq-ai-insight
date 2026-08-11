@@ -1,4 +1,4 @@
-// Shared, client-safe types for SOLIQ's live market layer.
+// Shared, client-safe types for AETHRON's live market layer.
 
 export type Sector = "layer1" | "layer2" | "defi" | "memecoin" | "ai" | "gaming" | "rwa" | "stablecoin" | "other";
 

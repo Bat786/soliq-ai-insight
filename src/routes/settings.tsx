@@ -21,13 +21,13 @@ import { updateMyProfile } from "@/lib/profile.functions";
 export const Route = createFileRoute("/settings")({
   head: () => ({
     meta: [
-      { title: "Settings & Profile — Avatar, Bio & Alerts | SOLIQ" },
+      { title: "Settings & Profile — Avatar, Bio & Alerts | AETHRON" },
       {
         name: "description",
         content:
-          "Manage your SOLIQ identity: avatar, display name, bio, social handles, time zone, appearance and alert delivery.",
+          "Manage your AETHRON identity: avatar, display name, bio, social handles, time zone, appearance and alert delivery.",
       },
-      { property: "og:title", content: "Settings & Profile — SOLIQ" },
+      { property: "og:title", content: "Settings & Profile — AETHRON" },
       { property: "og:description", content: "Avatar, bio, handles, appearance and alert preferences in one place." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -89,7 +89,7 @@ function Settings() {
   }, [form.avatarPath]);
 
   const initials = useMemo(
-    () => (form.displayName || "SOLIQ").slice(0, 2).toUpperCase(),
+    () => (form.displayName || "AETHRON").slice(0, 2).toUpperCase(),
     [form.displayName],
   );
 
@@ -97,7 +97,7 @@ function Settings() {
     mutationFn: () =>
       save({
         data: {
-          displayName: form.displayName || "SOLIQ Member",
+          displayName: form.displayName || "AETHRON Member",
           handle: form.handle || null,
           bio: form.bio || null,
           timezone: form.timezone || null,
@@ -141,7 +141,7 @@ function Settings() {
           <UserRound className="mx-auto size-8 text-primary" />
           <h1 className="mt-3 text-lg font-semibold">Sign in to manage your profile</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Your avatar, bio, handles and alert delivery live on your SOLIQ account.
+            Your avatar, bio, handles and alert delivery live on your AETHRON account.
           </p>
           <Button asChild variant="hero" className="mt-4">
             <Link to="/auth">Sign in</Link>

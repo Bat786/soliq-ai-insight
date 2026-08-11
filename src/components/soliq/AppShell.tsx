@@ -45,6 +45,7 @@ const nav = [
   { to: "/scanner", label: "Scanner", icon: Radar },
   { to: "/lists", label: "Lists", icon: ListChecks },
   { to: "/portfolio", label: "Portfolio", icon: Wallet },
+  { to: "/wallets", label: "Wallets", icon: Wallet },
   { to: "/discover", label: "Discover", icon: Compass },
   { to: "/whales", label: "Whale Flow", icon: Waves },
   { to: "/stocks", label: "Stocks", icon: BarChart3 },
@@ -63,13 +64,19 @@ export function Logo({ compact = false }: { compact?: boolean }) {
         <Zap className="size-4.5" />
       </span>
       {!compact && (
-        <span className="font-display text-lg font-bold tracking-tight">
-          SOL<span className="text-gradient">IQ</span>
+        <span className="flex flex-col leading-none">
+          <span className="font-display text-lg font-bold tracking-tight">
+            AETH<span className="text-gradient">RON</span>
+          </span>
+          <span className="mt-0.5 text-[9px] font-medium tracking-[0.22em] text-muted-foreground">
+            INTELLIGENCE ENGINE
+          </span>
         </span>
       )}
     </Link>
   );
 }
+
 
 export function MemberBadge({ tier, className = "" }: { tier: Tier; className?: string }) {
   if (!isPaid(tier)) return null;
@@ -211,14 +218,14 @@ function SidebarFooter() {
 
   return (
     <div className="m-3 rounded-xl border border-border bg-surface-2/60 p-4">
-      <p className="text-xs font-medium">{isSignedIn ? "Explorer plan" : "Guest preview mode"}</p>
+      <p className="text-xs font-medium">{isSignedIn ? "Orbit plan" : "Guest preview mode"}</p>
       <p className="mt-1 text-[11px] text-muted-foreground">
         {isSignedIn
           ? "Upgrade for unlimited alerts, a member badge and posting rights."
           : "Create an account to sync watchlists, alerts and portfolios."}
       </p>
       <Button asChild variant="hero" size="sm" className="mt-3 w-full">
-        <Link to={isSignedIn ? "/pricing" : "/auth"}>{isSignedIn ? "Go Premium" : "Explore SOLIQ Free"}</Link>
+        <Link to={isSignedIn ? "/pricing" : "/auth"}>{isSignedIn ? "Go Premium" : "Explore AETHRON Free"}</Link>
       </Button>
     </div>
   );
@@ -278,7 +285,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             </p>
             <div className="flex items-center gap-2">
               <Button asChild size="sm" variant="ghost" className="hidden sm:inline-flex">
-                <Link to="/assistant">Ask SOLIQ AI</Link>
+                <Link to="/assistant">Ask AETHRON AI</Link>
               </Button>
               <AppearanceMenu />
               <NotificationBell />

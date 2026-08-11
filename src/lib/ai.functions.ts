@@ -15,7 +15,7 @@ const schema = z.object({
 
 export type AskInput = z.infer<typeof schema>;
 
-/** SOLIQ AI chat grounded in the live desk tape. */
+/** AETHRON AI chat grounded in the live desk tape. */
 export const askAssistant = createServerFn({ method: "POST" })
   .inputValidator((input: AskInput) => schema.parse(input))
   .handler(async ({ data }) => {

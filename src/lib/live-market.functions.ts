@@ -24,7 +24,7 @@ export const getAssetDetail = createServerFn({ method: "POST" })
     const { loadUniverse, loadHistory, forecast } = await import("@/lib/live-market.server");
     const universe = await loadUniverse();
     const asset = universe.find((a) => a.id === data.id || a.symbol.toLowerCase() === data.id.toLowerCase());
-    if (!asset) throw new Error("Asset not found in the SOLIQ universe");
+    if (!asset) throw new Error("Asset not found in the AETHRON universe");
     const history = await loadHistory(asset.id, data.days, {
       price: asset.price,
       volume: asset.volume24h,

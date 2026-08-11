@@ -14,12 +14,12 @@ import { supabase } from "@/integrations/supabase/client";
 export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
-      { title: "Sign in or explore free — SOLIQ" },
+      { title: "Sign in or explore free — AETHRON" },
       {
         name: "description",
-        content: "Create a SOLIQ account to sync watchlists, alerts, portfolios and AI research — or explore as a guest.",
+        content: "Create a AETHRON account to sync watchlists, alerts, portfolios and AI research — or explore as a guest.",
       },
-      { property: "og:title", content: "Sign in to SOLIQ" },
+      { property: "og:title", content: "Sign in to AETHRON" },
       { property: "og:description", content: "Sync watchlists, alerts, portfolios and AI research across devices." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -63,7 +63,7 @@ function Auth() {
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        toast.success("Welcome back to SOLIQ.");
+        toast.success("Welcome back to AETHRON.");
       }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Authentication failed.");
@@ -102,7 +102,7 @@ function Auth() {
               </>
             ) : (
               <>
-                Welcome back to <span className="text-gradient">SOLIQ</span>
+                Welcome back to <span className="text-gradient">AETHRON</span>
               </>
             )}
           </h1>
@@ -143,7 +143,7 @@ function Auth() {
               <p className="text-sm font-medium">Confirm your email</p>
               <p className="text-xs text-muted-foreground">
                 We sent a confirmation link to <span className="text-foreground">{email}</span>. Open it to activate your
-                SOLIQ account.
+                AETHRON account.
               </p>
               <Button variant="subtle" className="w-full" onClick={() => setAwaitingConfirm(false)}>
                 Back
@@ -208,7 +208,7 @@ function Auth() {
           </div>
 
           <Button asChild variant="ghost" className="mt-4 w-full text-primary">
-            <Link to="/">Explore SOLIQ Free →</Link>
+            <Link to="/">Explore AETHRON Free →</Link>
           </Button>
 
           <p className="mt-4 flex items-center justify-center gap-1.5 text-[11px] text-muted-foreground">

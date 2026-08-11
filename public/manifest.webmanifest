@@ -1,0 +1,16 @@
+{
+  "name": "AETHRON — AI Market Intelligence Terminal",
+  "short_name": "AETHRON",
+  "description": "AI market intelligence: live crypto, futures, FX and equity desks with whale flow, alerts and AI research.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#070A12",
+  "theme_color": "#070A12",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

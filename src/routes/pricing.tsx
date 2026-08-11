@@ -13,16 +13,16 @@ import { setMembership } from "@/lib/soliq.functions";
 export const Route = createFileRoute("/pricing")({
   head: () => ({
     meta: [
-      { title: "SOLIQ Premium — Pro & Elite Plans" },
+      { title: "AETHRON Access — Pro $20 & Elite $30 Plans" },
       {
         name: "description",
         content:
-          "Upgrade to SOLIQ Pro or Elite for unlimited watchlist alerts, community posting rights and AI deep research.",
+          "Unlock the AETHRON engine: unlimited real-time alerts, whale flow, community posting and AI deep research from $20/month.",
       },
-      { property: "og:title", content: "SOLIQ Premium — Pro & Elite Plans" },
+      { property: "og:title", content: "AETHRON Access — Pro & Elite" },
       {
         property: "og:description",
-        content: "Unlimited alerts, verified member badge and AI deep research from $19/month.",
+        content: "Unlimited alerts, whale flow, verified badge and AI deep research from $20/month.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -30,6 +30,7 @@ export const Route = createFileRoute("/pricing")({
   }),
   component: Pricing,
 });
+
 
 function Pricing() {
   const { tier, isSignedIn } = useProfile();
@@ -44,7 +45,7 @@ function Pricing() {
       void queryClient.invalidateQueries({ queryKey: ["profile"] });
       toast.success(
         profile.membership_tier === "free"
-          ? "Membership cancelled — you're back on Explorer."
+          ? "Membership cancelled — you're back on Orbit."
           : `${profile.membership_tier === "elite" ? "Elite" : "Pro"} membership active.`,
       );
     },
@@ -64,15 +65,16 @@ function Pricing() {
       <div className="mx-auto max-w-5xl">
         <div className="text-center">
           <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-[11px] text-primary">
-            <Sparkles className="size-3.5" /> SOLIQ Premium
+            <Sparkles className="size-3.5" /> AETHRON Access
           </span>
           <h1 className="font-display mt-4 text-2xl font-bold lg:text-3xl">
-            Trade with <span className="text-gradient">unlimited signal</span>
+            Run the engine at <span className="text-gradient">full power</span>
           </h1>
           <p className="mx-auto mt-2 max-w-xl text-sm text-muted-foreground">
-            Premium unlocks unlimited watchlist alerts, posting rights in the community — which keeps spam and bots out
-            — and a verified member badge next to your name.
+            Pro and Elite unlock unlimited real-time alerts, institutional whale flow, posting rights in the community
+            terminal — which keeps spam and bots out — and a verified badge next to your name.
           </p>
+
         </div>
 
         <div className="mt-8 grid gap-4 lg:grid-cols-3">

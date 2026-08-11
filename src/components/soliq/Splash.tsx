@@ -4,7 +4,7 @@ import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const steps = [
-  "Booting SOLIQ terminal",
+  "Booting AETHRON terminal",
   "Syncing on-chain liquidity",
   "Streaming live market data",
   "Calibrating AI conviction models",
@@ -30,7 +30,7 @@ export function Splash() {
           <span className="font-display text-2xl font-bold text-gradient">SQ</span>
         </div>
         <h1 className="mt-5 font-display text-2xl font-bold">
-          SOL<span className="text-gradient">IQ</span>
+          AETH<span className="text-gradient">RON</span>
         </h1>
         <p className="mt-1 text-xs text-muted-foreground">Next generation market intelligence</p>
 

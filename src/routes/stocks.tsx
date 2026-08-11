@@ -11,13 +11,13 @@ import type { Timeframe } from "@/lib/futures.server";
 export const Route = createFileRoute("/stocks")({
   head: () => ({
     meta: [
-      { title: "Stocks Desk — Megacaps, Semis & Benchmarks | SOLIQ" },
+      { title: "Stocks Desk — Megacaps, Semis & Benchmarks | AETHRON" },
       {
         name: "description",
         content:
           "Live stocks desk: megacap and semiconductor tape, index benchmarks, RSI/MACD/VWAP scoring and multi-timeframe bull-bear signals.",
       },
-      { property: "og:title", content: "Stocks Desk — SOLIQ" },
+      { property: "og:title", content: "Stocks Desk — AETHRON" },
       {
         property: "og:description",
         content: "Megacap and semi tape with indicator stacks, benchmarks and multi-timeframe signals.",
