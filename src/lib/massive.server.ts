@@ -21,8 +21,8 @@ export type AssetClass = "stocks" | "crypto" | "fx" | "indices";
 
 /* ------------------------------ rate metering ----------------------------- */
 
-const LIMIT = 5; // free-tier requests per minute
-const MIN_GAP = 900;
+const LIMIT = 90; // requests per minute we allow ourselves against the plan
+const MIN_GAP = 160;
 const budget = { window: 0, used: 0 };
 let chain: Promise<unknown> = Promise.resolve();
 let lastAt = 0;
@@ -218,7 +218,7 @@ async function groupedDay(assetClass: AssetClass, dayOffset: number): Promise<Ma
 export async function massiveBoardSeries(
   assetClass: AssetClass,
   symbols: string[],
-  days = 22,
+  days = 10,
 ): Promise<Map<string, Bar[]>> {
   const series = new Map<string, Bar[]>();
   const wanted = new Map(symbols.map((s) => [massiveTicker(assetClass, s), s]));

@@ -34,6 +34,8 @@ export type Instrument = {
   desk: DeskId;
   symbol: string;
   quote: string;
+  /** US-listed ETF that tracks this instrument, used when the primary feed has no direct coverage. */
+  proxy?: string;
 };
 
 export type MarketRow = {
@@ -85,6 +87,19 @@ const fx: Instrument[] = [
   quote: quote!,
 }));
 
+/** ETF trackers used when the contract itself isn't covered by the primary feed. */
+const FUTURES_PROXY: Record<string, string> = {
+  ES: "SPY", NQ: "QQQ", YM: "DIA", RTY: "IWM",
+  CL: "USO", NG: "UNG", RB: "UGA",
+  GC: "GLD", SI: "SLV", HG: "CPER", PL: "PPLT",
+  ZC: "CORN", ZS: "SOYB",
+  BTCF: "IBIT", ETHF: "ETHA",
+};
+
+const INDEX_PROXY: Record<string, string> = {
+  SPX: "SPY", NDX: "QQQ", DJI: "DIA", RUT: "IWM", VIX: "VIXY", TNX: "IEF",
+};
+
 const futures: Instrument[] = [
   ["ES", "ES · S&P 500", "E-mini S&P 500", "Equity index futures", "ES=F"],
   ["NQ", "NQ · Nasdaq 100", "E-mini Nasdaq-100", "Equity index futures", "NQ=F"],
@@ -109,6 +124,7 @@ const futures: Instrument[] = [
   desk: "futures" as const,
   symbol: symbol!,
   quote: "USD",
+  proxy: FUTURES_PROXY[key!],
 }));
 
 const indices: Instrument[] = [
@@ -126,6 +142,7 @@ const indices: Instrument[] = [
   desk: "indices" as const,
   symbol: symbol!,
   quote: "USD",
+  proxy: INDEX_PROXY[key!],
 }));
 
 const stocks: Instrument[] = [
@@ -523,6 +540,24 @@ export async function loadTapeBoard(desk?: DeskId): Promise<MarketBoard> {
     for (const [symbol, bars] of spark) if (bars.length > 1) series.set(symbol, bars);
   }
 
+  // 2b) ETF proxy pricing for contracts and benchmarks the plan doesn't cover
+  //     directly (futures, index levels). Real, live ETF tape — labelled as a
+  //     proxy in the row name so nothing reads as a synthetic quote.
+  const usedDirect = new Set(series.keys());
+  const needProxy = list.filter(
+    (inst) => inst.proxy && (series.get(inst.symbol)?.length ?? 0) < 2,
+  );
+  if (needProxy.length > 0) {
+    const proxied = await massiveBoardSeries(
+      "stocks",
+      [...new Set(needProxy.map((i) => i.proxy!))],
+    ).catch(() => new Map<string, Bar[]>());
+    for (const inst of needProxy) {
+      const bars = proxied.get(inst.proxy!);
+      if (bars && bars.length > 1) series.set(inst.symbol, bars);
+    }
+  }
+
   // 3) Per-desk keyless fallback so a throttled feed never strands a row.
   await Promise.all(
     list
@@ -534,7 +569,11 @@ export async function loadTapeBoard(desk?: DeskId): Promise<MarketBoard> {
   );
 
 
-  const rows = list.map((inst) => toRow(inst, series.get(inst.symbol) ?? []));
+  const rows = list.map((inst) => {
+    const row = toRow(inst, series.get(inst.symbol) ?? []);
+    const viaProxy = Boolean(inst.proxy && row.status === "live" && !usedDirect.has(inst.symbol));
+    return viaProxy ? { ...row, name: `${inst.name} · ${inst.proxy} proxy` } : row;
+  });
   return {
     rows,
     updatedAt: Date.now(),
