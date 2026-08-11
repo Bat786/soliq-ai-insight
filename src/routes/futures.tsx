@@ -132,25 +132,29 @@ function FuturesPage() {
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
             <h1 className="font-display flex items-center gap-2 text-2xl font-bold tracking-tight">
-              <Activity className="size-5 text-primary" /> Futures Desk
+              <Activity className="size-5 text-primary" /> Markets Desk
             </h1>
             <p className="text-sm text-muted-foreground">
-              Live index, energy, metals and crypto tape with multi-timeframe bull/bear signal gauges.
+              Index, energy, metals, crypto and 24/7 forex tape with multi-timeframe bull/bear gauges, RSI, MACD, VWAP and
+              volume analytics.
             </p>
           </div>
           <div className="flex items-center gap-2">
             <div className="panel flex gap-1 p-1">
-              {(["board", "search"] as const).map((t) => (
+              {(["board", "fx", "search"] as const).map((t) => (
                 <button
                   key={t}
                   type="button"
                   onClick={() => setTab(t)}
-                  className={`rounded-md px-3 py-1.5 text-xs capitalize ${tab === t ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
+                  className={`rounded-md px-3 py-1.5 text-xs ${tab === t ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
                 >
-                  {t === "board" ? "Contracts" : "Ticker search"}
+                  {t === "board" ? "Contracts"
+                  : t === "fx" ? "Forex & crypto 24/7"
+                  : "Ticker search"}
                 </button>
               ))}
             </div>
+
             <div className="panel flex gap-1 p-1">
               {TFS.map((t) => (
                 <button
