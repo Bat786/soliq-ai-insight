@@ -110,6 +110,7 @@ const ms = (v: unknown): number => {
 type CacheEntry = { at: number; value: unknown };
 const cache = new Map<string, CacheEntry>();
 const TTL = 30_000;
+const sleep = (n: number) => new Promise((r) => setTimeout(r, n));
 
 async function uw<T>(path: string, query: Record<string, string | number> = {}): Promise<T> {
   const key = process.env["UNUSUAL_WHALES_API_KEY"];
@@ -122,13 +123,21 @@ async function uw<T>(path: string, query: Record<string, string | number> = {}):
   const hit = cache.get(cacheKey);
   if (hit && Date.now() - hit.at < TTL) return hit.value as T;
 
-  const res = await fetch(cacheKey, {
-    headers: { Authorization: `Bearer ${key}`, Accept: "application/json" },
-  });
-  if (!res.ok) {
-    if (hit) return hit.value as T;
-    throw new Error(`Unusual Whales ${path} failed [${res.status}]`);
+  // Upstream throttles bursts, so retry transient rate-limit/5xx responses.
+  let res: Response | null = null;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    res = await fetch(cacheKey, {
+      headers: { Authorization: `Bearer ${key}`, Accept: "application/json" },
+    });
+    if (res.ok) break;
+    if (res.status !== 429 && res.status < 500) break;
+    await sleep(350 * (attempt + 1));
   }
+  if (!res || !res.ok) {
+    if (hit) return hit.value as T;
+    throw new Error(`Unusual Whales ${path} failed [${res?.status ?? 0}]`);
+  }
+
   const json = (await res.json()) as { data?: T };
   const value = (json.data ?? ([] as unknown)) as T;
   cache.set(cacheKey, { at: Date.now(), value });
