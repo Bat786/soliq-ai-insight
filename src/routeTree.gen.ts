@@ -26,7 +26,6 @@ import { Route as StocksRouteImport } from './routes/stocks'
 import { Route as WalletsRouteImport } from './routes/wallets'
 import { Route as WhalesRouteImport } from './routes/whales'
 import { Route as AssetIdRouteImport } from './routes/asset.$id'
-import { Route as ApiPublicDiagRouteImport } from './routes/api/public/diag'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -113,11 +112,6 @@ const AssetIdRoute = AssetIdRouteImport.update({
   path: '/asset/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiPublicDiagRoute = ApiPublicDiagRouteImport.update({
-  id: '/api/public/diag',
-  path: '/api/public/diag',
-  getParentRoute: () => rootRouteImport,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -137,7 +131,6 @@ export interface FileRoutesByFullPath {
   '/wallets': typeof WalletsRoute
   '/whales': typeof WhalesRoute
   '/asset/$id': typeof AssetIdRoute
-  '/api/public/diag': typeof ApiPublicDiagRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -157,7 +150,6 @@ export interface FileRoutesByTo {
   '/wallets': typeof WalletsRoute
   '/whales': typeof WhalesRoute
   '/asset/$id': typeof AssetIdRoute
-  '/api/public/diag': typeof ApiPublicDiagRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -178,7 +170,6 @@ export interface FileRoutesById {
   '/wallets': typeof WalletsRoute
   '/whales': typeof WhalesRoute
   '/asset/$id': typeof AssetIdRoute
-  '/api/public/diag': typeof ApiPublicDiagRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -200,7 +191,6 @@ export interface FileRouteTypes {
     | '/wallets'
     | '/whales'
     | '/asset/$id'
-    | '/api/public/diag'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -220,7 +210,6 @@ export interface FileRouteTypes {
     | '/wallets'
     | '/whales'
     | '/asset/$id'
-    | '/api/public/diag'
   id:
     | '__root__'
     | '/'
@@ -240,7 +229,6 @@ export interface FileRouteTypes {
     | '/wallets'
     | '/whales'
     | '/asset/$id'
-    | '/api/public/diag'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -261,7 +249,6 @@ export interface RootRouteChildren {
   WalletsRoute: typeof WalletsRoute
   WhalesRoute: typeof WhalesRoute
   AssetIdRoute: typeof AssetIdRoute
-  ApiPublicDiagRoute: typeof ApiPublicDiagRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -385,13 +372,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AssetIdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/diag': {
-      id: '/api/public/diag'
-      path: '/api/public/diag'
-      fullPath: '/api/public/diag'
-      preLoaderRoute: typeof ApiPublicDiagRouteImport
-      parentRoute: typeof rootRouteImport
-    }
   }
 }
 
@@ -413,7 +393,6 @@ const rootRouteChildren: RootRouteChildren = {
   WalletsRoute: WalletsRoute,
   WhalesRoute: WhalesRoute,
   AssetIdRoute: AssetIdRoute,
-  ApiPublicDiagRoute: ApiPublicDiagRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

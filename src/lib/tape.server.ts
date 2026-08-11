@@ -35,7 +35,7 @@ export type Instrument = {
   symbol: string;
   quote: string;
   /** US-listed ETF that tracks this instrument, used when the primary feed has no direct coverage. */
-  proxy?: string;
+  proxy?: string | undefined;
 };
 
 export type MarketRow = {
