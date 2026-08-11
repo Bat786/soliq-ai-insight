@@ -5,12 +5,14 @@ import { Activity, BarChart3, Loader2, Search } from "lucide-react";
 import { AppShell } from "@/components/soliq/AppShell";
 import { BullBearGauge } from "@/components/soliq/BullBearGauge";
 import CandleChart, { type Overlays, type Point, type VolPoint } from "@/components/soliq/CandleChart";
+import { MarketsBoard } from "@/components/soliq/MarketsBoard";
 import { Delta, SectionTitle, Sparkline } from "@/components/soliq/primitives";
 import { WhaleStrip } from "@/components/soliq/WhaleSignal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useFuturesBoard, useTickerDetail } from "@/hooks/use-futures";
 import type { Bar, Timeframe, TfSignal } from "@/lib/futures.server";
+
 
 export const Route = createFileRoute("/futures")({
   head: () => ({
