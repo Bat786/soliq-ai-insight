@@ -30,9 +30,11 @@ export function Splash() {
           <span className="font-display text-2xl font-bold text-gradient">SQ</span>
         </div>
         <h1 className="mt-5 font-display text-2xl font-bold">
-          AETH<span className="text-gradient">RON</span>
+          SOL<span className="text-gradient">IQ</span>
         </h1>
-        <p className="mt-1 text-xs text-muted-foreground">Next generation market intelligence</p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Powered by AETHRON · Solana Blockchain Intelligence Engine
+        </p>
 
         <Progress value={pct} className="mt-6 h-1.5" />
         <p className="num mt-2 text-[11px] text-muted-foreground">{steps[step]}…</p>
