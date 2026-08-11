@@ -190,8 +190,10 @@ async function groupedDay(assetClass: AssetClass, dayOffset: number): Promise<Ma
   const path = `/v2/aggs/grouped/locale/${locale}/${day}?adjusted=true`;
   const json = await get<{ results?: Record<string, string | number>[] }>(path, {
     // Closed sessions never change; today's summary refreshes on a short clock.
-    ttl: dayOffset === 0 ? 5 * 60_000 : 12 * 3600_000,
-    scope: `grouped:${assetClass}`,
+    ttl: 12 * 3600_000,
+    // Per-day scope: the plan rejects the in-progress session, and that must not
+    // disqualify the closed sessions we are entitled to.
+    scope: `grouped:${assetClass}:${day}`,
   });
   for (const r of json?.results ?? []) {
     const ticker = String(r["T"] ?? "");
@@ -222,7 +224,9 @@ export async function massiveBoardSeries(
   const wanted = new Map(symbols.map((s) => [massiveTicker(assetClass, s), s]));
   // Newest first: today's price matters most, and older sessions fill in on
   // later polls as the request budget allows (closed days cache for hours).
-  for (let offset = 0; offset <= days; offset++) {
+  // Start at the last closed session: the in-progress day is not covered by the
+  // daily summary endpoint on this plan.
+  for (let offset = 1; offset <= days; offset++) {
     const day = await groupedDay(assetClass, offset).catch(() => new Map<string, Bar>());
     if (day.size === 0) continue;
     for (const [ticker, symbol] of wanted) {
