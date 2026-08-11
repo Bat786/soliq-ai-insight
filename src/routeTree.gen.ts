@@ -21,6 +21,8 @@ import { Route as ListsRouteImport } from './routes/lists'
 import { Route as PortfolioRouteImport } from './routes/portfolio'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as ScannerRouteImport } from './routes/scanner'
+import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as StocksRouteImport } from './routes/stocks'
 import { Route as WhalesRouteImport } from './routes/whales'
 import { Route as AssetIdRouteImport } from './routes/asset.$id'
 
@@ -84,6 +86,16 @@ const ScannerRoute = ScannerRouteImport.update({
   path: '/scanner',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StocksRoute = StocksRouteImport.update({
+  id: '/stocks',
+  path: '/stocks',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const WhalesRoute = WhalesRouteImport.update({
   id: '/whales',
   path: '/whales',
@@ -108,6 +120,8 @@ export interface FileRoutesByFullPath {
   '/portfolio': typeof PortfolioRoute
   '/pricing': typeof PricingRoute
   '/scanner': typeof ScannerRoute
+  '/settings': typeof SettingsRoute
+  '/stocks': typeof StocksRoute
   '/whales': typeof WhalesRoute
   '/asset/$id': typeof AssetIdRoute
 }
@@ -124,6 +138,8 @@ export interface FileRoutesByTo {
   '/portfolio': typeof PortfolioRoute
   '/pricing': typeof PricingRoute
   '/scanner': typeof ScannerRoute
+  '/settings': typeof SettingsRoute
+  '/stocks': typeof StocksRoute
   '/whales': typeof WhalesRoute
   '/asset/$id': typeof AssetIdRoute
 }
@@ -141,6 +157,8 @@ export interface FileRoutesById {
   '/portfolio': typeof PortfolioRoute
   '/pricing': typeof PricingRoute
   '/scanner': typeof ScannerRoute
+  '/settings': typeof SettingsRoute
+  '/stocks': typeof StocksRoute
   '/whales': typeof WhalesRoute
   '/asset/$id': typeof AssetIdRoute
 }
@@ -159,6 +177,8 @@ export interface FileRouteTypes {
     | '/portfolio'
     | '/pricing'
     | '/scanner'
+    | '/settings'
+    | '/stocks'
     | '/whales'
     | '/asset/$id'
   fileRoutesByTo: FileRoutesByTo
@@ -175,6 +195,8 @@ export interface FileRouteTypes {
     | '/portfolio'
     | '/pricing'
     | '/scanner'
+    | '/settings'
+    | '/stocks'
     | '/whales'
     | '/asset/$id'
   id:
@@ -191,6 +213,8 @@ export interface FileRouteTypes {
     | '/portfolio'
     | '/pricing'
     | '/scanner'
+    | '/settings'
+    | '/stocks'
     | '/whales'
     | '/asset/$id'
   fileRoutesById: FileRoutesById
@@ -208,6 +232,8 @@ export interface RootRouteChildren {
   PortfolioRoute: typeof PortfolioRoute
   PricingRoute: typeof PricingRoute
   ScannerRoute: typeof ScannerRoute
+  SettingsRoute: typeof SettingsRoute
+  StocksRoute: typeof StocksRoute
   WhalesRoute: typeof WhalesRoute
   AssetIdRoute: typeof AssetIdRoute
 }
@@ -298,6 +324,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ScannerRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/stocks': {
+      id: '/stocks'
+      path: '/stocks'
+      fullPath: '/stocks'
+      preLoaderRoute: typeof StocksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/whales': {
       id: '/whales'
       path: '/whales'
@@ -328,6 +368,8 @@ const rootRouteChildren: RootRouteChildren = {
   PortfolioRoute: PortfolioRoute,
   PricingRoute: PricingRoute,
   ScannerRoute: ScannerRoute,
+  SettingsRoute: SettingsRoute,
+  StocksRoute: StocksRoute,
   WhalesRoute: WhalesRoute,
   AssetIdRoute: AssetIdRoute,
 }

@@ -1,11 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Bot, Send, Sparkles } from "lucide-react";
+import { useMutation } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { Bot, Loader2, RadioTower, Send, Sparkles } from "lucide-react";
 import { useState } from "react";
+import ReactMarkdown from "react-markdown";
 
-import { WhaleStrip } from "@/components/soliq/WhaleSignal";
 import { AppShell } from "@/components/soliq/AppShell";
+import { WhaleStrip } from "@/components/soliq/WhaleSignal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { askAssistant } from "@/lib/ai.functions";
 
 export const Route = createFileRoute("/assistant")({
   head: () => ({
@@ -14,10 +18,12 @@ export const Route = createFileRoute("/assistant")({
       {
         name: "description",
         content:
-          "Ask SOLIQ AI to analyse coins, explain market moves, compare assets, summarise news and build research reports.",
+          "Ask SOLIQ AI to analyse coins, futures, forex and stocks using the live desk tape, indicators and institutional flow.",
       },
       { property: "og:title", content: "SOLIQ AI — Investing Research Assistant" },
-      { property: "og:description", content: "Analyse assets, explain indicators and generate research on demand." },
+      { property: "og:description", content: "Live-tape answers across crypto, stocks, futures and forex desks." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: Assistant,
@@ -25,45 +31,46 @@ export const Route = createFileRoute("/assistant")({
 
 const prompts = [
   "Analyze Solana for the next 30 days",
-  "Find undervalued crypto projects",
-  "Explain why Bitcoin moved today",
-  "Compare ETH vs SOL",
-  "Explain RSI divergence with an example",
+  "Which futures contracts are most bullish right now?",
+  "Read the forex tape — where is dollar strength strongest?",
+  "Find Solana tokens with whale accumulation",
+  "Compare NVDA momentum with the Nasdaq futures tape",
 ];
 
-type Msg = { role: "user" | "ai"; text: string };
+type Msg = { role: "user" | "assistant"; content: string };
 
-const canned: Msg[] = [
-  {
-    role: "user",
-    text: "Analyze Solana for the next 30 days",
-  },
-  {
-    role: "ai",
-    text: "**SOL · 30-day outlook (base case: constructive)**\n\n• Structure: higher highs and higher lows since the $186 reclaim; the $232 level is the invalidation for the current leg.\n• Flows: spot volume expanded 41% week-over-week while perp funding reset to neutral — buyers are paying in spot, not leverage.\n• On-chain: fee revenue and active addresses are both at 60-day highs; DEX volume share is holding above 30%.\n• Risk: a broad-market drawdown is the main threat — beta to BTC is ~1.4x. Memecoin cooldown could soften network activity.\n\n**SOLIQ Score: 94/100** — strong volume expansion, bullish momentum, improving sentiment.\n\n*This is research, not financial advice.*",
-  },
-];
+const greeting: Msg = {
+  role: "assistant",
+  content:
+    "**SOLIQ AI online.**\n\nI read the live tape across four desks — crypto (Solana/DEX + majors), stocks, futures and 24/7 forex — plus institutional flow. Ask for an asset breakdown, a cross-desk comparison, or a full research note.\n\n*Research, not financial advice.*",
+};
 
 function Assistant() {
-  const [messages, setMessages] = useState<Msg[]>(canned);
+  const [messages, setMessages] = useState<Msg[]>([greeting]);
   const [input, setInput] = useState("");
+  const ask = useServerFn(askAssistant);
+
+  const mutation = useMutation({
+    mutationFn: (history: Msg[]) => ask({ data: { messages: history } }),
+    onSuccess: (res) => setMessages((m) => [...m, { role: "assistant", content: res.answer }]),
+    onError: (e: Error) =>
+      setMessages((m) => [...m, { role: "assistant", content: `⚠️ ${e.message}` }]),
+  });
 
   const send = (text: string) => {
-    if (!text.trim()) return;
-    setMessages((m) => [
-      ...m,
-      { role: "user", text: text.trim() },
-      {
-        role: "ai",
-        text: "SOLIQ AI is in preview mode in this demo build. Connect Lovable Cloud + Lovable AI and I'll answer live with real market context, indicator breakdowns and full research reports.",
-      },
-    ]);
+    const t = text.trim();
+    if (!t || mutation.isPending) return;
+    const next: Msg[] = [...messages.filter((m) => m !== greeting), { role: "user", content: t }];
+    setMessages((m) => [...m, { role: "user", content: t }]);
     setInput("");
+    mutation.mutate(next);
   };
 
   return (
     <AppShell>
-      <div className="mb-4"><WhaleStrip /></div>
+      <div className="mb-4">
+        <WhaleStrip />
+      </div>
       <div className="mx-auto flex max-w-3xl flex-col">
         <header className="flex items-center gap-3">
           <span className="grid size-10 place-items-center rounded-xl bg-primary/15 text-primary glow-ring">
@@ -71,7 +78,9 @@ function Assistant() {
           </span>
           <div>
             <h1 className="text-xl font-bold">SOLIQ AI</h1>
-            <p className="text-xs text-muted-foreground">Market intelligence · research · explanations</p>
+            <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <RadioTower className="size-3 text-primary" /> Grounded in the live crypto, stocks, futures & forex tape
+            </p>
           </div>
         </header>
 
@@ -94,12 +103,22 @@ function Assistant() {
               className={
                 m.role === "user"
                   ? "ml-auto max-w-[85%] rounded-2xl rounded-br-sm bg-primary/15 px-4 py-3 text-sm"
-                  : "panel max-w-[92%] px-4 py-3.5 text-sm leading-relaxed whitespace-pre-line"
+                  : "panel max-w-[92%] px-4 py-3.5 text-sm leading-relaxed"
               }
             >
-              {m.text}
+              {m.role === "user" ?
+                m.content
+              : <div className="prose prose-sm prose-invert max-w-none prose-headings:font-display prose-strong:text-foreground prose-p:my-2 prose-li:my-0.5">
+                  <ReactMarkdown>{m.content}</ReactMarkdown>
+                </div>
+              }
             </div>
           ))}
+          {mutation.isPending && (
+            <div className="panel flex max-w-[92%] items-center gap-2 px-4 py-3.5 text-sm text-muted-foreground">
+              <Loader2 className="size-4 animate-spin" /> Reading the live tape…
+            </div>
+          )}
         </div>
 
         <div className="sticky bottom-24 mt-5 flex gap-2 lg:bottom-4">
@@ -110,8 +129,15 @@ function Assistant() {
             placeholder="Ask about any asset, indicator or market move…"
             className="h-11 bg-surface/80 backdrop-blur"
           />
-          <Button variant="hero" size="icon" className="size-11" onClick={() => send(input)} aria-label="Send">
-            <Send />
+          <Button
+            variant="hero"
+            size="icon"
+            className="size-11"
+            disabled={mutation.isPending}
+            onClick={() => send(input)}
+            aria-label="Send"
+          >
+            {mutation.isPending ? <Loader2 className="animate-spin" /> : <Send />}
           </Button>
         </div>
       </div>
