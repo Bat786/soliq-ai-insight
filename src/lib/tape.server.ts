@@ -371,10 +371,93 @@ async function loadSparkBars(symbols: string[]): Promise<Map<string, Bar[]>> {
   return out;
 }
 
+/* ------------------------------ keyless fallbacks ------------------------------ */
+
+const BINANCE = "https://api.binance.com/api/v3/klines";
+const FRANKFURTER = "https://api.frankfurter.dev/v1";
+
+/** Crypto pairs resolve from Binance spot klines when the primary feed throttles. */
+async function binanceBars(symbol: string): Promise<Bar[]> {
+  const base = symbol.replace("-USD", "").toUpperCase();
+  const url = `${BINANCE}?symbol=${base}USDT&interval=5m&limit=576`;
+  const res = await fetch(url, { headers: { Accept: "application/json" } });
+  if (!res.ok) throw new Error(`binance ${res.status}`);
+  const rows = (await res.json()) as unknown[][];
+  return rows.map((r) => ({
+    t: num(r[0]),
+    open: num(r[1]),
+    high: num(r[2]),
+    low: num(r[3]),
+    close: num(r[4]),
+    volume: num(r[5]),
+  }));
+}
+
+/** Spot FX resolves from Frankfurter's daily ECB series (close-only). */
+async function frankfurterBars(symbol: string): Promise<Bar[]> {
+  const pair = symbol.replace("=X", "").toUpperCase();
+  if (pair.length !== 6) throw new Error("unsupported fx pair");
+  const from = pair.slice(0, 3);
+  const to = pair.slice(3);
+  const start = new Date(Date.now() - 120 * 86_400_000).toISOString().slice(0, 10);
+  const res = await fetch(`${FRANKFURTER}/${start}..?base=${from}&symbols=${to}`, {
+    headers: { Accept: "application/json" },
+  });
+  if (!res.ok) throw new Error(`frankfurter ${res.status}`);
+  const json = (await res.json()) as { rates?: Record<string, Record<string, number>> };
+  const entries = Object.entries(json.rates ?? {}).sort(([a], [b]) => a.localeCompare(b));
+  const bars: Bar[] = [];
+  for (const [day, rates] of entries) {
+    const close = num(rates[to]);
+    if (!close) continue;
+    const prev = bars[bars.length - 1]?.close ?? close;
+    bars.push({
+      t: new Date(`${day}T21:00:00Z`).getTime(),
+      open: prev,
+      high: Math.max(prev, close),
+      low: Math.min(prev, close),
+      close,
+      volume: 0,
+    });
+  }
+  return bars;
+}
+
+/** Keyless per-desk fallback so a throttled primary feed never strands a row. */
+async function fallbackBars(inst: Instrument): Promise<Bar[]> {
+  const key = `fb:${inst.symbol}`;
+  const hit = cache.get(key);
+  if (hit && Date.now() - hit.at < TTL) return hit.value;
+  try {
+    const bars =
+      inst.desk === "crypto" || inst.symbol.startsWith("BTC-") || inst.symbol.startsWith("ETH-")
+        ? await binanceBars(inst.symbol)
+        : inst.desk === "fx" && inst.symbol.endsWith("=X")
+          ? await frankfurterBars(inst.symbol)
+          : [];
+    if (bars.length > 1) cache.set(key, { at: Date.now(), value: bars });
+    return bars;
+  } catch (e) {
+    console.warn(`[tape] fallback ${inst.symbol} failed: ${(e as Error).message}`);
+    return hit?.value ?? [];
+  }
+}
+
 /** Board for one desk (or every desk when `desk` is omitted). */
 export async function loadTapeBoard(desk?: DeskId): Promise<MarketBoard> {
   const list = desk ? instrumentsByDesk(desk) : instruments;
   const series = await loadSparkBars(list.map((i) => i.symbol)).catch(() => new Map<string, Bar[]>());
+
+  // Anything the primary feed dropped gets a keyless fallback before scoring.
+  await Promise.all(
+    list
+      .filter((inst) => (series.get(inst.symbol)?.length ?? 0) < 5)
+      .map(async (inst) => {
+        const bars = await fallbackBars(inst);
+        if (bars.length > 1) series.set(inst.symbol, bars);
+      }),
+  );
+
   const rows = list.map((inst) => toRow(inst, series.get(inst.symbol) ?? []));
   return {
     rows,
@@ -393,11 +476,13 @@ export async function loadTapeDetail(key: string, interval: Timeframe): Promise<
     symbol: key.toUpperCase(),
     quote: "USD",
   };
-  const base = await loadBars(inst.symbol);
+  let base = await loadBars(inst.symbol);
+  if (base.length < 5) base = await fallbackBars(inst);
   if (base.length < 5) throw new Error(`No tape available for “${inst.code}”`);
   const tf = barsByTf(base);
   return { ...toRow(inst, base), bars: tf[interval].slice(-320), interval };
 }
+
 
 /* --------------------------------- search --------------------------------- */
 
