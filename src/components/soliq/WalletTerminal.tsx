@@ -67,25 +67,28 @@ export function WalletTerminal() {
                         ready ? "bg-bull/15 text-bull" : "bg-muted text-muted-foreground"
                       }`}
                     >
-                      {p.universal ? "QR READY" : ready ? "DETECTED" : "NOT FOUND"}
+                      {p.universal ? "QR READY" : ready ? "DETECTED" : "TAP TO CONNECT"}
                     </span>
                   </p>
                   <p className="truncate text-[11px] text-muted-foreground">{p.blurb}</p>
-                </div>
-                {ready ? (
-                  <Button size="sm" variant="hero" disabled={connect.isPending} onClick={() => connect.mutate(p)}>
-                    Connect
-                  </Button>
-                ) : (
-                  <Button asChild size="sm" variant="subtle">
-                    <a href={p.site} target="_blank" rel="noreferrer noopener">
-                      Install <ExternalLink className="size-3" />
+                  {!ready && !p.universal && (
+                    <a
+                      className="text-[10px] text-muted-foreground underline hover:text-foreground"
+                      href={p.site}
+                      target="_blank"
+                      rel="noreferrer noopener"
+                    >
+                      Don't have it? Install {p.name} <ExternalLink className="inline size-2.5" />
                     </a>
-                  </Button>
-                )}
+                  )}
+                </div>
+                <Button size="sm" variant="hero" disabled={connect.isPending} onClick={() => connect.mutate(p)}>
+                  Connect
+                </Button>
               </div>
             );
           })}
+
         </div>
 
         <form

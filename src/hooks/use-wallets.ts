@@ -92,12 +92,26 @@ export function useDetectedWallets() {
         walletconnect: true,
       });
     scan();
-    const id = setTimeout(scan, 800);
-    return () => clearTimeout(id);
+    // Extensions inject asynchronously — keep polling briefly, and listen for the
+    // standard announcement events both EVM (EIP-6963) and Solana wallets fire.
+    const timers = [150, 400, 900, 1800, 3000].map((ms) => window.setTimeout(scan, ms));
+    window.addEventListener("eip6963:announceProvider", scan as EventListener);
+    window.addEventListener("ethereum#initialized", scan);
+    window.addEventListener("load", scan);
+    document.addEventListener("visibilitychange", scan);
+    window.dispatchEvent(new Event("eip6963:requestProvider"));
+    return () => {
+      timers.forEach((t) => window.clearTimeout(t));
+      window.removeEventListener("eip6963:announceProvider", scan as EventListener);
+      window.removeEventListener("ethereum#initialized", scan);
+      window.removeEventListener("load", scan);
+      document.removeEventListener("visibilitychange", scan);
+    };
   }, []);
 
   return available;
 }
+
 
 /** WalletConnect (Reown) session — works with any mobile or desktop EVM wallet. */
 async function connectWalletConnect(): Promise<string> {
@@ -120,10 +134,30 @@ async function connectWalletConnect(): Promise<string> {
   return address;
 }
 
+/** Mobile deep links that open this site inside the wallet's in-app browser. */
+const deepLinks: Partial<Record<WalletProviderId, (url: string) => string>> = {
+  phantom: (url) => `https://phantom.app/ul/browse/${encodeURIComponent(url)}?ref=${encodeURIComponent(url)}`,
+  solflare: (url) => `https://solflare.com/ul/v1/browse/${encodeURIComponent(url)}?ref=${encodeURIComponent(url)}`,
+  backpack: (url) => `https://backpack.app/ul/v1/browse/${encodeURIComponent(url)}`,
+  metamask: (url) => `https://metamask.app.link/dapp/${url.replace(/^https?:\/\//, "")}`,
+};
+
+function openInWalletApp(id: WalletProviderId) {
+  if (typeof window === "undefined") return false;
+  const mobile = /android|iphone|ipad|ipod/i.test(navigator.userAgent);
+  const build = deepLinks[id];
+  if (!mobile || !build) return false;
+  window.location.href = build(window.location.href);
+  return true;
+}
+
 async function connectProvider(id: WalletProviderId): Promise<string> {
   if (id === "walletconnect") return connectWalletConnect();
   const provider = injected(id);
-  if (!provider) throw new Error("wallet-missing");
+  if (!provider) {
+    if (openInWalletApp(id)) throw new Error("wallet-deeplink");
+    throw new Error("wallet-missing");
+  }
   if (id === "metamask") {
     const accounts = (await (provider as EvmProvider).request({ method: "eth_requestAccounts" })) as string[];
     const address = accounts?.[0];
@@ -133,6 +167,7 @@ async function connectProvider(id: WalletProviderId): Promise<string> {
   const res = await (provider as SolanaProvider).connect();
   return res.publicKey.toString();
 }
+
 
 
 export function useWallets() {
@@ -173,12 +208,14 @@ export function useWallets() {
         toast.error("Sign in first", { description: "Wallets are linked to your SOLIQ account." });
         return;
       }
+      if (code === "wallet-deeplink") return;
       if (code === "wallet-missing") {
         toast.error("Wallet extension not detected", {
-          description: "Install the extension, then reload and try again.",
+          description: "Unlock the extension (or open SOLIQ in the wallet's browser on mobile) and try again.",
         });
         return;
       }
+
       const rejected = /reject|denied|4001|closed/i.test(code);
       toast.error(rejected ? "Connection cancelled in your wallet" : "Could not link that wallet", {
         description: rejected ? undefined : code.slice(0, 140) || undefined,

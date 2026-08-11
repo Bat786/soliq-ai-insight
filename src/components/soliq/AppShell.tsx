@@ -314,24 +314,27 @@ export function AppShell({ children }: { children: ReactNode }) {
       </div>
 
       <nav className="fixed inset-x-0 bottom-0 z-40 glass lg:hidden">
-        <div className="scroll-none flex items-center justify-between gap-1 overflow-x-auto px-2 py-2">
+        <div className="scroll-none flex items-stretch gap-1 overflow-x-auto px-2 py-2">
           {nav.map(({ to, label, icon: Icon }) => {
             const active = to === "/" ? pathname === "/" : pathname.startsWith(to);
+            const short =
+              label === "AI Assistant" ? "AI" : label === "Whale Flow" ? "Whales" : label.split(" ")[0];
             return (
               <Link
                 key={to}
                 to={to}
-                className={`flex min-w-14 flex-col items-center gap-1 rounded-lg px-2 py-1.5 text-[10px] ${
+                className={`flex w-16 shrink-0 flex-col items-center justify-start gap-1 rounded-lg px-1 py-1.5 text-center text-[10px] leading-tight whitespace-nowrap ${
                   active ? "text-primary" : "text-muted-foreground"
                 }`}
               >
                 <Icon className="size-5" />
-                {label === "AI Assistant" ? "AI" : label}
+                {short}
               </Link>
             );
           })}
         </div>
       </nav>
+
     </div>
   );
 }
