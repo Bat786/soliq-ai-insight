@@ -51,15 +51,24 @@ type WalletWindow = Window & {
   phantom?: { solana?: SolanaProvider };
   solflare?: SolanaProvider;
   backpack?: SolanaProvider;
-  ethereum?: EvmProvider;
+  xnft?: { solana?: SolanaProvider };
+  solana?: SolanaProvider & { isSolflare?: boolean; isBackpack?: boolean };
+  ethereum?: EvmProvider & { providers?: EvmProvider[] };
 };
 
+/** Resolve the injected provider for a wallet, tolerating every known injection shape. */
 function injected(id: WalletProviderId): SolanaProvider | EvmProvider | undefined {
   if (typeof window === "undefined") return undefined;
   const w = window as WalletWindow;
-  if (id === "phantom") return w.phantom?.solana;
-  if (id === "solflare") return w.solflare;
-  if (id === "backpack") return w.backpack;
+  if (id === "phantom") return w.phantom?.solana ?? (w.solana?.isPhantom ? w.solana : undefined);
+  if (id === "solflare") return w.solflare ?? (w.solana?.isSolflare ? w.solana : undefined);
+  if (id === "backpack") return w.backpack ?? w.xnft?.solana ?? (w.solana?.isBackpack ? w.solana : undefined);
+  if (id === "metamask") {
+    const eth = w.ethereum;
+    if (!eth) return undefined;
+    const multi = eth.providers?.find((p) => p.isMetaMask);
+    return multi ?? eth;
+  }
   return w.ethereum;
 }
 
@@ -150,6 +159,7 @@ export function useWallets() {
 
   const connect = useMutation({
     mutationFn: async (meta: WalletProviderMeta) => {
+      if (!isSignedIn) throw new Error("signed-out");
       const address = await connectProvider(meta.id);
       return runLink({ data: { chain: meta.chain, provider: meta.name, address, label: meta.name } });
     },
@@ -158,9 +168,20 @@ export function useWallets() {
       toast.success(`${row.provider} linked`, { description: `${row.address.slice(0, 6)}…${row.address.slice(-4)}` });
     },
     onError: (error) => {
-      const missing = error instanceof Error && error.message === "wallet-missing";
-      toast.error(missing ? "Wallet extension not detected" : "Could not link that wallet", {
-        description: missing ? "Install the extension, then reload and try again." : undefined,
+      const code = error instanceof Error ? error.message : "";
+      if (code === "signed-out") {
+        toast.error("Sign in first", { description: "Wallets are linked to your SOLIQ account." });
+        return;
+      }
+      if (code === "wallet-missing") {
+        toast.error("Wallet extension not detected", {
+          description: "Install the extension, then reload and try again.",
+        });
+        return;
+      }
+      const rejected = /reject|denied|4001|closed/i.test(code);
+      toast.error(rejected ? "Connection cancelled in your wallet" : "Could not link that wallet", {
+        description: rejected ? undefined : code.slice(0, 140) || undefined,
       });
     },
   });
@@ -185,6 +206,7 @@ export function useWallets() {
       const value = address.trim();
       const isEvm = /^0x[a-fA-F0-9]{40}$/.test(value);
       const isSol = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(value);
+      if (!isSignedIn) throw new Error("signed-out");
       if (!isEvm && !isSol) throw new Error("bad-address");
       return runLink({
         data: {
@@ -199,12 +221,14 @@ export function useWallets() {
       invalidate();
       toast.success("Address added to your watch list");
     },
-    onError: (error) =>
+    onError: (error) => {
+      const code = error instanceof Error ? error.message : "";
       toast.error(
-        error instanceof Error && error.message === "bad-address"
-          ? "That doesn't look like a Solana or EVM address"
-          : "Could not track that address",
-      ),
+        code === "bad-address" ? "That doesn't look like a Solana or EVM address"
+        : code === "signed-out" ? "Sign in first to track addresses"
+        : "Could not track that address",
+      );
+    },
   });
 
   const balanceFor = (address: string) => balances.data?.find((b) => b.address === address);
