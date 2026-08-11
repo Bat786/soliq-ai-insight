@@ -332,13 +332,62 @@ async function mapLimited<T, R>(items: T[], limit: number, fn: (item: T) => Prom
   return out;
 }
 
+const SPARK = "https://query1.finance.yahoo.com/v8/finance/spark";
+
+type SparkResponse = Record<string, { timestamp?: number[]; close?: (number | null)[] } | undefined>;
+
+/**
+ * Batched board feed: one upstream call covers up to 15 symbols, which keeps us
+ * far below the burst limits that made per-symbol chart calls return 429.
+ * Close-only series is enough for board scoring; the detail view still pulls
+ * true OHLCV for the selected instrument.
+ */
+async function loadSparkBars(symbols: string[]): Promise<Map<string, Bar[]>> {
+  const out = new Map<string, Bar[]>();
+  const chunks: string[][] = [];
+  for (let i = 0; i < symbols.length; i += 15) chunks.push(symbols.slice(i, i + 15));
+
+  await Promise.all(
+    chunks.map(async (chunk) => {
+      const key = `spark:${chunk.join(",")}`;
+      const hit = cache.get(key);
+      const fresh = hit && Date.now() - hit.at < 60_000;
+      const url = `${SPARK}?symbols=${chunk.map(encodeURIComponent).join(",")}&interval=5m&range=5d`;
+      let json: SparkResponse | null = null;
+      if (!fresh) {
+        json = (await fetchChart(url).catch(() => null)) as unknown as SparkResponse | null;
+      }
+      for (const symbol of chunk) {
+        const cached = cache.get(`spark:one:${symbol}`);
+        const series = json?.[symbol];
+        const ts = series?.timestamp ?? [];
+        const closes = series?.close ?? [];
+        const bars: Bar[] = [];
+        for (let i = 0; i < ts.length; i++) {
+          const close = num(closes[i]);
+          if (!close) continue;
+          const prev = bars[bars.length - 1]?.close ?? close;
+          bars.push({ t: (ts[i] as number) * 1000, open: prev, high: Math.max(prev, close), low: Math.min(prev, close), close, volume: 0 });
+        }
+        if (bars.length > 1) {
+          const trimmed = bars.slice(-600);
+          cache.set(`spark:one:${symbol}`, { at: Date.now(), value: trimmed });
+          out.set(symbol, trimmed);
+        } else if (cached) {
+          out.set(symbol, cached.value);
+        }
+      }
+      if (json) cache.set(key, { at: Date.now(), value: [] });
+    }),
+  );
+  return out;
+}
+
 /** Board for one desk (or every desk when `desk` is omitted). */
 export async function loadTapeBoard(desk?: DeskId): Promise<MarketBoard> {
   const list = desk ? instrumentsByDesk(desk) : instruments;
-  const rows = await mapLimited(list, 4, async (inst) => {
-    const bars = await loadBars(inst.symbol).catch(() => [] as Bar[]);
-    return toRow(inst, bars);
-  });
+  const series = await loadSparkBars(list.map((i) => i.symbol)).catch(() => new Map<string, Bar[]>());
+  const rows = list.map((inst) => toRow(inst, series.get(inst.symbol) ?? []));
   return {
     rows,
     updatedAt: Date.now(),
