@@ -38,6 +38,42 @@ export type Database = {
         }
         Relationships: []
       }
+      linked_wallets: {
+        Row: {
+          address: string
+          chain: string
+          created_at: string
+          id: string
+          is_primary: boolean
+          label: string | null
+          provider: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address: string
+          chain: string
+          created_at?: string
+          id?: string
+          is_primary?: boolean
+          label?: string | null
+          provider: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          address?: string
+          chain?: string
+          created_at?: string
+          id?: string
+          is_primary?: boolean
+          label?: string | null
+          provider?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           alert_id: string | null
