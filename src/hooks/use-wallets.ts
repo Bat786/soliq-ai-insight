@@ -70,6 +70,7 @@ export function useDetectedWallets() {
     solflare: false,
     backpack: false,
     metamask: false,
+    walletconnect: true,
   });
 
   useEffect(() => {
@@ -79,6 +80,7 @@ export function useDetectedWallets() {
         solflare: !!injected("solflare"),
         backpack: !!injected("backpack"),
         metamask: !!injected("metamask"),
+        walletconnect: true,
       });
     scan();
     const id = setTimeout(scan, 800);
@@ -88,7 +90,29 @@ export function useDetectedWallets() {
   return available;
 }
 
+/** WalletConnect (Reown) session — works with any mobile or desktop EVM wallet. */
+async function connectWalletConnect(): Promise<string> {
+  const { EthereumProvider } = await import("@walletconnect/ethereum-provider");
+  const provider = await EthereumProvider.init({
+    projectId: WALLETCONNECT_PROJECT_ID,
+    chains: [1],
+    optionalChains: [8453, 42161, 137, 10],
+    showQrModal: true,
+    metadata: {
+      name: "SOLIQ",
+      description: "SOLIQ — powered by AETHRON, Solana Blockchain Intelligence Engine",
+      url: typeof window === "undefined" ? "https://soliq.app" : window.location.origin,
+      icons: [`${typeof window === "undefined" ? "" : window.location.origin}/favicon.ico`],
+    },
+  });
+  await provider.connect();
+  const address = provider.accounts?.[0];
+  if (!address) throw new Error("No account returned");
+  return address;
+}
+
 async function connectProvider(id: WalletProviderId): Promise<string> {
+  if (id === "walletconnect") return connectWalletConnect();
   const provider = injected(id);
   if (!provider) throw new Error("wallet-missing");
   if (id === "metamask") {
@@ -100,6 +124,7 @@ async function connectProvider(id: WalletProviderId): Promise<string> {
   const res = await (provider as SolanaProvider).connect();
   return res.publicKey.toString();
 }
+
 
 export function useWallets() {
   const { isSignedIn } = useSession();
