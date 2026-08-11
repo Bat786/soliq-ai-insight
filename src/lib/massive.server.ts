@@ -216,11 +216,13 @@ async function groupedDay(assetClass: AssetClass, dayOffset: number): Promise<Ma
 export async function massiveBoardSeries(
   assetClass: AssetClass,
   symbols: string[],
-  days = 6,
+  days = 22,
 ): Promise<Map<string, Bar[]>> {
   const series = new Map<string, Bar[]>();
   const wanted = new Map(symbols.map((s) => [massiveTicker(assetClass, s), s]));
-  for (let offset = days; offset >= 0; offset--) {
+  // Newest first: today's price matters most, and older sessions fill in on
+  // later polls as the request budget allows (closed days cache for hours).
+  for (let offset = 0; offset <= days; offset++) {
     const day = await groupedDay(assetClass, offset).catch(() => new Map<string, Bar>());
     if (day.size === 0) continue;
     for (const [ticker, symbol] of wanted) {
