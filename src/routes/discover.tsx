@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Compass, GraduationCap, Rocket, Sparkles, TrendingUp } from "lucide-react";
 
+import { WhaleStrip } from "@/components/soliq/WhaleSignal";
 import { AppShell } from "@/components/soliq/AppShell";
 import { AssetRow, ScoreRing, SectionTitle } from "@/components/soliq/primitives";
 import { Button } from "@/components/ui/button";
@@ -25,6 +26,7 @@ export const Route = createFileRoute("/discover")({
 function Discover() {
   return (
     <AppShell>
+      <div className="mb-4"><WhaleStrip /></div>
       <h1 className="flex items-center gap-2 text-xl font-bold lg:text-2xl">
         <Compass className="size-5 text-primary" /> Discover
       </h1>

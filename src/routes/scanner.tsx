@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ChevronDown, Loader2, Radar, RotateCcw } from "lucide-react";
 import { useMemo, useState } from "react";
 
+import { WhaleStrip } from "@/components/soliq/WhaleSignal";
 import { AppShell } from "@/components/soliq/AppShell";
 import { CommandBar } from "@/components/soliq/CommandBar";
 import { Delta, RiskBar, ScoreRing, Sparkline } from "@/components/soliq/primitives";
@@ -207,6 +208,7 @@ function Scanner() {
 
   return (
     <AppShell>
+      <div className="mb-4"><WhaleStrip /></div>
       <div className="space-y-4">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
