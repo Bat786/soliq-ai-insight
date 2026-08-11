@@ -1,16 +1,20 @@
 import { Link } from "@tanstack/react-router";
-import { Copy, ExternalLink, Link2Off, Star, Wallet } from "lucide-react";
+import { Copy, ExternalLink, Eye, Link2Off, Star, Wallet } from "lucide-react";
+import { useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useDetectedWallets, useWallets, walletProviders } from "@/hooks/use-wallets";
 
 const short = (a: string) => `${a.slice(0, 5)}…${a.slice(-4)}`;
 const usd = (n: number) => `$${n.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
 
 export function WalletTerminal() {
-  const { isSignedIn, wallets, balances, balanceFor, totalUsd, connect, remove, makePrimary } = useWallets();
+  const { isSignedIn, wallets, balances, balanceFor, totalUsd, connect, watch, remove, makePrimary } = useWallets();
   const detected = useDetectedWallets();
+  const [watchAddress, setWatchAddress] = useState("");
+
 
   if (!isSignedIn) {
     return (
