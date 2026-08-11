@@ -5,8 +5,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 const steps = [
   "Booting SOLIQ · AETHRON engine",
-  "Syncing on-chain liquidity",
-  "Streaming live market data",
+  "Syncing Solana on-chain liquidity",
+  "Streaming crypto · stocks · futures tape",
   "Calibrating AI conviction models",
 ];
 
@@ -26,18 +26,24 @@ export function Splash() {
   return (
     <div className="hero-bg fixed inset-0 z-100 grid place-items-center bg-background px-6">
       <div className="w-full max-w-sm text-center">
-        <div className="mx-auto grid size-16 place-items-center rounded-2xl bg-primary/15 glow-ring">
-          <span className="font-display text-2xl font-bold text-gradient">SQ</span>
+        <div className="relative mx-auto grid size-20 place-items-center">
+          <span className="absolute inset-0 animate-[spin_5s_linear_infinite] rounded-full border border-primary/25 border-t-primary/80" />
+          <span className="absolute inset-2 rounded-full bg-primary/10 blur-md" />
+          <span className="relative grid size-14 place-items-center rounded-2xl bg-primary/15 glow-ring">
+            <span className="font-display text-xl font-bold text-gradient">SQ</span>
+          </span>
         </div>
-        <h1 className="mt-5 font-display text-2xl font-bold">
+        <h1 className="mt-5 font-display text-2xl font-bold tracking-tight">
           SOL<span className="text-gradient">IQ</span>
         </h1>
-        <p className="mt-1 text-xs text-muted-foreground">
-          Powered by AETHRON · Solana Blockchain Intelligence Engine
+        <p className="mt-1 text-[10px] font-medium tracking-[0.22em] text-muted-foreground uppercase">
+          Powered by AETHRON
         </p>
+        <p className="mt-1 text-xs text-muted-foreground">Solana Blockchain Intelligence Engine</p>
 
         <Progress value={pct} className="mt-6 h-1.5" />
         <p className="num mt-2 text-[11px] text-muted-foreground">{steps[step]}…</p>
+
 
         <div className="mt-6 space-y-2">
           <Skeleton className="h-8 w-full" />
