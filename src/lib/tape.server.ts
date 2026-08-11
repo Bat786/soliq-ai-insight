@@ -504,6 +504,7 @@ export async function loadTapeBoard(desk?: DeskId): Promise<MarketBoard> {
         cls,
         group.map((i) => i.key),
       ).catch(() => new Map<string, Bar[]>());
+      console.log(`[board] ${cls} massive bars`, [...rows].slice(0,3).map(([k,v])=>`${k}:${v.length}`).join(" "));
       for (const inst of group) {
         const bars = rows.get(inst.key);
         if (bars && bars.length > 1) series.set(inst.symbol, bars);
