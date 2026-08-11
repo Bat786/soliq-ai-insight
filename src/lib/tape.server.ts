@@ -319,18 +319,6 @@ function toRow(inst: Instrument, base: Bar[]): MarketRow {
   };
 }
 
-async function mapLimited<T, R>(items: T[], limit: number, fn: (item: T) => Promise<R>): Promise<R[]> {
-  const out: R[] = new Array(items.length);
-  let cursor = 0;
-  const workers = Array.from({ length: Math.min(limit, items.length) }, async () => {
-    while (cursor < items.length) {
-      const index = cursor++;
-      out[index] = await fn(items[index] as T);
-    }
-  });
-  await Promise.all(workers);
-  return out;
-}
 
 const SPARK = "https://query1.finance.yahoo.com/v8/finance/spark";
 
