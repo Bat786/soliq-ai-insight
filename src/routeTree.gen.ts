@@ -15,6 +15,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as BacktestRouteImport } from './routes/backtest'
 import { Route as CommunityRouteImport } from './routes/community'
 import { Route as DiscoverRouteImport } from './routes/discover'
+import { Route as FuturesRouteImport } from './routes/futures'
 import { Route as ListsRouteImport } from './routes/lists'
 import { Route as PortfolioRouteImport } from './routes/portfolio'
 import { Route as PricingRouteImport } from './routes/pricing'
@@ -50,6 +51,11 @@ const CommunityRoute = CommunityRouteImport.update({
 const DiscoverRoute = DiscoverRouteImport.update({
   id: '/discover',
   path: '/discover',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FuturesRoute = FuturesRouteImport.update({
+  id: '/futures',
+  path: '/futures',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ListsRoute = ListsRouteImport.update({
@@ -90,6 +96,7 @@ export interface FileRoutesByFullPath {
   '/backtest': typeof BacktestRoute
   '/community': typeof CommunityRoute
   '/discover': typeof DiscoverRoute
+  '/futures': typeof FuturesRoute
   '/lists': typeof ListsRoute
   '/portfolio': typeof PortfolioRoute
   '/pricing': typeof PricingRoute
@@ -104,6 +111,7 @@ export interface FileRoutesByTo {
   '/backtest': typeof BacktestRoute
   '/community': typeof CommunityRoute
   '/discover': typeof DiscoverRoute
+  '/futures': typeof FuturesRoute
   '/lists': typeof ListsRoute
   '/portfolio': typeof PortfolioRoute
   '/pricing': typeof PricingRoute
@@ -119,6 +127,7 @@ export interface FileRoutesById {
   '/backtest': typeof BacktestRoute
   '/community': typeof CommunityRoute
   '/discover': typeof DiscoverRoute
+  '/futures': typeof FuturesRoute
   '/lists': typeof ListsRoute
   '/portfolio': typeof PortfolioRoute
   '/pricing': typeof PricingRoute
@@ -135,6 +144,7 @@ export interface FileRouteTypes {
     | '/backtest'
     | '/community'
     | '/discover'
+    | '/futures'
     | '/lists'
     | '/portfolio'
     | '/pricing'
@@ -149,6 +159,7 @@ export interface FileRouteTypes {
     | '/backtest'
     | '/community'
     | '/discover'
+    | '/futures'
     | '/lists'
     | '/portfolio'
     | '/pricing'
@@ -163,6 +174,7 @@ export interface FileRouteTypes {
     | '/backtest'
     | '/community'
     | '/discover'
+    | '/futures'
     | '/lists'
     | '/portfolio'
     | '/pricing'
@@ -178,6 +190,7 @@ export interface RootRouteChildren {
   BacktestRoute: typeof BacktestRoute
   CommunityRoute: typeof CommunityRoute
   DiscoverRoute: typeof DiscoverRoute
+  FuturesRoute: typeof FuturesRoute
   ListsRoute: typeof ListsRoute
   PortfolioRoute: typeof PortfolioRoute
   PricingRoute: typeof PricingRoute
@@ -228,6 +241,13 @@ declare module '@tanstack/react-router' {
       path: '/discover'
       fullPath: '/discover'
       preLoaderRoute: typeof DiscoverRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/futures': {
+      id: '/futures'
+      path: '/futures'
+      fullPath: '/futures'
+      preLoaderRoute: typeof FuturesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/lists': {
@@ -282,6 +302,7 @@ const rootRouteChildren: RootRouteChildren = {
   BacktestRoute: BacktestRoute,
   CommunityRoute: CommunityRoute,
   DiscoverRoute: DiscoverRoute,
+  FuturesRoute: FuturesRoute,
   ListsRoute: ListsRoute,
   PortfolioRoute: PortfolioRoute,
   PricingRoute: PricingRoute,
