@@ -80,17 +80,22 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   head: () => ({
     meta: [
       { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "SOLIQ — AI Market Intelligence & Investing Platform" },
+      { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
+      { title: "AETHRON — AI Market Intelligence Terminal" },
       {
         name: "description",
-        content: "AI-powered market intelligence: scan crypto markets, track portfolios and get daily AI briefings.",
+        content:
+          "AETHRON is an AI market intelligence terminal: live crypto, futures, FX and equity desks with whale flow, real-time alerts and AI research.",
       },
-      { name: "author", content: "SOLIQ" },
-      { property: "og:title", content: "SOLIQ — AI Market Intelligence & Investing Platform" },
+      { name: "author", content: "AETHRON" },
+      { name: "theme-color", content: "#070A12" },
+      { name: "apple-mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
+      { name: "apple-mobile-web-app-title", content: "AETHRON" },
+      { property: "og:title", content: "AETHRON — AI Market Intelligence Terminal" },
       {
         property: "og:description",
-        content: "Scan markets, track portfolios and get AI-powered insights in one premium terminal.",
+        content: "Live multi-asset desks, whale flow, real-time alerts and AI research in one premium terminal.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -106,9 +111,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         rel: "stylesheet",
         href: "https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=DM+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap",
       },
-      { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      { rel: "icon", type: "image/png", href: "/favicon.png" },
+      { rel: "apple-touch-icon", href: "/icon-192.png" },
+      { rel: "manifest", href: "/manifest.webmanifest" },
     ],
   }),
+
 
   shellComponent: RootShell,
   component: RootComponent,
