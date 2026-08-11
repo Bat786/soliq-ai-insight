@@ -2,6 +2,7 @@ import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   BadgeCheck,
+  BarChart3,
   Bot,
   Activity,
   Coins,
@@ -12,13 +13,15 @@ import {
   ListChecks,
   LogOut,
   Radar,
+  Settings,
   Sparkles,
+  UserRound,
   Users,
   Waves,
   Wallet,
   Zap,
 } from "lucide-react";
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 
 import { AppearanceMenu } from "@/components/soliq/AppearanceMenu";
 import { NotificationBell } from "@/components/soliq/NotificationBell";
@@ -44,11 +47,13 @@ const nav = [
   { to: "/portfolio", label: "Portfolio", icon: Wallet },
   { to: "/discover", label: "Discover", icon: Compass },
   { to: "/whales", label: "Whale Flow", icon: Waves },
+  { to: "/stocks", label: "Stocks", icon: BarChart3 },
   { to: "/futures", label: "Futures", icon: Activity },
   { to: "/crypto", label: "Crypto Desk", icon: Coins },
   { to: "/community", label: "Community", icon: Users },
   { to: "/backtest", label: "Backtest", icon: FlaskConical },
   { to: "/assistant", label: "AI Assistant", icon: Bot },
+  { to: "/settings", label: "Settings", icon: Settings },
 ] as const;
 
 export function Logo({ compact = false }: { compact?: boolean }) {
@@ -98,10 +103,32 @@ function Ticker() {
   );
 }
 
+function useAvatarUrl(path: string | null | undefined) {
+  const [url, setUrl] = useState<string | null>(null);
+  useEffect(() => {
+    let live = true;
+    if (!path) {
+      setUrl(null);
+      return;
+    }
+    supabase.storage
+      .from("avatars")
+      .createSignedUrl(path, 60 * 60 * 6)
+      .then(({ data }) => {
+        if (live) setUrl(data?.signedUrl ?? null);
+      });
+    return () => {
+      live = false;
+    };
+  }, [path]);
+  return url;
+}
+
 function AccountMenu() {
   const { data: profile, tier, isSignedIn } = useProfile();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const avatar = useAvatarUrl(profile?.avatar_url);
 
   if (!isSignedIn) {
     return (
@@ -124,9 +151,12 @@ function AccountMenu() {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="subtle" size="sm" className="gap-2">
-          <span className="grid size-5 place-items-center rounded-full bg-primary/20 text-[9px] font-semibold text-primary">
-            {name.slice(0, 2).toUpperCase()}
-          </span>
+          {avatar ?
+            <img src={avatar} alt={`${name} avatar`} className="size-5 rounded-full object-cover" />
+          : <span className="grid size-5 place-items-center rounded-full bg-primary/20 text-[9px] font-semibold text-primary">
+              {name.slice(0, 2).toUpperCase()}
+            </span>
+          }
           <span className="hidden max-w-24 truncate sm:inline">{name}</span>
           <MemberBadge tier={tier} />
         </Button>
@@ -136,6 +166,11 @@ function AccountMenu() {
           {planByTier(tier).name} plan
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
+        <DropdownMenuItem asChild>
+          <Link to="/settings">
+            <UserRound className="size-4" /> Profile & settings
+          </Link>
+        </DropdownMenuItem>
         <DropdownMenuItem asChild>
           <Link to="/pricing">
             <Sparkles className="size-4" /> {isPaid(tier) ? "Manage membership" : "Upgrade to Premium"}

@@ -78,6 +78,8 @@ export type Database = {
       }
       profiles: {
         Row: {
+          avatar_url: string | null
+          bio: string | null
           created_at: string
           display_name: string
           handle: string | null
@@ -85,9 +87,14 @@ export type Database = {
           member_since: string | null
           membership_tier: Database["public"]["Enums"]["membership_tier"]
           renews_at: string | null
+          telegram_handle: string | null
+          timezone: string | null
           updated_at: string
+          x_handle: string | null
         }
         Insert: {
+          avatar_url?: string | null
+          bio?: string | null
           created_at?: string
           display_name?: string
           handle?: string | null
@@ -95,9 +102,14 @@ export type Database = {
           member_since?: string | null
           membership_tier?: Database["public"]["Enums"]["membership_tier"]
           renews_at?: string | null
+          telegram_handle?: string | null
+          timezone?: string | null
           updated_at?: string
+          x_handle?: string | null
         }
         Update: {
+          avatar_url?: string | null
+          bio?: string | null
           created_at?: string
           display_name?: string
           handle?: string | null
@@ -105,7 +117,10 @@ export type Database = {
           member_since?: string | null
           membership_tier?: Database["public"]["Enums"]["membership_tier"]
           renews_at?: string | null
+          telegram_handle?: string | null
+          timezone?: string | null
           updated_at?: string
+          x_handle?: string | null
         }
         Relationships: []
       }

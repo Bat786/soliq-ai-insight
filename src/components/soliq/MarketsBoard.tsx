@@ -1,12 +1,13 @@
 import { useMemo, useState } from "react";
-import { Gauge, Globe, Loader2, RadioTower } from "lucide-react";
+import { Gauge, Globe, Loader2, RadioTower, Search } from "lucide-react";
 
 import { BullBearGauge } from "@/components/soliq/BullBearGauge";
 import CandleChart, { type Overlays, type Point, type VolPoint } from "@/components/soliq/CandleChart";
 import { Delta, SectionTitle, Sparkline } from "@/components/soliq/primitives";
-import { useMarketBoard, useMarketDetail } from "@/hooks/use-polygon";
+import { Input } from "@/components/ui/input";
+import { useTapeBoard, useTapeDetail, useTapeSearch } from "@/hooks/use-tape";
 import type { Bar, Timeframe } from "@/lib/futures.server";
-import type { Indicators, MarketRow } from "@/lib/polygon.server";
+import type { DeskId, Indicators, MarketRow } from "@/lib/tape.server";
 
 const overlays: Overlays = { ma20: true, ma50: true, vwap: true, rsi: true, volume: true, signals: true };
 
@@ -108,53 +109,104 @@ function MarketCard({ row, active, onSelect, tf }: { row: MarketRow; active: boo
   );
 }
 
-/** 24/7 forex + crypto desk powered by the Polygon tape. */
-export function MarketsBoard({ tf, onTf }: { tf: Timeframe; onTf: (t: Timeframe) => void }) {
-  const { data, isLoading, isError, error } = useMarketBoard();
-  const [selected, setSelected] = useState("EURUSD");
-  const detail = useMarketDetail(selected, tf);
+export type MarketsBoardProps = {
+  tf: Timeframe;
+  onTf: (t: Timeframe) => void;
+  /** Which desks to render. Defaults to the 24/7 forex + crypto grid. */
+  decks?: DeskId[];
+  defaultKey?: string;
+  searchable?: boolean;
+  headline?: string;
+};
+
+/** Reusable multi-desk terminal: instrument grid + chart + indicator stack. */
+export function MarketsBoard({
+  tf,
+  onTf,
+  decks = ["fx", "crypto"],
+  defaultKey,
+  searchable = false,
+  headline,
+}: MarketsBoardProps) {
+  const [term, setTerm] = useState("");
+  const search = useTapeSearch(searchable ? term : "");
+
+  const board = useTapeBoard(decks.length === 1 ? decks[0] : undefined);
+  const rows = useMemo(
+    () => (board.data?.rows ?? []).filter((r) => decks.includes(r.desk)),
+    [board.data, decks.join()],
+  );
+  const isLoading = board.isLoading;
+  const pending = rows.filter((r) => r.status === "syncing").length;
+
+  const [selected, setSelected] = useState(defaultKey ?? "");
+  const active = selected || rows[0]?.key || defaultKey || "";
+  const detail = useTapeDetail(active, tf);
   const chart = useMemo(() => barsToPoints(detail.data?.bars ?? []), [detail.data?.bars]);
 
   const groups = useMemo(() => {
     const map = new Map<string, MarketRow[]>();
-    for (const r of data?.rows ?? []) {
+    for (const r of rows) {
       const list = map.get(r.group) ?? [];
       list.push(r);
       map.set(r.group, list);
     }
     return [...map.entries()];
-  }, [data]);
+  }, [rows]);
 
   return (
     <div className="space-y-4">
       <div className="panel flex flex-wrap items-center gap-3 px-3 py-2 text-[11px]">
         <RadioTower className="size-3.5 text-primary" />
-        <span className="text-muted-foreground">24/7 tape</span>
-        <span className="text-foreground">Forex majors · crosses · crypto</span>
-        {data ? (
+        <span className="text-muted-foreground">Live tape</span>
+        <span className="text-foreground">{headline ?? "Forex majors · crosses · crypto"}</span>
+        {rows.length > 0 && (
           <span className="num ml-auto text-muted-foreground">
-            {data.rows.length - data.pending}/{data.rows.length} instruments live
-            {data.pending > 0 ? " · warming feed" : ""}
+            {rows.length - pending}/{rows.length} instruments live
           </span>
-        ) : null}
+        )}
       </div>
 
-      {isLoading && (
-        <div className="flex items-center justify-center gap-2 py-16 text-sm text-muted-foreground">
-          <Loader2 className="size-4 animate-spin" /> Loading 24/7 forex &amp; crypto tape…
+      {searchable && (
+        <div className="panel p-3">
+          <div className="flex items-center gap-2">
+            <Search className="size-4 text-muted-foreground" />
+            <Input
+              value={term}
+              onChange={(e) => setTerm(e.target.value)}
+              placeholder="Search any symbol — NVDA, ES=F, EURUSD=X, BTC-USD…"
+              className="h-9"
+            />
+          </div>
+          {search.data && search.data.length > 0 && (
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {search.data.slice(0, 10).map((h) => (
+                <button
+                  key={h.symbol}
+                  type="button"
+                  onClick={() => setSelected(h.symbol)}
+                  className="num rounded-md border border-border px-2 py-1 text-[10px] text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground"
+                >
+                  {h.symbol} · {h.name.slice(0, 22)}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       )}
-      {isError && <p className="py-16 text-center text-sm text-bear">{(error as Error)?.message ?? "Feed unavailable"}</p>}
 
-      {groups.map(([group, rows]) => (
+      {isLoading && rows.length === 0 && (
+        <div className="flex items-center justify-center gap-2 py-16 text-sm text-muted-foreground">
+          <Loader2 className="size-4 animate-spin" /> Loading live tape…
+        </div>
+      )}
+
+      {groups.map(([group, list]) => (
         <div key={group} className="space-y-2">
-          <SectionTitle
-            title={group}
-            subtitle={group.startsWith("Crypto") ? "Continuous crypto pairs, aggregated tape" : "Spot FX aggregates, 24/5 continuous"}
-          />
+          <SectionTitle title={group} subtitle={`${list.length} instruments · multi-timeframe scoring`} />
           <div className="grid gap-3 lg:grid-cols-2 xl:grid-cols-3">
-            {rows.map((r) => (
-              <MarketCard key={r.key} row={r} tf={tf} active={selected === r.key} onSelect={() => setSelected(r.key)} />
+            {list.map((r) => (
+              <MarketCard key={r.key} row={r} tf={tf} active={active === r.key} onSelect={() => setSelected(r.key)} />
             ))}
           </div>
         </div>
@@ -163,8 +215,8 @@ export function MarketsBoard({ tf, onTf }: { tf: Timeframe; onTf: (t: Timeframe)
       <div className="panel p-4">
         <div className="flex flex-wrap items-end justify-between gap-2">
           <SectionTitle
-            title={`${detail.data?.code ?? selected} · ${tf} chart`}
-            subtitle={detail.data ? `${detail.data.name} · quoted in ${detail.data.quote}` : "Polygon aggregate tape"}
+            title={`${detail.data?.code ?? active} · ${tf} chart`}
+            subtitle={detail.data ? `${detail.data.name} · quoted in ${detail.data.quote}` : "Live aggregate tape"}
           />
           {detail.data && (
             <div className="flex items-center gap-3">
@@ -179,11 +231,11 @@ export function MarketsBoard({ tf, onTf }: { tf: Timeframe; onTf: (t: Timeframe)
 
         {detail.isLoading && (
           <div className="flex items-center justify-center gap-2 py-16 text-sm text-muted-foreground">
-            <Loader2 className="size-4 animate-spin" /> Loading {selected} bars…
+            <Loader2 className="size-4 animate-spin" /> Loading {active} bars…
           </div>
         )}
         {detail.isError && (
-          <p className="py-16 text-center text-sm text-bear">{(detail.error as Error)?.message ?? "No data for that pair"}</p>
+          <p className="py-16 text-center text-sm text-bear">{(detail.error as Error)?.message ?? "No data for that symbol"}</p>
         )}
 
         {detail.data && chart.points.length > 4 && (
@@ -226,8 +278,8 @@ export function MarketsBoard({ tf, onTf }: { tf: Timeframe; onTf: (t: Timeframe)
 
       <p className="flex items-start gap-1.5 text-[11px] text-muted-foreground">
         <Globe className="mt-0.5 size-3 shrink-0" />
-        Forex and crypto pairs stream from Polygon aggregates on a 24/7 grid with RSI, MACD, VWAP, EMA and volume-weighted
-        signal scoring. Informational only — not financial advice.
+        Every desk streams from a continuous 5-minute aggregate tape with RSI, MACD, VWAP, EMA and volume-weighted
+        multi-timeframe scoring.
       </p>
     </div>
   );
