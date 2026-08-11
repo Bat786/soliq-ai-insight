@@ -287,7 +287,7 @@ function FuturesPage() {
           </>
         )}
 
-        <div className="panel p-4">
+        <div className={`panel p-4 ${tab === "fx" ? "hidden" : ""}`}>
           <div className="flex flex-wrap items-end justify-between gap-2">
             <SectionTitle
               title={`${detailSymbol} · ${tf} chart`}
