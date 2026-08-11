@@ -313,9 +313,28 @@ async function loadBars(symbol: string) {
   } satisfies Record<Timeframe, Bar[]>;
 }
 
+/** Fill any gaps in the quote snapshot from the intraday bar tape. */
+function fromBars(state: State, bars: Bar[]): State {
+  if (state.close > 0 || bars.length === 0) return state;
+  const last = bars.at(-1) as Bar;
+  const first = bars[0] as Bar;
+  const volume = bars.reduce((s, b) => s + b.volume, 0);
+  return {
+    close: last.close,
+    prevClose: first.open,
+    high: Math.max(...bars.map((b) => b.high)),
+    low: Math.min(...bars.map((b) => b.low)),
+    volume,
+    totalVolume: volume,
+    marketTime: state.marketTime === "closed" ? "tape" : state.marketTime,
+    tapeTime: last.t,
+  };
+}
+
 export async function loadContractQuote(contract: Contract): Promise<FuturesQuote> {
-  const state = await loadState(contract.proxy);
+  const rawState = await loadState(contract.proxy);
   const [options, bars] = await Promise.all([loadOptionTilt(contract.proxy), loadBars(contract.proxy)]);
+  const state = fromBars(rawState, bars["5m"]);
 
   const signals = timeframes.map((t) => tfSignal(t.id, bars[t.id], options.tilt));
   const spark = bars["5m"].slice(-60).map((b) => b.close);
@@ -337,6 +356,7 @@ export async function loadContractQuote(contract: Contract): Promise<FuturesQuot
     spark,
   };
 }
+
 
 export async function loadFuturesBoard(): Promise<FuturesBoard> {
   const quotes: FuturesQuote[] = [];
