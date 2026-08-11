@@ -3,6 +3,7 @@ import { Loader2, Waves } from "lucide-react";
 
 import { AppShell } from "@/components/soliq/AppShell";
 import { BullBearGauge } from "@/components/soliq/BullBearGauge";
+import { WhaleAlerts } from "@/components/soliq/WhaleAlerts";
 import { SectionTitle } from "@/components/soliq/primitives";
 import { fmtBig, TideSpark } from "@/components/soliq/WhaleSignal";
 import { useWhaleFeed } from "@/hooks/use-whales";
@@ -130,6 +131,8 @@ function WhalesPage() {
             </div>
           </div>
         </div>
+
+        <WhaleAlerts />
 
         <div className="grid gap-4 lg:grid-cols-2">
           <div className="panel p-4">
