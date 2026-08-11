@@ -134,10 +134,30 @@ async function connectWalletConnect(): Promise<string> {
   return address;
 }
 
+/** Mobile deep links that open this site inside the wallet's in-app browser. */
+const deepLinks: Partial<Record<WalletProviderId, (url: string) => string>> = {
+  phantom: (url) => `https://phantom.app/ul/browse/${encodeURIComponent(url)}?ref=${encodeURIComponent(url)}`,
+  solflare: (url) => `https://solflare.com/ul/v1/browse/${encodeURIComponent(url)}?ref=${encodeURIComponent(url)}`,
+  backpack: (url) => `https://backpack.app/ul/v1/browse/${encodeURIComponent(url)}`,
+  metamask: (url) => `https://metamask.app.link/dapp/${url.replace(/^https?:\/\//, "")}`,
+};
+
+function openInWalletApp(id: WalletProviderId) {
+  if (typeof window === "undefined") return false;
+  const mobile = /android|iphone|ipad|ipod/i.test(navigator.userAgent);
+  const build = deepLinks[id];
+  if (!mobile || !build) return false;
+  window.location.href = build(window.location.href);
+  return true;
+}
+
 async function connectProvider(id: WalletProviderId): Promise<string> {
   if (id === "walletconnect") return connectWalletConnect();
   const provider = injected(id);
-  if (!provider) throw new Error("wallet-missing");
+  if (!provider) {
+    if (openInWalletApp(id)) throw new Error("wallet-deeplink");
+    throw new Error("wallet-missing");
+  }
   if (id === "metamask") {
     const accounts = (await (provider as EvmProvider).request({ method: "eth_requestAccounts" })) as string[];
     const address = accounts?.[0];
@@ -147,6 +167,7 @@ async function connectProvider(id: WalletProviderId): Promise<string> {
   const res = await (provider as SolanaProvider).connect();
   return res.publicKey.toString();
 }
+
 
 
 export function useWallets() {
