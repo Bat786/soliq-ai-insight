@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 
 const deskIds = ["fx", "futures", "stocks", "crypto", "indices"] as const;
-const intervals = ["1m", "5m", "15m", "1h"] as const;
+const intervals = ["1m", "5m", "15m", "1h", "4h"] as const;
 
 export const getTapeBoard = createServerFn({ method: "GET" })
   .inputValidator((input: { desk?: (typeof deskIds)[number] | undefined } | undefined) => ({

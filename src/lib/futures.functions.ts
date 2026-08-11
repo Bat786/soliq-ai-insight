@@ -6,9 +6,9 @@ export const getFuturesBoard = createServerFn({ method: "GET" }).handler(async (
 });
 
 export const getTickerDetail = createServerFn({ method: "GET" })
-  .inputValidator((input: { symbol: string; interval: "1m" | "5m" | "15m" | "1h" }) => ({
+  .inputValidator((input: { symbol: string; interval: "1m" | "5m" | "15m" | "1h" | "4h" }) => ({
     symbol: String(input.symbol ?? "").slice(0, 12),
-    interval: (["1m", "5m", "15m", "1h"] as const).includes(input.interval) ? input.interval : "5m",
+    interval: (["1m", "5m", "15m", "1h", "4h"] as const).includes(input.interval) ? input.interval : "5m",
   }))
   .handler(async ({ data }) => {
     const { loadTickerDetail } = await import("@/lib/futures.server");

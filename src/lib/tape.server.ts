@@ -9,6 +9,13 @@
 
 import { resample, tfSignal, timeframes, type Bar, type TfSignal, type Timeframe } from "@/lib/futures.server";
 import { indicators, type Indicators } from "@/lib/indicators.server";
+import {
+  massiveBars,
+  massiveBoardSeries,
+  massiveDailyBars,
+  massiveSearch,
+  type AssetClass,
+} from "@/lib/massive.server";
 
 export type { Indicators, Bar, Timeframe, TfSignal };
 
@@ -287,14 +294,49 @@ function barsByTf(base: Bar[]): Record<Timeframe, Bar[]> {
     "5m": base,
     "15m": resample(base, 15 * 60_000),
     "1h": resample(base, 3_600_000),
+    "4h": resample(base, 4 * 3_600_000),
   };
 }
 
+/* ------------------------- Massive (primary provider) ------------------------ */
+
+/** Which Massive asset class a desk maps to (`null` = no Massive coverage). */
+function assetClassFor(inst: Instrument): AssetClass | null {
+  if (inst.desk === "stocks") return "stocks";
+  if (inst.desk === "crypto") return "crypto";
+  if (inst.desk === "fx") return inst.key.length === 6 ? "fx" : null;
+  if (inst.desk === "indices") return ["SPX", "NDX", "DJI", "RUT", "VIX"].includes(inst.key) ? "indices" : null;
+  return null; // futures resolve from the continuous tape
+}
+
+/**
+ * Terminal-grade bars for one instrument at one timeframe, straight from
+ * Massive when the plan covers it. Falls back to daily bars so the pane always
+ * has a real series rather than an empty chart.
+ */
+async function massiveTapeBars(inst: Instrument, tf: Timeframe): Promise<Bar[]> {
+  const assetClass = assetClassFor(inst);
+  if (!assetClass) return [];
+  const symbol = assetClass === "stocks" ? inst.key : inst.key;
+  const intraday = await massiveBars(assetClass, symbol, tf).catch(() => null);
+  if (intraday && intraday.length > 4) return intraday;
+  if (tf === "1h" || tf === "4h") {
+    const daily = await massiveDailyBars(assetClass, symbol).catch(() => null);
+    if (daily && daily.length > 4) return daily;
+  }
+  return [];
+}
+
+
 function toRow(inst: Instrument, base: Bar[]): MarketRow {
   const tf = barsByTf(base);
-  const session = base.slice(-288);
+  // Daily-granularity series (whole-market summaries) need a session window and
+  // a prev-close reference that differ from an intraday 5m tape.
+  const gap = base.length > 2 ? (base.at(-1)!.t - base.at(-2)!.t) : 0;
+  const daily = gap >= 12 * 3600_000;
+  const session = daily ? base.slice(-40) : base.slice(-288);
   const last = session.at(-1);
-  const first = session[0];
+  const first = daily ? { open: session.at(-2)?.close ?? last?.open ?? 0 } : session[0];
   const live = Boolean(last && first);
   return {
     key: inst.key,
@@ -308,9 +350,9 @@ function toRow(inst: Instrument, base: Bar[]): MarketRow {
     last: last?.close ?? 0,
     prevClose: first?.open ?? 0,
     changePct: last && first?.open ? ((last.close - first.open) / first.open) * 100 : 0,
-    high: live ? Math.max(...session.map((b) => b.high)) : 0,
-    low: live ? Math.min(...session.map((b) => b.low)) : 0,
-    volume: session.reduce((s, b) => s + b.volume, 0),
+    high: live ? (daily ? last!.high : Math.max(...session.map((b) => b.high))) : 0,
+    low: live ? (daily ? last!.low : Math.min(...session.map((b) => b.low))) : 0,
+    volume: daily ? (last?.volume ?? 0) : session.reduce((s, b) => s + b.volume, 0),
     spark: session.slice(-72).map((b) => b.close),
     signals: timeframes.map((t) => tfSignal(t.id, tf[t.id])),
     indicators: indicators(session),
@@ -446,17 +488,51 @@ async function fallbackBars(inst: Instrument): Promise<Bar[]> {
 /** Board for one desk (or every desk when `desk` is omitted). */
 export async function loadTapeBoard(desk?: DeskId): Promise<MarketBoard> {
   const list = desk ? instrumentsByDesk(desk) : instruments;
-  const series = await loadSparkBars(list.map((i) => i.symbol)).catch(() => new Map<string, Bar[]>());
+  const series = new Map<string, Bar[]>();
 
-  // Anything the primary feed dropped gets a keyless fallback before scoring.
+  // 1) Massive whole-market daily summaries: one request covers an entire asset
+  //    class, so every stock, crypto pair and FX cross prices on the first poll.
+  const byClass = new Map<AssetClass, Instrument[]>();
+  for (const inst of list) {
+    const cls = assetClassFor(inst);
+    if (!cls || cls === "indices") continue;
+    byClass.set(cls, [...(byClass.get(cls) ?? []), inst]);
+  }
+  await Promise.all(
+    [...byClass].map(async ([cls, group]) => {
+      const rows = await massiveBoardSeries(
+        cls,
+        group.map((i) => i.key),
+      ).catch(() => new Map<string, Bar[]>());
+      for (const inst of group) {
+        const bars = rows.get(inst.key);
+        if (bars && bars.length > 1) series.set(inst.symbol, bars);
+      }
+    }),
+  );
+
+  // 2) Continuous keyless tape for anything Massive doesn't cover (futures,
+  //    benchmarks) or hasn't answered for yet. Both fallback steps are time
+  //    boxed so a throttled public feed can never stall the whole board.
+  const cap = <T,>(p: Promise<T>, fallback: T, ms = 4_000): Promise<T> =>
+    Promise.race([p.catch(() => fallback), sleep(ms).then(() => fallback)]);
+
+  const missing = list.filter((inst) => (series.get(inst.symbol)?.length ?? 0) < 2);
+  if (missing.length > 0) {
+    const spark = await cap(loadSparkBars(missing.map((i) => i.symbol)), new Map<string, Bar[]>(), 5_000);
+    for (const [symbol, bars] of spark) if (bars.length > 1) series.set(symbol, bars);
+  }
+
+  // 3) Per-desk keyless fallback so a throttled feed never strands a row.
   await Promise.all(
     list
-      .filter((inst) => (series.get(inst.symbol)?.length ?? 0) < 5)
+      .filter((inst) => (series.get(inst.symbol)?.length ?? 0) < 2)
       .map(async (inst) => {
-        const bars = await fallbackBars(inst);
+        const bars = await cap(fallbackBars(inst), [] as Bar[]);
         if (bars.length > 1) series.set(inst.symbol, bars);
       }),
   );
+
 
   const rows = list.map((inst) => toRow(inst, series.get(inst.symbol) ?? []));
   return {
@@ -465,6 +541,7 @@ export async function loadTapeBoard(desk?: DeskId): Promise<MarketBoard> {
     pending: rows.filter((r) => r.status === "syncing").length,
   };
 }
+
 
 export async function loadTapeDetail(key: string, interval: Timeframe): Promise<MarketDetail> {
   const inst = findInstrument(key) ?? {
@@ -476,12 +553,20 @@ export async function loadTapeDetail(key: string, interval: Timeframe): Promise<
     symbol: key.toUpperCase(),
     quote: "USD",
   };
-  let base = await loadBars(inst.symbol);
+  // 1) Massive at the requested granularity (1m → 4h), 2) continuous tape,
+  // 3) keyless per-desk fallback. Whichever answers first wins.
+  const primary = await massiveTapeBars(inst, interval).catch(() => []);
+  if (primary.length > 4) {
+    const row = toRow(inst, primary);
+    return { ...row, bars: primary.slice(-400), interval };
+  }
+  let base = await loadBars(inst.symbol, { interval: interval === "1m" ? "1m" : "5m", range: interval === "1m" ? "1d" : "5d" });
   if (base.length < 5) base = await fallbackBars(inst);
   if (base.length < 5) throw new Error(`No tape available for “${inst.code}”`);
   const tf = barsByTf(base);
-  return { ...toRow(inst, base), bars: tf[interval].slice(-320), interval };
+  return { ...toRow(inst, base), bars: tf[interval].slice(-400), interval };
 }
+
 
 
 /* --------------------------------- search --------------------------------- */
@@ -491,18 +576,31 @@ export type SearchHit = { symbol: string; name: string; type: string; exchange: 
 export async function searchSymbols(q: string): Promise<SearchHit[]> {
   const term = q.trim();
   if (term.length < 1) return [];
+
+  // Massive reference search first — same tickers the bar loader consumes.
+  const massive = await massiveSearch(term).catch(() => []);
+  const hits: SearchHit[] = massive
+    .filter((h) => h.symbol)
+    .map((h) => ({ symbol: h.symbol, name: h.name, type: h.type, exchange: h.exchange || h.market }));
+
   const url = `${SEARCH}?q=${encodeURIComponent(term)}&quotesCount=12&newsCount=0`;
-  const res = await fetch(url, { headers: { Accept: "application/json", "User-Agent": UA } });
-  if (!res.ok) return [];
-  const json = (await res.json()) as {
+  const res = await fetch(url, { headers: { Accept: "application/json", "User-Agent": UA } }).catch(() => null);
+  if (!res || !res.ok) return hits;
+  const json = (await res.json().catch(() => ({}))) as {
     quotes?: { symbol?: string; shortname?: string; longname?: string; quoteType?: string; exchDisp?: string }[];
   };
-  return (json.quotes ?? [])
-    .filter((h) => typeof h.symbol === "string")
-    .map((h) => ({
-      symbol: String(h.symbol),
-      name: String(h.longname ?? h.shortname ?? h.symbol),
+  const seen = new Set(hits.map((h) => h.symbol.toUpperCase()));
+  for (const h of json.quotes ?? []) {
+    const symbol = typeof h.symbol === "string" ? h.symbol : "";
+    if (!symbol || seen.has(symbol.toUpperCase())) continue;
+    seen.add(symbol.toUpperCase());
+    hits.push({
+      symbol,
+      name: String(h.longname ?? h.shortname ?? symbol),
       type: String(h.quoteType ?? "EQUITY").toLowerCase(),
       exchange: String(h.exchDisp ?? ""),
-    }));
+    });
+  }
+  return hits.slice(0, 20);
 }
+

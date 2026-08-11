@@ -11,12 +11,13 @@ export type Bar = {
   volume: number;
 };
 
-export type Timeframe = "1m" | "5m" | "15m" | "1h";
+export type Timeframe = "1m" | "5m" | "15m" | "1h" | "4h";
 export const timeframes: { id: Timeframe; label: string; ms: number }[] = [
   { id: "1m", label: "1m", ms: 60_000 },
   { id: "5m", label: "5m", ms: 5 * 60_000 },
   { id: "15m", label: "15m", ms: 15 * 60_000 },
   { id: "1h", label: "1H", ms: 3_600_000 },
+  { id: "4h", label: "4H", ms: 4 * 3_600_000 },
 ];
 
 export type TfSignal = {
@@ -310,6 +311,7 @@ async function loadBars(symbol: string) {
     "5m": m5.length > 3 ? m5 : m1,
     "15m": resample(m5.length > 3 ? m5 : m1, 15 * 60_000),
     "1h": resample(m5.length > 3 ? m5 : m1, 3_600_000),
+    "4h": resample(m5.length > 3 ? m5 : m1, 4 * 3_600_000),
   } satisfies Record<Timeframe, Bar[]>;
 }
 

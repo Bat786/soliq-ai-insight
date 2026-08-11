@@ -129,6 +129,7 @@ function barsByTf(base: Bar[]): Record<Timeframe, Bar[]> {
     "5m": base,
     "15m": resample(base, 15 * 60_000),
     "1h": resample(base, 3_600_000),
+    "4h": resample(base, 4 * 3_600_000),
   };
 }
 

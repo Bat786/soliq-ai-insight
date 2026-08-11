@@ -81,18 +81,18 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
-      { title: "AETHRON — AI Market Intelligence Terminal" },
+      { title: "SOLIQ — powered by AETHRON, Solana Blockchain Intelligence Engine" },
       {
         name: "description",
         content:
-          "AETHRON is an AI market intelligence terminal: live crypto, futures, FX and equity desks with whale flow, real-time alerts and AI research.",
+          "SOLIQ, powered by the AETHRON Solana Blockchain Intelligence Engine: live crypto, futures, FX, indices and equity desks with 1m–4h signals, whale flow, real-time alerts and AI research.",
       },
-      { name: "author", content: "AETHRON" },
+      { name: "author", content: "SOLIQ" },
       { name: "theme-color", content: "#070A12" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
-      { name: "apple-mobile-web-app-title", content: "AETHRON" },
-      { property: "og:title", content: "AETHRON — AI Market Intelligence Terminal" },
+      { name: "apple-mobile-web-app-title", content: "SOLIQ" },
+      { property: "og:title", content: "SOLIQ — powered by AETHRON" },
       {
         property: "og:description",
         content: "Live multi-asset desks, whale flow, real-time alerts and AI research in one premium terminal.",
