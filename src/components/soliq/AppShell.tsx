@@ -3,6 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import {
   BadgeCheck,
   Bot,
+  Activity,
   Compass,
   Crown,
   FlaskConical,
@@ -42,6 +43,7 @@ const nav = [
   { to: "/portfolio", label: "Portfolio", icon: Wallet },
   { to: "/discover", label: "Discover", icon: Compass },
   { to: "/whales", label: "Whale Flow", icon: Waves },
+  { to: "/futures", label: "Futures", icon: Activity },
   { to: "/community", label: "Community", icon: Users },
   { to: "/backtest", label: "Backtest", icon: FlaskConical },
   { to: "/assistant", label: "AI Assistant", icon: Bot },
