@@ -14,6 +14,7 @@ import { Route as AssistantRouteImport } from './routes/assistant'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as BacktestRouteImport } from './routes/backtest'
 import { Route as CommunityRouteImport } from './routes/community'
+import { Route as CryptoRouteImport } from './routes/crypto'
 import { Route as DiscoverRouteImport } from './routes/discover'
 import { Route as FuturesRouteImport } from './routes/futures'
 import { Route as ListsRouteImport } from './routes/lists'
@@ -46,6 +47,11 @@ const BacktestRoute = BacktestRouteImport.update({
 const CommunityRoute = CommunityRouteImport.update({
   id: '/community',
   path: '/community',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CryptoRoute = CryptoRouteImport.update({
+  id: '/crypto',
+  path: '/crypto',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DiscoverRoute = DiscoverRouteImport.update({
@@ -95,6 +101,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/backtest': typeof BacktestRoute
   '/community': typeof CommunityRoute
+  '/crypto': typeof CryptoRoute
   '/discover': typeof DiscoverRoute
   '/futures': typeof FuturesRoute
   '/lists': typeof ListsRoute
@@ -110,6 +117,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/backtest': typeof BacktestRoute
   '/community': typeof CommunityRoute
+  '/crypto': typeof CryptoRoute
   '/discover': typeof DiscoverRoute
   '/futures': typeof FuturesRoute
   '/lists': typeof ListsRoute
@@ -126,6 +134,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/backtest': typeof BacktestRoute
   '/community': typeof CommunityRoute
+  '/crypto': typeof CryptoRoute
   '/discover': typeof DiscoverRoute
   '/futures': typeof FuturesRoute
   '/lists': typeof ListsRoute
@@ -143,6 +152,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/backtest'
     | '/community'
+    | '/crypto'
     | '/discover'
     | '/futures'
     | '/lists'
@@ -158,6 +168,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/backtest'
     | '/community'
+    | '/crypto'
     | '/discover'
     | '/futures'
     | '/lists'
@@ -173,6 +184,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/backtest'
     | '/community'
+    | '/crypto'
     | '/discover'
     | '/futures'
     | '/lists'
@@ -189,6 +201,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   BacktestRoute: typeof BacktestRoute
   CommunityRoute: typeof CommunityRoute
+  CryptoRoute: typeof CryptoRoute
   DiscoverRoute: typeof DiscoverRoute
   FuturesRoute: typeof FuturesRoute
   ListsRoute: typeof ListsRoute
@@ -234,6 +247,13 @@ declare module '@tanstack/react-router' {
       path: '/community'
       fullPath: '/community'
       preLoaderRoute: typeof CommunityRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/crypto': {
+      id: '/crypto'
+      path: '/crypto'
+      fullPath: '/crypto'
+      preLoaderRoute: typeof CryptoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/discover': {
@@ -301,6 +321,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   BacktestRoute: BacktestRoute,
   CommunityRoute: CommunityRoute,
+  CryptoRoute: CryptoRoute,
   DiscoverRoute: DiscoverRoute,
   FuturesRoute: FuturesRoute,
   ListsRoute: ListsRoute,
@@ -313,13 +334,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
