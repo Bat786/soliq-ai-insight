@@ -44,11 +44,12 @@ export function WalletTerminal() {
       <div className="panel p-5">
         <p className="text-sm font-semibold">Connect a wallet</p>
         <p className="mt-1 text-xs text-muted-foreground">
-          Approve the connection request in your extension. AETHRON only reads your public address.
+          Approve the connection request in your wallet. SOLIQ only reads your public address — never a signature that
+          moves funds.
         </p>
         <div className="mt-4 grid gap-2 sm:grid-cols-2">
           {walletProviders.map((p) => {
-            const ready = detected[p.id];
+            const ready = p.universal || detected[p.id];
             return (
               <div
                 key={p.id}
@@ -62,7 +63,7 @@ export function WalletTerminal() {
                         ready ? "bg-bull/15 text-bull" : "bg-muted text-muted-foreground"
                       }`}
                     >
-                      {ready ? "DETECTED" : "NOT FOUND"}
+                      {p.universal ? "QR READY" : ready ? "DETECTED" : "NOT FOUND"}
                     </span>
                   </p>
                   <p className="truncate text-[11px] text-muted-foreground">{p.blurb}</p>
@@ -82,7 +83,33 @@ export function WalletTerminal() {
             );
           })}
         </div>
+
+        <form
+          className="mt-4 flex flex-wrap items-center gap-2 border-t border-border pt-4"
+          onSubmit={(event) => {
+            event.preventDefault();
+            if (!watchAddress.trim()) return;
+            watch.mutate(watchAddress, { onSuccess: () => setWatchAddress("") });
+          }}
+        >
+          <div className="min-w-0 flex-1">
+            <label className="text-[11px] font-medium text-muted-foreground" htmlFor="watch-address">
+              Or track any public address (Solana or EVM)
+            </label>
+            <Input
+              id="watch-address"
+              value={watchAddress}
+              onChange={(event) => setWatchAddress(event.target.value)}
+              placeholder="So1111… or 0xabc…"
+              className="num mt-1"
+            />
+          </div>
+          <Button type="submit" size="sm" variant="subtle" className="mt-5" disabled={watch.isPending}>
+            <Eye className="size-3.5" /> Track
+          </Button>
+        </form>
       </div>
+
 
       <div className="panel p-5">
         <p className="text-sm font-semibold">Linked wallets</p>
