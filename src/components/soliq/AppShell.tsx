@@ -4,6 +4,7 @@ import {
   BadgeCheck,
   Bot,
   Activity,
+  Coins,
   Compass,
   Crown,
   FlaskConical,
