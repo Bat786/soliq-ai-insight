@@ -362,7 +362,7 @@ export async function loadFuturesBoard(): Promise<FuturesBoard> {
   const quotes: FuturesQuote[] = [];
   // Sequential-in-chunks keeps us inside the upstream rate limit.
   for (let i = 0; i < contracts.length; i += 2) {
-    if (i > 0) await sleep(120);
+    if (i > 0) await sleep(220);
     const chunk = contracts.slice(i, i + 2);
     const done = await Promise.all(
       chunk.map((c) =>
@@ -398,11 +398,12 @@ export async function loadTickerDetail(symbolRaw: string, interval: Timeframe): 
   const info = await uw<Record<string, unknown>>(`/api/stock/${symbol}/info`).catch(() => null);
   if (!info || !info["symbol"]) throw new Error(`No market data found for “${symbol}”`);
 
-  const [state, options, bars] = await Promise.all([
+  const [rawState, options, bars] = await Promise.all([
     loadState(symbol),
     loadOptionTilt(symbol),
     loadBars(symbol),
   ]);
+  const state = fromBars(rawState, bars["5m"]);
 
   return {
     symbol,
