@@ -100,7 +100,7 @@ async function connectWalletConnect(): Promise<string> {
     showQrModal: true,
     metadata: {
       name: "SOLIQ",
-      description: "SOLIQ — powered by AETHRON, Solana Blockchain Intelligence Engine",
+      description: "SOLIQ — powered by SOLIQ, Solana Blockchain Intelligence Engine",
       url: typeof window === "undefined" ? "https://soliq.app" : window.location.origin,
       icons: [`${typeof window === "undefined" ? "" : window.location.origin}/favicon.ico`],
     },

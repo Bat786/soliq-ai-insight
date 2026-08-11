@@ -66,10 +66,10 @@ export function Logo({ compact = false }: { compact?: boolean }) {
       {!compact && (
         <span className="flex flex-col leading-none">
           <span className="font-display text-lg font-bold tracking-tight">
-            AETH<span className="text-gradient">RON</span>
+            SOL<span className="text-gradient">IQ</span>
           </span>
           <span className="mt-0.5 text-[9px] font-medium tracking-[0.22em] text-muted-foreground">
-            INTELLIGENCE ENGINE
+            POWERED BY SOLIQ
           </span>
         </span>
       )}
@@ -225,7 +225,7 @@ function SidebarFooter() {
           : "Create an account to sync watchlists, alerts and portfolios."}
       </p>
       <Button asChild variant="hero" size="sm" className="mt-3 w-full">
-        <Link to={isSignedIn ? "/pricing" : "/auth"}>{isSignedIn ? "Go Premium" : "Explore AETHRON Free"}</Link>
+        <Link to={isSignedIn ? "/pricing" : "/auth"}>{isSignedIn ? "Go Premium" : "Explore SOLIQ Free"}</Link>
       </Button>
     </div>
   );
@@ -285,7 +285,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             </p>
             <div className="flex items-center gap-2">
               <Button asChild size="sm" variant="ghost" className="hidden sm:inline-flex">
-                <Link to="/assistant">Ask AETHRON AI</Link>
+                <Link to="/assistant">Ask SOLIQ AI</Link>
               </Button>
               <AppearanceMenu />
               <NotificationBell />

@@ -9,13 +9,13 @@ import { fmtPct, fmtUsd, portfolio, portfolioCost, portfolioSeries, portfolioVal
 export const Route = createFileRoute("/portfolio")({
   head: () => ({
     meta: [
-      { title: "Portfolio Tracker — AETHRON" },
+      { title: "Portfolio Tracker — SOLIQ" },
       {
         name: "description",
         content:
-          "Track holdings, cost basis, allocation and profit/loss across timeframes with the AETHRON portfolio tracker.",
+          "Track holdings, cost basis, allocation and profit/loss across timeframes with the SOLIQ portfolio tracker.",
       },
-      { property: "og:title", content: "Portfolio Tracker — AETHRON" },
+      { property: "og:title", content: "Portfolio Tracker — SOLIQ" },
       { property: "og:description", content: "Holdings, P&L, allocation and performance in one view." },
     ],
   }),

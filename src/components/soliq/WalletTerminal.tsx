@@ -22,7 +22,7 @@ export function WalletTerminal() {
         <Wallet className="mx-auto size-6 text-primary" />
         <p className="mt-3 text-sm font-medium">Sign in to link wallets</p>
         <p className="mt-1 text-xs text-muted-foreground">
-          Wallet links are read-only and stored privately on your account — AETHRON never requests transactions.
+          Wallet links are read-only and stored privately on your account — SOLIQ never requests transactions.
         </p>
         <Button asChild variant="hero" size="sm" className="mt-4">
           <Link to="/auth">Create free account</Link>

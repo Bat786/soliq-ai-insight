@@ -14,13 +14,13 @@ import { askAssistant } from "@/lib/ai.functions";
 export const Route = createFileRoute("/assistant")({
   head: () => ({
     meta: [
-      { title: "AETHRON AI — Your Investing Research Assistant" },
+      { title: "SOLIQ AI — Your Investing Research Assistant" },
       {
         name: "description",
         content:
-          "Ask AETHRON AI to analyse coins, futures, forex and stocks using the live desk tape, indicators and institutional flow.",
+          "Ask SOLIQ AI to analyse coins, futures, forex and stocks using the live desk tape, indicators and institutional flow.",
       },
-      { property: "og:title", content: "AETHRON AI — Investing Research Assistant" },
+      { property: "og:title", content: "SOLIQ AI — Investing Research Assistant" },
       { property: "og:description", content: "Live-tape answers across crypto, stocks, futures and forex desks." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -42,7 +42,7 @@ type Msg = { role: "user" | "assistant"; content: string };
 const greeting: Msg = {
   role: "assistant",
   content:
-    "**AETHRON AI online.**\n\nI read the live tape across four desks — crypto (Solana/DEX + majors), stocks, futures and 24/7 forex — plus institutional flow. Ask for an asset breakdown, a cross-desk comparison, or a full research note.\n\n*Research, not financial advice.*",
+    "**SOLIQ AI online.**\n\nI read the live tape across four desks — crypto (Solana/DEX + majors), stocks, futures and 24/7 forex — plus institutional flow. Ask for an asset breakdown, a cross-desk comparison, or a full research note.\n\n*Research, not financial advice.*",
 };
 
 function Assistant() {
@@ -77,7 +77,7 @@ function Assistant() {
             <Bot className="size-5" />
           </span>
           <div>
-            <h1 className="text-xl font-bold">AETHRON AI</h1>
+            <h1 className="text-xl font-bold">SOLIQ AI</h1>
             <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <RadioTower className="size-3 text-primary" /> Grounded in the live crypto, stocks, futures & forex tape
             </p>
