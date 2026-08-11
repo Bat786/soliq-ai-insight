@@ -39,19 +39,27 @@ export function BullBearGauge({
         </div>
       </div>
 
-      <div className="relative mt-3 h-2.5 overflow-hidden rounded-full bg-muted">
+      <div className="relative mt-3 h-2.5 rounded-full bg-muted">
         <div className="absolute inset-y-0 left-0 rounded-full bg-bear/70" style={{ width: `${100 - bullPct}%` }} />
         <div className="absolute inset-y-0 right-0 rounded-full bg-bull" style={{ width: `${bullPct}%` }} />
         <div
           className="absolute top-1/2 size-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-background bg-foreground"
           style={{ left: `${100 - bullPct}%` }}
         />
+        {whaleBull !== undefined && (
+          <div
+            className="absolute -top-1.5 h-5.5 w-0.5 -translate-x-1/2 rounded-full bg-primary"
+            style={{ left: `${100 - Math.round(whaleBull)}%` }}
+            title={`Whale flow ${Math.round(whaleBull)}% bullish`}
+          />
+        )}
       </div>
       <div className="mt-1.5 flex justify-between text-[10px] text-muted-foreground">
         <span>Bearish</span>
-        <span>Neutral</span>
+        <span>{whaleBull !== undefined ? <span className="text-primary">| whale flow</span> : "Neutral"}</span>
         <span>Bullish</span>
       </div>
+
     </div>
   );
 }
