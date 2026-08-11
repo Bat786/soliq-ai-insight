@@ -1,4 +1,4 @@
-// Client-safe membership metadata for SOLIQ premium plans.
+// Client-safe membership metadata for AETHRON access tiers.
 export type Tier = "free" | "pro" | "elite";
 
 export type Plan = {
@@ -16,48 +16,49 @@ export const FREE_ALERT_LIMIT = 3;
 export const plans: Plan[] = [
   {
     tier: "free",
-    name: "Explorer",
+    name: "Orbit",
     price: 0,
     cadence: "forever",
-    tagline: "Scan the market and track a few ideas.",
+    tagline: "Get inside the engine and track a few ideas.",
     features: [
-      "Market scanner & SOLIQ Scores",
-      "Portfolio tracking",
+      "Multi-asset desks & AETHRON Scores",
+      "Portfolio & wallet tracking",
       `${FREE_ALERT_LIMIT} watchlist alerts`,
-      "Read the community feed",
+      "Read the community terminal",
     ],
   },
   {
     tier: "pro",
     name: "Pro",
-    price: 19,
+    price: 20,
     cadence: "per month",
-    tagline: "Unlimited alerts and a voice in the community.",
+    tagline: "Unlimited alerts, whale flow and a voice in the terminal.",
     badge: "PRO",
     features: [
-      "Unlimited watchlist alerts",
-      "Real-time in-app notifications",
-      "Post in the community feed",
+      "Unlimited real-time alerts",
+      "Whale flow & unusual activity feed",
+      "Push + in-app notifications",
+      "Post in the community terminal",
       "Pro badge on your profile",
-      "Priority AI assistant queue",
     ],
   },
   {
     tier: "elite",
     name: "Elite",
-    price: 49,
+    price: 30,
     cadence: "per month",
-    tagline: "Deep research and institutional-grade signals.",
+    tagline: "Full engine: deep research, backtests and priority signals.",
     badge: "ELITE",
     features: [
       "Everything in Pro",
       "AI deep-research reports",
+      "Strategy backtesting workspace",
       "Advanced scanner presets",
-      "Elite badge on your profile",
-      "Early access to new modules",
+      "Elite badge & early access modules",
     ],
   },
 ];
+
 
 export const planByTier = (tier: Tier) => plans.find((p) => p.tier === tier) ?? plans[0]!;
 export const isPaid = (tier: Tier) => tier === "pro" || tier === "elite";
