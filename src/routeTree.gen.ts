@@ -25,6 +25,7 @@ import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as StocksRouteImport } from './routes/stocks'
 import { Route as WhalesRouteImport } from './routes/whales'
 import { Route as AssetIdRouteImport } from './routes/asset.$id'
+import { Route as ApiPublicProbeRouteImport } from './routes/api/public/probe'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -106,6 +107,11 @@ const AssetIdRoute = AssetIdRouteImport.update({
   path: '/asset/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicProbeRoute = ApiPublicProbeRouteImport.update({
+  id: '/api/public/probe',
+  path: '/api/public/probe',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -124,6 +130,7 @@ export interface FileRoutesByFullPath {
   '/stocks': typeof StocksRoute
   '/whales': typeof WhalesRoute
   '/asset/$id': typeof AssetIdRoute
+  '/api/public/probe': typeof ApiPublicProbeRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -142,6 +149,7 @@ export interface FileRoutesByTo {
   '/stocks': typeof StocksRoute
   '/whales': typeof WhalesRoute
   '/asset/$id': typeof AssetIdRoute
+  '/api/public/probe': typeof ApiPublicProbeRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -161,6 +169,7 @@ export interface FileRoutesById {
   '/stocks': typeof StocksRoute
   '/whales': typeof WhalesRoute
   '/asset/$id': typeof AssetIdRoute
+  '/api/public/probe': typeof ApiPublicProbeRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -181,6 +190,7 @@ export interface FileRouteTypes {
     | '/stocks'
     | '/whales'
     | '/asset/$id'
+    | '/api/public/probe'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -199,6 +209,7 @@ export interface FileRouteTypes {
     | '/stocks'
     | '/whales'
     | '/asset/$id'
+    | '/api/public/probe'
   id:
     | '__root__'
     | '/'
@@ -217,6 +228,7 @@ export interface FileRouteTypes {
     | '/stocks'
     | '/whales'
     | '/asset/$id'
+    | '/api/public/probe'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -236,6 +248,7 @@ export interface RootRouteChildren {
   StocksRoute: typeof StocksRoute
   WhalesRoute: typeof WhalesRoute
   AssetIdRoute: typeof AssetIdRoute
+  ApiPublicProbeRoute: typeof ApiPublicProbeRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -352,6 +365,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AssetIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/probe': {
+      id: '/api/public/probe'
+      path: '/api/public/probe'
+      fullPath: '/api/public/probe'
+      preLoaderRoute: typeof ApiPublicProbeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -372,7 +392,18 @@ const rootRouteChildren: RootRouteChildren = {
   StocksRoute: StocksRoute,
   WhalesRoute: WhalesRoute,
   AssetIdRoute: AssetIdRoute,
+  ApiPublicProbeRoute: ApiPublicProbeRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
