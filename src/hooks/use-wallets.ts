@@ -92,12 +92,26 @@ export function useDetectedWallets() {
         walletconnect: true,
       });
     scan();
-    const id = setTimeout(scan, 800);
-    return () => clearTimeout(id);
+    // Extensions inject asynchronously — keep polling briefly, and listen for the
+    // standard announcement events both EVM (EIP-6963) and Solana wallets fire.
+    const timers = [150, 400, 900, 1800, 3000].map((ms) => window.setTimeout(scan, ms));
+    window.addEventListener("eip6963:announceProvider", scan as EventListener);
+    window.addEventListener("ethereum#initialized", scan);
+    window.addEventListener("load", scan);
+    document.addEventListener("visibilitychange", scan);
+    window.dispatchEvent(new Event("eip6963:requestProvider"));
+    return () => {
+      timers.forEach((t) => window.clearTimeout(t));
+      window.removeEventListener("eip6963:announceProvider", scan as EventListener);
+      window.removeEventListener("ethereum#initialized", scan);
+      window.removeEventListener("load", scan);
+      document.removeEventListener("visibilitychange", scan);
+    };
   }, []);
 
   return available;
 }
+
 
 /** WalletConnect (Reown) session — works with any mobile or desktop EVM wallet. */
 async function connectWalletConnect(): Promise<string> {
