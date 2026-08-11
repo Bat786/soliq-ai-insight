@@ -512,10 +512,14 @@ export async function loadTapeBoard(desk?: DeskId): Promise<MarketBoard> {
   );
 
   // 2) Continuous keyless tape for anything Massive doesn't cover (futures,
-  //    benchmarks) or hasn't answered for yet.
+  //    benchmarks) or hasn't answered for yet. Both fallback steps are time
+  //    boxed so a throttled public feed can never stall the whole board.
+  const cap = <T,>(p: Promise<T>, fallback: T, ms = 4_000): Promise<T> =>
+    Promise.race([p.catch(() => fallback), sleep(ms).then(() => fallback)]);
+
   const missing = list.filter((inst) => (series.get(inst.symbol)?.length ?? 0) < 2);
   if (missing.length > 0) {
-    const spark = await loadSparkBars(missing.map((i) => i.symbol)).catch(() => new Map<string, Bar[]>());
+    const spark = await cap(loadSparkBars(missing.map((i) => i.symbol)), new Map<string, Bar[]>(), 5_000);
     for (const [symbol, bars] of spark) if (bars.length > 1) series.set(symbol, bars);
   }
 
@@ -524,10 +528,11 @@ export async function loadTapeBoard(desk?: DeskId): Promise<MarketBoard> {
     list
       .filter((inst) => (series.get(inst.symbol)?.length ?? 0) < 2)
       .map(async (inst) => {
-        const bars = await fallbackBars(inst);
+        const bars = await cap(fallbackBars(inst), [] as Bar[]);
         if (bars.length > 1) series.set(inst.symbol, bars);
       }),
   );
+
 
   const rows = list.map((inst) => toRow(inst, series.get(inst.symbol) ?? []));
   return {
