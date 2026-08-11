@@ -301,8 +301,8 @@ export function CryptoDesk() {
                 </div>
                 {p.description && <p className="mt-1.5 line-clamp-2 text-[11px] text-muted-foreground">{p.description}</p>}
                 <div className="mt-1.5 flex flex-wrap gap-1.5 text-[10px] text-primary">
-                  {p.links.map((l) => (
-                    <span key={l.url}>{l.label}</span>
+                  {p.links.map((l, i) => (
+                    <span key={`${l.url}-${i}`}>{l.label}</span>
                   ))}
                 </div>
               </a>
