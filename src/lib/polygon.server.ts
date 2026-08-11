@@ -1,21 +1,12 @@
 /** Polygon.io 24/7 FX + crypto tape and shared technical indicators (server only). */
 
 import { resample, tfSignal, timeframes, type Bar, type TfSignal, type Timeframe } from "@/lib/futures.server";
+import { indicators, type Indicators } from "@/lib/indicators.server";
 
 const BASE = "https://api.polygon.io";
 
-export type Indicators = {
-  rsi14: number;
-  macd: number;
-  macdSignal: number;
-  macdHist: number;
-  vwap: number;
-  ema20: number;
-  ema50: number;
-  atrPct: number;
-  verdict: "buy" | "sell" | "hold";
-  score: number;
-};
+export type { Indicators };
+
 
 export type MarketRow = {
   key: string;
