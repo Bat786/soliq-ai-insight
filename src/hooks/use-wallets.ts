@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { useSession } from "@/hooks/use-soliq-account";
 import { linkWallet, listWallets, setPrimaryWallet, unlinkWallet, walletBalances } from "@/lib/wallets.functions";
 
-export type WalletProviderId = "phantom" | "solflare" | "backpack" | "metamask";
+export type WalletProviderId = "phantom" | "solflare" | "backpack" | "metamask" | "walletconnect";
 
 export type WalletProviderMeta = {
   id: WalletProviderId;
@@ -14,14 +14,27 @@ export type WalletProviderMeta = {
   chain: "solana" | "evm";
   blurb: string;
   site: string;
+  /** WalletConnect works without an extension (QR / mobile deep link). */
+  universal?: boolean;
 };
+
+export const WALLETCONNECT_PROJECT_ID = "3107d184dd8ba1e8a4d698c20ea61dbe";
 
 export const walletProviders: WalletProviderMeta[] = [
   { id: "phantom", name: "Phantom", chain: "solana", blurb: "Solana · the default power wallet", site: "https://phantom.app" },
   { id: "solflare", name: "Solflare", chain: "solana", blurb: "Solana · staking native", site: "https://solflare.com" },
   { id: "backpack", name: "Backpack", chain: "solana", blurb: "Solana · xNFT terminal", site: "https://backpack.app" },
   { id: "metamask", name: "MetaMask", chain: "evm", blurb: "Ethereum & EVM chains", site: "https://metamask.io" },
+  {
+    id: "walletconnect",
+    name: "WalletConnect",
+    chain: "evm",
+    blurb: "Any EVM wallet · scan a QR from mobile",
+    site: "https://walletconnect.network",
+    universal: true,
+  },
 ];
+
 
 type SolanaProvider = {
   isPhantom?: boolean;
