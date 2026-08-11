@@ -85,7 +85,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         name: "description",
         content:
-          "SOLIQ, powered by the SOLIQ Solana Blockchain Intelligence Engine: live crypto, futures, FX, indices and equity desks with 1m–4h signals, whale flow, real-time alerts and AI research.",
+          "SOLIQ, powered by the AETHRON Solana Blockchain Intelligence Engine: live crypto, futures, FX, indices and equity desks with 1m–4h signals, whale flow, real-time alerts and AI research.",
       },
       { name: "author", content: "SOLIQ" },
       { name: "theme-color", content: "#070A12" },
