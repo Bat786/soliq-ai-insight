@@ -172,6 +172,10 @@ function FuturesPage() {
 
         <WhaleStrip />
 
+        {tab === "fx" && <MarketsBoard tf={tf} onTf={setTf} />}
+
+
+
         {tab === "search" && (
           <form
             className="panel flex flex-wrap items-center gap-2 p-3"
