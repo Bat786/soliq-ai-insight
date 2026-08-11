@@ -179,6 +179,34 @@ export function useWallets() {
     onSuccess: invalidate,
   });
 
+  /** Track any public address read-only, no wallet app required. */
+  const watch = useMutation({
+    mutationFn: async (address: string) => {
+      const value = address.trim();
+      const isEvm = /^0x[a-fA-F0-9]{40}$/.test(value);
+      const isSol = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(value);
+      if (!isEvm && !isSol) throw new Error("bad-address");
+      return runLink({
+        data: {
+          chain: isEvm ? "evm" : "solana",
+          provider: "Watch",
+          address: value,
+          label: "Watched address",
+        },
+      });
+    },
+    onSuccess: () => {
+      invalidate();
+      toast.success("Address added to your watch list");
+    },
+    onError: (error) =>
+      toast.error(
+        error instanceof Error && error.message === "bad-address"
+          ? "That doesn't look like a Solana or EVM address"
+          : "Could not track that address",
+      ),
+  });
+
   const balanceFor = (address: string) => balances.data?.find((b) => b.address === address);
   const totalUsd = (balances.data ?? []).reduce((sum, b) => sum + b.usd, 0);
 
@@ -190,7 +218,9 @@ export function useWallets() {
     balanceFor,
     totalUsd,
     connect,
+    watch,
     remove,
     makePrimary,
+
   };
 }
