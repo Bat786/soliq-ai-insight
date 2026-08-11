@@ -14,6 +14,10 @@ export const Route = createFileRoute("/api/public/diag")({
           ["groupedFx", `/v2/aggs/grouped/locale/global/market/fx/${day}?adjusted=true`],
           ["news", `/v2/reference/news?limit=3`],
           ["aaplAgg", `/v2/aggs/ticker/AAPL/range/5/minute/${day}/${day}?limit=5`],
+          ["spxAgg", `/v2/aggs/ticker/I:SPX/range/1/hour/${new Date(Date.now() - 10 * 86400000).toISOString().slice(0, 10)}/${day}?limit=10`],
+          ["spxSnap", `/v3/snapshot/indices?ticker.any_of=I:SPX,I:NDX,I:VIX`],
+          ["stockSnap", `/v2/snapshot/locale/us/markets/stocks/tickers?tickers=AAPL,SPY,USO,GLD`],
+          ["cryptoSnap", `/v2/snapshot/locale/global/markets/crypto/tickers?tickers=X:BTCUSD,X:SOLUSD`],
         ] as const) {
           const res = await fetch(`https://api.polygon.io${path}&apiKey=${key}`);
           const j = (await res.json()) as { status?: string; resultsCount?: number; results?: unknown[] };
