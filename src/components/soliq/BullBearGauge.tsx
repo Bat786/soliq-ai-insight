@@ -8,10 +8,10 @@ export function BullBearGauge({
 }: {
   bull: number;
   bear: number;
-  confidence?: number;
+  confidence?: number | undefined;
   compact?: boolean;
   /** 0-100 bullish share derived from institutional whale flow. */
-  whaleBull?: number;
+  whaleBull?: number | undefined;
 }) {
   const total = Math.max(1, bull + bear);
   const bullPct = Math.round((bull / total) * 100);
