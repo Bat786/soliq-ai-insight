@@ -5,12 +5,14 @@ import { Activity, BarChart3, Loader2, Search } from "lucide-react";
 import { AppShell } from "@/components/soliq/AppShell";
 import { BullBearGauge } from "@/components/soliq/BullBearGauge";
 import CandleChart, { type Overlays, type Point, type VolPoint } from "@/components/soliq/CandleChart";
+import { MarketsBoard } from "@/components/soliq/MarketsBoard";
 import { Delta, SectionTitle, Sparkline } from "@/components/soliq/primitives";
 import { WhaleStrip } from "@/components/soliq/WhaleSignal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useFuturesBoard, useTickerDetail } from "@/hooks/use-futures";
 import type { Bar, Timeframe, TfSignal } from "@/lib/futures.server";
+
 
 export const Route = createFileRoute("/futures")({
   head: () => ({
@@ -105,7 +107,7 @@ function TfSignalRow({ signals, active, onSelect }: { signals: TfSignal[]; activ
 function FuturesPage() {
   const { data, isLoading, isError, error } = useFuturesBoard();
   const [tf, setTf] = useState<Timeframe>("5m");
-  const [tab, setTab] = useState<"board" | "search">("board");
+  const [tab, setTab] = useState<"board" | "fx" | "search">("board");
   const [selected, setSelected] = useState("SPY");
   const [query, setQuery] = useState("");
   const [symbol, setSymbol] = useState("SPY");
@@ -130,25 +132,29 @@ function FuturesPage() {
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
             <h1 className="font-display flex items-center gap-2 text-2xl font-bold tracking-tight">
-              <Activity className="size-5 text-primary" /> Futures Desk
+              <Activity className="size-5 text-primary" /> Markets Desk
             </h1>
             <p className="text-sm text-muted-foreground">
-              Live index, energy, metals and crypto tape with multi-timeframe bull/bear signal gauges.
+              Index, energy, metals, crypto and 24/7 forex tape with multi-timeframe bull/bear gauges, RSI, MACD, VWAP and
+              volume analytics.
             </p>
           </div>
           <div className="flex items-center gap-2">
             <div className="panel flex gap-1 p-1">
-              {(["board", "search"] as const).map((t) => (
+              {(["board", "fx", "search"] as const).map((t) => (
                 <button
                   key={t}
                   type="button"
                   onClick={() => setTab(t)}
-                  className={`rounded-md px-3 py-1.5 text-xs capitalize ${tab === t ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
+                  className={`rounded-md px-3 py-1.5 text-xs ${tab === t ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
                 >
-                  {t === "board" ? "Contracts" : "Ticker search"}
+                  {t === "board" ? "Contracts"
+                  : t === "fx" ? "Forex & crypto 24/7"
+                  : "Ticker search"}
                 </button>
               ))}
             </div>
+
             <div className="panel flex gap-1 p-1">
               {TFS.map((t) => (
                 <button
@@ -165,6 +171,10 @@ function FuturesPage() {
         </div>
 
         <WhaleStrip />
+
+        {tab === "fx" && <MarketsBoard tf={tf} onTf={setTf} />}
+
+
 
         {tab === "search" && (
           <form
@@ -277,7 +287,7 @@ function FuturesPage() {
           </>
         )}
 
-        <div className="panel p-4">
+        <div className={`panel p-4 ${tab === "fx" ? "hidden" : ""}`}>
           <div className="flex flex-wrap items-end justify-between gap-2">
             <SectionTitle
               title={`${detailSymbol} · ${tf} chart`}
