@@ -43,8 +43,10 @@ function LiveRow({ row }: { row: MarketRow }) {
         <p className="truncate text-sm font-medium">{row.code}</p>
         <p className="truncate text-[11px] text-muted-foreground">{row.name}</p>
       </div>
-      <Sparkline data={row.spark} up={row.changePct >= 0} className="h-8 w-20" />
-      <div className="w-24 text-right">
+      <span className="w-20 shrink-0">
+        <Sparkline data={row.spark.length ? row.spark : [0, 0]} up={row.changePct >= 0} />
+      </span>
+      <div className="w-24 shrink-0 text-right">
         <p className="num text-sm">{price(row.last)}</p>
         <p className={`num text-[11px] ${row.changePct >= 0 ? "text-bull" : "text-bear"}`}>{pct(row.changePct)}</p>
       </div>
