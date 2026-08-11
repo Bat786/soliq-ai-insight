@@ -65,15 +65,16 @@ function Pricing() {
       <div className="mx-auto max-w-5xl">
         <div className="text-center">
           <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-[11px] text-primary">
-            <Sparkles className="size-3.5" /> SOLIQ Premium
+            <Sparkles className="size-3.5" /> AETHRON Access
           </span>
           <h1 className="font-display mt-4 text-2xl font-bold lg:text-3xl">
-            Trade with <span className="text-gradient">unlimited signal</span>
+            Run the engine at <span className="text-gradient">full power</span>
           </h1>
           <p className="mx-auto mt-2 max-w-xl text-sm text-muted-foreground">
-            Premium unlocks unlimited watchlist alerts, posting rights in the community — which keeps spam and bots out
-            — and a verified member badge next to your name.
+            Pro and Elite unlock unlimited real-time alerts, institutional whale flow, posting rights in the community
+            terminal — which keeps spam and bots out — and a verified badge next to your name.
           </p>
+
         </div>
 
         <div className="mt-8 grid gap-4 lg:grid-cols-3">
