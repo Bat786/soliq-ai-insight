@@ -87,10 +87,15 @@ function Home() {
   const spx = allRows.find((r) => r.key === "SPX");
   const btc = allRows.find((r) => r.key === "BTCUSD");
   const breadth = all.length ? (all.filter((r) => r.changePct >= 0).length / all.length) * 100 : 0;
-  const movers = desk.data?.movers ?? [];
+  const STABLES = new Set(["USDC", "USDT", "USDS", "PYUSD", "FDUSD", "DAI", "CASH", "EURC"]);
+  const movers = (desk.data?.movers ?? []).filter((m) => !STABLES.has(m.symbol.toUpperCase()));
 
   const stats = [
-    { label: "S&P 500", value: spx ? price(spx.last) : "—", delta: spx?.changePct ?? 0 },
+    {
+      label: spx?.name.includes("proxy") ? "S&P 500 · SPY" : "S&P 500",
+      value: spx ? price(spx.last) : "—",
+      delta: spx?.changePct ?? 0,
+    },
     { label: "Bitcoin", value: btc ? `$${price(btc.last)}` : "—", delta: btc?.changePct ?? 0 },
     { label: "Market breadth", value: `${breadth.toFixed(0)}% up`, delta: breadth - 50 },
     { label: "Instruments live", value: String(all.length), delta: 0 },
