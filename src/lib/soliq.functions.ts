@@ -21,7 +21,7 @@ export const getMyProfile = createServerFn({ method: "GET" })
       .from("profiles")
       .insert({
         id: userId,
-        display_name: email ? email.split("@")[0]! : "SOLIQ Member",
+        display_name: email ? email.split("@")[0]! : "AETHRON Member",
         handle: email ? `@${email.split("@")[0]!.replace(/[^a-z0-9_]/gi, "").toLowerCase()}` : null,
       })
       .select("*")

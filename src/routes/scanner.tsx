@@ -31,13 +31,13 @@ import {
 export const Route = createFileRoute("/scanner")({
   head: () => ({
     meta: [
-      { title: "AI Universal Market Scanner — SOLIQ" },
+      { title: "AI Universal Market Scanner — AETHRON" },
       {
         name: "description",
         content:
-          "Scan 200+ live crypto, DeFi, AI and memecoin markets with SOLIQ filters for market cap, relative volume, RSI, whale flow, sentiment and AI conviction.",
+          "Scan 200+ live crypto, DeFi, AI and memecoin markets with AETHRON filters for market cap, relative volume, RSI, whale flow, sentiment and AI conviction.",
       },
-      { property: "og:title", content: "AI Universal Market Scanner — SOLIQ" },
+      { property: "og:title", content: "AI Universal Market Scanner — AETHRON" },
       { property: "og:description", content: "Live multi-market scanner with AI conviction scores and natural-language commands." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

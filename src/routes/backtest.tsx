@@ -14,13 +14,13 @@ import { fmtPctc, fmtUsdc } from "@/lib/market-types";
 export const Route = createFileRoute("/backtest")({
   head: () => ({
     meta: [
-      { title: "Backtesting workspace — paper-trade strategies | SOLIQ" },
+      { title: "Backtesting workspace — paper-trade strategies | AETHRON" },
       {
         name: "description",
         content:
           "Test MA crossover, RSI mean-reversion and breakout strategies on historical crypto data with paper money and full performance analytics.",
       },
-      { property: "og:title", content: "SOLIQ backtesting workspace" },
+      { property: "og:title", content: "AETHRON backtesting workspace" },
       {
         property: "og:description",
         content: "Paper-money strategy testing on historical crypto data with equity curve and risk analytics.",

@@ -11,13 +11,13 @@ import { useWhaleFeed } from "@/hooks/use-whales";
 export const Route = createFileRoute("/whales")({
   head: () => ({
     meta: [
-      { title: "Whale Flow Dashboard — institutional options & dark pool tape | SOLIQ" },
+      { title: "Whale Flow Dashboard — institutional options & dark pool tape | AETHRON" },
       {
         name: "description",
         content:
           "Live institutional whale flow: market tide net premium, dark pool prints, unusual options alerts, sector tilt and bullish/bearish conviction scoring.",
       },
-      { property: "og:title", content: "SOLIQ Whale Flow Dashboard" },
+      { property: "og:title", content: "AETHRON Whale Flow Dashboard" },
       {
         property: "og:description",
         content: "Market tide, dark pool prints and unusual options alerts scored into a live bull/bear signal.",

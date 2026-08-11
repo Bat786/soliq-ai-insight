@@ -17,12 +17,12 @@ import { createAlert, deleteAlert, listAlerts, setAlertActive } from "@/lib/soli
 export const Route = createFileRoute("/lists")({
   head: () => ({
     meta: [
-      { title: "Watchlists & Price Alerts — SOLIQ" },
+      { title: "Watchlists & Price Alerts — AETHRON" },
       {
         name: "description",
-        content: "Build SOLIQ watchlists, group assets by thesis and get in-app alert notifications when prices cross your targets.",
+        content: "Build AETHRON watchlists, group assets by thesis and get in-app alert notifications when prices cross your targets.",
       },
-      { property: "og:title", content: "Watchlists & Price Alerts — SOLIQ" },
+      { property: "og:title", content: "Watchlists & Price Alerts — AETHRON" },
       { property: "og:description", content: "Unlimited watchlists with working price alerts and notifications." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

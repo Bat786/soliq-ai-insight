@@ -4,7 +4,7 @@ import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const steps = [
-  "Booting SOLIQ terminal",
+  "Booting AETHRON terminal",
   "Syncing on-chain liquidity",
   "Streaming live market data",
   "Calibrating AI conviction models",

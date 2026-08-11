@@ -22,13 +22,13 @@ import {
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "SOLIQ — AI Market Intelligence & Investing Terminal" },
+      { title: "AETHRON — AI Market Intelligence & Investing Terminal" },
       {
         name: "description",
         content:
-          "SOLIQ is an AI-powered market intelligence platform: scan crypto markets, track portfolios, build watchlists and get daily AI market briefings.",
+          "AETHRON is an AI-powered market intelligence platform: scan crypto markets, track portfolios, build watchlists and get daily AI market briefings.",
       },
-      { property: "og:title", content: "SOLIQ — AI Market Intelligence & Investing Terminal" },
+      { property: "og:title", content: "AETHRON — AI Market Intelligence & Investing Terminal" },
       {
         property: "og:description",
         content: "Scan markets, track portfolios and get AI-powered crypto insights in one premium terminal.",
@@ -49,14 +49,14 @@ function Home() {
           The market, <span className="text-gradient">decoded</span> in real time.
         </h1>
         <p className="mt-2 max-w-lg text-sm text-muted-foreground">
-          Intelligence across 14,000+ assets — scanned, scored and summarised by SOLIQ AI.
+          Intelligence across 14,000+ assets — scanned, scored and summarised by AETHRON AI.
         </p>
         <div className="mt-5 flex flex-wrap gap-2">
           <Button asChild variant="hero">
             <Link to="/scanner">Run market scan</Link>
           </Button>
           <Button asChild variant="subtle">
-            <Link to="/assistant">Ask SOLIQ AI</Link>
+            <Link to="/assistant">Ask AETHRON AI</Link>
           </Button>
         </div>
       </section>
@@ -79,7 +79,7 @@ function Home() {
             </span>
             <div>
               <h2 className="font-display text-base font-semibold">AI Market Briefing</h2>
-              <p className="text-[11px] text-muted-foreground">Generated 6 minutes ago · SOLIQ AI</p>
+              <p className="text-[11px] text-muted-foreground">Generated 6 minutes ago · AETHRON AI</p>
             </div>
           </div>
           <ul className="mt-4 space-y-3 text-sm leading-relaxed">

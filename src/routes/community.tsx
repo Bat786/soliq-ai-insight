@@ -19,14 +19,14 @@ import { supabase } from "@/integrations/supabase/client";
 export const Route = createFileRoute("/community")({
   head: () => ({
     meta: [
-      { title: "Community — Social Investing on SOLIQ" },
+      { title: "Community — Social Investing on AETHRON" },
       {
         name: "description",
         content:
-          "Follow top analysts, traders and researchers, share market ideas and build reputation in the SOLIQ investing community.",
+          "Follow top analysts, traders and researchers, share market ideas and build reputation in the AETHRON investing community.",
       },
-      { property: "og:title", content: "Community — SOLIQ" },
-      { property: "og:description", content: "Share ideas, follow investors and climb the SOLIQ leaderboards." },
+      { property: "og:title", content: "Community — AETHRON" },
+      { property: "og:description", content: "Share ideas, follow investors and climb the AETHRON leaderboards." },
     ],
   }),
   component: Community,
@@ -60,7 +60,7 @@ function Community() {
         const author = profiles.find((pr) => pr.id === p.user_id);
         return {
           id: p.id,
-          author: author?.display_name ?? "SOLIQ Member",
+          author: author?.display_name ?? "AETHRON Member",
           handle: author?.handle ?? "@member",
           tier: (author?.membership_tier ?? "free") as "free" | "pro" | "elite",
           body: p.body,

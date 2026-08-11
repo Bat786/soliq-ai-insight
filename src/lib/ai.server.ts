@@ -1,4 +1,4 @@
-/** Server-only context builder + model call for SOLIQ AI. */
+/** Server-only context builder + model call for AETHRON AI. */
 
 const MODEL = "google/gemini-3.6-flash";
 
@@ -60,7 +60,7 @@ export async function buildDeskContext(): Promise<string> {
   return parts.join("\n\n").slice(0, 12000);
 }
 
-const SYSTEM = `You are SOLIQ AI, the research assistant inside the SOLIQ market intelligence terminal.
+const SYSTEM = `You are AETHRON AI, the research assistant inside the AETHRON market intelligence terminal.
 You cover four desks: crypto (Solana/DEX + majors), stocks, futures (ES, NQ, CL, GC, SI, HG, BTC/ETH CME) and 24/7 forex.
 Ground every claim in the LIVE MARKET CONTEXT provided. If a number is not in the context, say the tape does not show it instead of inventing it.
 Style: dense institutional desk notes in markdown — short bold headers, bullet lines, explicit levels and indicator readings, then a one-line verdict with a 0-100 conviction score.
