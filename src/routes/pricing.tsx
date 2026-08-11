@@ -13,16 +13,16 @@ import { setMembership } from "@/lib/soliq.functions";
 export const Route = createFileRoute("/pricing")({
   head: () => ({
     meta: [
-      { title: "SOLIQ Premium — Pro & Elite Plans" },
+      { title: "AETHRON Access — Pro $20 & Elite $30 Plans" },
       {
         name: "description",
         content:
-          "Upgrade to SOLIQ Pro or Elite for unlimited watchlist alerts, community posting rights and AI deep research.",
+          "Unlock the AETHRON engine: unlimited real-time alerts, whale flow, community posting and AI deep research from $20/month.",
       },
-      { property: "og:title", content: "SOLIQ Premium — Pro & Elite Plans" },
+      { property: "og:title", content: "AETHRON Access — Pro & Elite" },
       {
         property: "og:description",
-        content: "Unlimited alerts, verified member badge and AI deep research from $19/month.",
+        content: "Unlimited alerts, whale flow, verified badge and AI deep research from $20/month.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -30,6 +30,7 @@ export const Route = createFileRoute("/pricing")({
   }),
   component: Pricing,
 });
+
 
 function Pricing() {
   const { tier, isSignedIn } = useProfile();
