@@ -314,11 +314,8 @@ async function loadBars(symbol: string) {
 }
 
 export async function loadContractQuote(contract: Contract): Promise<FuturesQuote> {
-  const [state, options, bars] = await Promise.all([
-    loadState(contract.proxy),
-    loadOptionTilt(contract.proxy),
-    loadBars(contract.proxy),
-  ]);
+  const state = await loadState(contract.proxy);
+  const [options, bars] = await Promise.all([loadOptionTilt(contract.proxy), loadBars(contract.proxy)]);
 
   const signals = timeframes.map((t) => tfSignal(t.id, bars[t.id], options.tilt));
   const spark = bars["5m"].slice(-60).map((b) => b.close);
@@ -344,8 +341,9 @@ export async function loadContractQuote(contract: Contract): Promise<FuturesQuot
 export async function loadFuturesBoard(): Promise<FuturesBoard> {
   const quotes: FuturesQuote[] = [];
   // Sequential-in-chunks keeps us inside the upstream rate limit.
-  for (let i = 0; i < contracts.length; i += 4) {
-    const chunk = contracts.slice(i, i + 4);
+  for (let i = 0; i < contracts.length; i += 2) {
+    if (i > 0) await sleep(120);
+    const chunk = contracts.slice(i, i + 2);
     const done = await Promise.all(
       chunk.map((c) =>
         loadContractQuote(c).catch(
