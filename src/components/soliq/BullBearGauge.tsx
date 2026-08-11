@@ -1,20 +1,24 @@
-/** Bullish ⇄ bearish conviction gauge. */
+/** Bullish ⇄ bearish conviction gauge, optionally overlaid with whale-flow tilt. */
 export function BullBearGauge({
   bull,
   bear,
   confidence,
   compact = false,
+  whaleBull,
 }: {
   bull: number;
   bear: number;
   confidence?: number;
   compact?: boolean;
+  /** 0-100 bullish share derived from institutional whale flow. */
+  whaleBull?: number;
 }) {
   const total = Math.max(1, bull + bear);
   const bullPct = Math.round((bull / total) * 100);
   const net = bullPct - 50;
   const label = net > 18 ? "Strong bullish" : net > 6 ? "Bullish" : net < -18 ? "Strong bearish" : net < -6 ? "Bearish" : "Neutral";
   const tone = net > 6 ? "text-bull" : net < -6 ? "text-bear" : "text-muted-foreground";
+
 
   return (
     <div className={compact ? "w-full" : "panel w-full p-4"}>
