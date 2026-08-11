@@ -248,7 +248,7 @@ type State = {
 };
 
 async function loadState(symbol: string): Promise<State> {
-  const raw = await uw<Record<string, unknown>>(`/api/stock/${symbol}/stock-state`).catch(() => ({}));
+  const raw = await uw<Record<string, unknown>>(`/api/stock/${symbol}/stock-state`).catch(() => ({}) as Record<string, unknown>);
   return {
     close: num(raw["close"]),
     prevClose: num(raw["prev_close"]),
