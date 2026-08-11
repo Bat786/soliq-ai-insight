@@ -81,7 +81,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
-      { title: "SOLIQ — powered by SOLIQ, Solana Blockchain Intelligence Engine" },
+      { title: "SOLIQ — powered by AETHRON, Solana Blockchain Intelligence Engine" },
       {
         name: "description",
         content:
@@ -92,7 +92,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "apple-mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
       { name: "apple-mobile-web-app-title", content: "SOLIQ" },
-      { property: "og:title", content: "SOLIQ — powered by SOLIQ" },
+      { property: "og:title", content: "SOLIQ — powered by AETHRON" },
       {
         property: "og:description",
         content: "Live multi-asset desks, whale flow, real-time alerts and AI research in one premium terminal.",
