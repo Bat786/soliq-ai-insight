@@ -218,14 +218,14 @@ function SidebarFooter() {
 
   return (
     <div className="m-3 rounded-xl border border-border bg-surface-2/60 p-4">
-      <p className="text-xs font-medium">{isSignedIn ? "Explorer plan" : "Guest preview mode"}</p>
+      <p className="text-xs font-medium">{isSignedIn ? "Orbit plan" : "Guest preview mode"}</p>
       <p className="mt-1 text-[11px] text-muted-foreground">
         {isSignedIn
           ? "Upgrade for unlimited alerts, a member badge and posting rights."
           : "Create an account to sync watchlists, alerts and portfolios."}
       </p>
       <Button asChild variant="hero" size="sm" className="mt-3 w-full">
-        <Link to={isSignedIn ? "/pricing" : "/auth"}>{isSignedIn ? "Go Premium" : "Explore SOLIQ Free"}</Link>
+        <Link to={isSignedIn ? "/pricing" : "/auth"}>{isSignedIn ? "Go Premium" : "Explore AETHRON Free"}</Link>
       </Button>
     </div>
   );
@@ -285,7 +285,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             </p>
             <div className="flex items-center gap-2">
               <Button asChild size="sm" variant="ghost" className="hidden sm:inline-flex">
-                <Link to="/assistant">Ask SOLIQ AI</Link>
+                <Link to="/assistant">Ask AETHRON AI</Link>
               </Button>
               <AppearanceMenu />
               <NotificationBell />

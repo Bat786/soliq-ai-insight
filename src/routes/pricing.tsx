@@ -45,7 +45,7 @@ function Pricing() {
       void queryClient.invalidateQueries({ queryKey: ["profile"] });
       toast.success(
         profile.membership_tier === "free"
-          ? "Membership cancelled — you're back on Explorer."
+          ? "Membership cancelled — you're back on Orbit."
           : `${profile.membership_tier === "elite" ? "Elite" : "Pro"} membership active.`,
       );
     },

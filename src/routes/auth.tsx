@@ -208,7 +208,7 @@ function Auth() {
           </div>
 
           <Button asChild variant="ghost" className="mt-4 w-full text-primary">
-            <Link to="/">Explore SOLIQ Free →</Link>
+            <Link to="/">Explore AETHRON Free →</Link>
           </Button>
 
           <p className="mt-4 flex items-center justify-center gap-1.5 text-[11px] text-muted-foreground">
