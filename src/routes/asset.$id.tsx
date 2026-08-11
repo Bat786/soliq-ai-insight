@@ -7,7 +7,9 @@ import { BullBearGauge } from "@/components/soliq/BullBearGauge";
 import { ChartTerminal } from "@/components/soliq/ChartTerminal";
 import { RiskBar, ScoreRing } from "@/components/soliq/primitives";
 import { Delta } from "@/components/soliq/primitives";
+import { WhaleSignalCard } from "@/components/soliq/WhaleSignal";
 import { useAssetDetail } from "@/hooks/use-market";
+import { useWhaleFeed } from "@/hooks/use-whales";
 import { fmtPctc, fmtUsdc, sectorLabels, signalLabels } from "@/lib/market-types";
 
 
@@ -51,6 +53,7 @@ function AssetPage() {
   const { id } = Route.useParams();
   const [days, setDays] = useState(90);
   const { data, isLoading, isError, error } = useAssetDetail(id, days);
+  const { data: whales } = useWhaleFeed();
 
   if (isLoading) {
     return (
@@ -105,7 +108,13 @@ function AssetPage() {
             onDaysChange={setDays}
           />
           <div className="space-y-4">
-            <BullBearGauge bull={asset.bullScore} bear={asset.bearScore} confidence={asset.aiConfidence} />
+            <BullBearGauge
+              bull={asset.bullScore}
+              bear={asset.bearScore}
+              confidence={asset.aiConfidence}
+              whaleBull={whales?.signal.bull}
+            />
+            <WhaleSignalCard compact />
             <div className="panel p-4">
               <p className="text-[10px] tracking-wide text-muted-foreground uppercase">Flow &amp; pressure</p>
               <div className="mt-2 space-y-2 text-xs">

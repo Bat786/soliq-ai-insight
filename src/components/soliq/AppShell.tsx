@@ -12,6 +12,7 @@ import {
   Radar,
   Sparkles,
   Users,
+  Waves,
   Wallet,
   Zap,
 } from "lucide-react";
@@ -40,6 +41,7 @@ const nav = [
   { to: "/lists", label: "Lists", icon: ListChecks },
   { to: "/portfolio", label: "Portfolio", icon: Wallet },
   { to: "/discover", label: "Discover", icon: Compass },
+  { to: "/whales", label: "Whale Flow", icon: Waves },
   { to: "/community", label: "Community", icon: Users },
   { to: "/backtest", label: "Backtest", icon: FlaskConical },
   { to: "/assistant", label: "AI Assistant", icon: Bot },

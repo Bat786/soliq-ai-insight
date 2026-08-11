@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Bot, Send, Sparkles } from "lucide-react";
 import { useState } from "react";
 
+import { WhaleStrip } from "@/components/soliq/WhaleSignal";
 import { AppShell } from "@/components/soliq/AppShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -62,6 +63,7 @@ function Assistant() {
 
   return (
     <AppShell>
+      <div className="mb-4"><WhaleStrip /></div>
       <div className="mx-auto flex max-w-3xl flex-col">
         <header className="flex items-center gap-3">
           <span className="grid size-10 place-items-center rounded-xl bg-primary/15 text-primary glow-ring">
