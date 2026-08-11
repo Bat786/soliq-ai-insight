@@ -97,15 +97,11 @@ export function MemberBadge({ tier, className = "" }: { tier: Tier; className?: 
 
 /** Live multi-desk tape: crypto, stocks and futures streamed from our market APIs. */
 function Ticker() {
-  const crypto = useTapeBoard("crypto");
-  const stocks = useTapeBoard("stocks");
-  const futures = useTapeBoard("futures");
+  const board = useTapeBoard();
 
-  const rows = [
-    ...(crypto.data?.rows ?? []),
-    ...(stocks.data?.rows ?? []),
-    ...(futures.data?.rows ?? []),
-  ].filter((r) => Number.isFinite(r.last) && r.last > 0);
+  const rows = (board.data?.rows ?? []).filter(
+    (r) => (r.desk === "crypto" || r.desk === "stocks" || r.desk === "futures") && Number.isFinite(r.last) && r.last > 0,
+  );
 
   const loading = !rows.length;
   const loop = loading ? [] : [...rows, ...rows];

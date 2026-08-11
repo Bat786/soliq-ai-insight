@@ -72,26 +72,20 @@ function Panel({ title, subtitle, rows, loading }: { title: string; subtitle: st
 }
 
 function Home() {
-  const crypto = useTapeBoard("crypto");
-  const stocks = useTapeBoard("stocks");
-  const futures = useTapeBoard("futures");
-  const indices = useTapeBoard("indices");
+  const board = useTapeBoard();
   const desk = useCryptoDesk();
   const news = useMarketNews(undefined, 10);
 
-  const all = [
-    ...(crypto.data?.rows ?? []),
-    ...(stocks.data?.rows ?? []),
-    ...(futures.data?.rows ?? []),
-  ].filter((r) => Number.isFinite(r.last) && r.last > 0);
+  const allRows = board.data?.rows ?? [];
+  const all = allRows.filter((r) => Number.isFinite(r.last) && r.last > 0);
 
-  const loading = crypto.isLoading || stocks.isLoading || futures.isLoading;
+  const loading = board.isLoading;
   const gainers = [...all].sort((a, b) => b.changePct - a.changePct).slice(0, 5);
   const losers = [...all].sort((a, b) => a.changePct - b.changePct).slice(0, 5);
   const trending = [...all].sort((a, b) => Math.abs(b.changePct) - Math.abs(a.changePct)).slice(0, 5);
 
-  const spx = indices.data?.rows.find((r) => r.key === "SPX");
-  const btc = crypto.data?.rows.find((r) => r.key === "BTCUSD");
+  const spx = allRows.find((r) => r.key === "SPX");
+  const btc = allRows.find((r) => r.key === "BTCUSD");
   const breadth = all.length ? (all.filter((r) => r.changePct >= 0).length / all.length) * 100 : 0;
   const movers = desk.data?.movers ?? [];
 
