@@ -194,7 +194,7 @@ export function findInstrument(key: string): Instrument | undefined {
 
 type CacheEntry = { at: number; value: Bar[] };
 const cache = new Map<string, CacheEntry>();
-const TTL = 5 * 60_000;
+const TTL = 10 * 60_000;
 
 const num = (v: unknown): number => {
   const n = Number(v ?? 0);
@@ -214,7 +214,7 @@ type ChartResponse = {
  * Upstream is aggressive about bursts, so every chart request goes through one
  * serialized queue with a minimum gap plus exponential backoff on 429s.
  */
-const MIN_GAP = 220;
+const MIN_GAP = 1500;
 let chain: Promise<unknown> = Promise.resolve();
 let lastAt = 0;
 
@@ -232,7 +232,7 @@ function queued<T>(task: () => Promise<T>): Promise<T> {
 }
 
 async function fetchChart(url: string): Promise<ChartResponse | null> {
-  const backoff = [0, 700, 2000];
+  const backoff = [0, 4000];
   for (const wait of backoff) {
     if (wait) await sleep(wait);
     try {
@@ -339,7 +339,7 @@ async function loadSparkBars(symbols: string[]): Promise<Map<string, Bar[]>> {
     chunks.map(async (chunk) => {
       const key = `spark:${chunk.join(",")}`;
       const hit = cache.get(key);
-      const fresh = hit && Date.now() - hit.at < 60_000;
+      const fresh = hit && Date.now() - hit.at < TTL;
       const url = `${SPARK}?symbols=${chunk.map(encodeURIComponent).join(",")}&interval=5m&range=5d`;
       let json: SparkResponse | null = null;
       if (!fresh) {
