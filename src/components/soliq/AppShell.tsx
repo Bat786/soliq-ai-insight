@@ -12,6 +12,7 @@ import {
   LayoutDashboard,
   ListChecks,
   LogOut,
+  PieChart,
   Radar,
   Settings,
   Sparkles,
@@ -36,8 +37,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useProfile } from "@/hooks/use-soliq-account";
+import { useTapeBoard } from "@/hooks/use-tape";
 import { supabase } from "@/integrations/supabase/client";
-import { assets, fmtPct } from "@/lib/market-data";
+import { fmtPct } from "@/lib/market-data";
 import { isPaid, planByTier, type Tier } from "@/lib/membership";
 
 const nav = [
