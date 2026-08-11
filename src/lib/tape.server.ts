@@ -235,9 +235,15 @@ async function fetchChart(url: string): Promise<ChartResponse | null> {
   const backoff = [0, 700, 2000];
   for (const wait of backoff) {
     if (wait) await sleep(wait);
-    const res = await queued(() => fetch(url, { headers: { Accept: "application/json", "User-Agent": UA } }));
-    if (res.ok) return (await res.json()) as ChartResponse;
-    if (res.status !== 429 && res.status !== 503) return null;
+    try {
+      const res = await queued(() => fetch(url, { headers: { Accept: "application/json", "User-Agent": UA } }));
+      if (res.ok) return (await res.json()) as ChartResponse;
+      console.warn(`[tape] ${url} -> ${res.status}`);
+      if (res.status !== 429 && res.status !== 503) return null;
+    } catch (e) {
+      console.warn(`[tape] ${url} threw ${(e as Error).message}`);
+      return null;
+    }
   }
   return null;
 }
