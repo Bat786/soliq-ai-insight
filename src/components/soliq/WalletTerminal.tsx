@@ -162,7 +162,27 @@ export function WalletTerminal() {
                       <Link2Off className="size-3.5" />
                     </Button>
                   </div>
+                  {!!bal?.tokens?.length && (
+                    <div className="mt-1 w-full border-t border-border/60 pt-2">
+                      <p className="text-[10px] font-semibold tracking-wide text-muted-foreground">TOKEN HOLDINGS</p>
+                      <div className="mt-1.5 flex flex-wrap gap-1.5">
+                        {bal.tokens.slice(0, 8).map((t) => (
+                          <span
+                            key={`${w.id}-${t.symbol}-${t.amount}`}
+                            className="num rounded-lg border border-border bg-surface-2/60 px-2 py-1 text-[10px]"
+                            title={t.name}
+                          >
+                            {t.symbol}{" "}
+                            <span className="text-muted-foreground">
+                              {t.amount.toLocaleString(undefined, { maximumFractionDigits: 4 })}
+                            </span>
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
+
               );
             })}
           </div>
