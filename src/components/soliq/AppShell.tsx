@@ -43,14 +43,14 @@ import { isPaid, planByTier, type Tier } from "@/lib/membership";
 const nav = [
   { to: "/", label: "Home", icon: LayoutDashboard },
   { to: "/scanner", label: "Scanner", icon: Radar },
-  { to: "/lists", label: "Lists", icon: ListChecks },
-  { to: "/portfolio", label: "Portfolio", icon: Wallet },
-  { to: "/wallets", label: "Wallets", icon: Wallet },
-  { to: "/discover", label: "Discover", icon: Compass },
-  { to: "/whales", label: "Whale Flow", icon: Waves },
   { to: "/stocks", label: "Stocks", icon: BarChart3 },
   { to: "/futures", label: "Futures", icon: Activity },
-  { to: "/crypto", label: "Crypto Desk", icon: Coins },
+  { to: "/crypto", label: "Crypto", icon: Coins },
+  { to: "/whales", label: "Whale Flow", icon: Waves },
+  { to: "/lists", label: "Lists", icon: ListChecks },
+  { to: "/portfolio", label: "Portfolio", icon: PieChart },
+  { to: "/wallets", label: "Wallets", icon: Wallet },
+  { to: "/discover", label: "Discover", icon: Compass },
   { to: "/community", label: "Community", icon: Users },
   { to: "/backtest", label: "Backtest", icon: FlaskConical },
   { to: "/assistant", label: "AI Assistant", icon: Bot },
@@ -60,7 +60,7 @@ const nav = [
 export function Logo({ compact = false }: { compact?: boolean }) {
   return (
     <Link to="/" className="flex items-center gap-2.5">
-      <span className="grid size-9 place-items-center rounded-xl bg-primary/15 text-primary glow-ring">
+      <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-primary/15 text-primary glow-ring">
         <Zap className="size-4.5" />
       </span>
       {!compact && (
@@ -69,7 +69,7 @@ export function Logo({ compact = false }: { compact?: boolean }) {
             SOL<span className="text-gradient">IQ</span>
           </span>
           <span className="mt-0.5 text-[9px] font-medium tracking-[0.22em] text-muted-foreground">
-            POWERED BY SOLIQ
+            POWERED BY AETHRON
           </span>
         </span>
       )}
@@ -93,19 +93,36 @@ export function MemberBadge({ tier, className = "" }: { tier: Tier; className?: 
   );
 }
 
+/** Live multi-desk tape: crypto, stocks and futures streamed from our market APIs. */
 function Ticker() {
-  const row = [...assets, ...assets];
+  const crypto = useTapeBoard("crypto");
+  const stocks = useTapeBoard("stocks");
+  const futures = useTapeBoard("futures");
+
+  const rows = [
+    ...(crypto.data?.rows ?? []),
+    ...(stocks.data?.rows ?? []),
+    ...(futures.data?.rows ?? []),
+  ].filter((r) => Number.isFinite(r.price) && r.price > 0);
+
+  const loading = !rows.length;
+  const loop = loading ? [] : [...rows, ...rows];
+
   return (
     <div className="scroll-none overflow-hidden border-b border-border/70 bg-surface/40">
-      <div className="flex w-max animate-[marquee_48s_linear_infinite] gap-6 px-4 py-1.5">
-        {row.map((a, i) => (
-          <span key={`${a.id}-${i}`} className="num flex items-center gap-2 text-[11px] whitespace-nowrap">
-            <span className="text-muted-foreground">{a.symbol}</span>
-            <span>{a.price < 1 ? a.price.toPrecision(3) : a.price.toLocaleString()}</span>
-            <span className={a.change24h >= 0 ? "text-bull" : "text-bear"}>{fmtPct(a.change24h)}</span>
-          </span>
-        ))}
-      </div>
+      {loading ? (
+        <div className="px-4 py-1.5 text-[11px] text-muted-foreground">Streaming live crypto · stocks · futures tape…</div>
+      ) : (
+        <div className="flex w-max animate-[marquee_60s_linear_infinite] gap-6 px-4 py-1.5">
+          {loop.map((r, i) => (
+            <span key={`${r.key}-${i}`} className="num flex items-center gap-2 text-[11px] whitespace-nowrap">
+              <span className="text-muted-foreground">{r.code}</span>
+              <span>{r.price < 1 ? r.price.toPrecision(4) : r.price.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
+              <span className={r.changePct >= 0 ? "text-bull" : "text-bear"}>{fmtPct(r.changePct)}</span>
+            </span>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
