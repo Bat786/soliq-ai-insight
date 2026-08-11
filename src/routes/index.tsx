@@ -3,6 +3,7 @@ import { Bot, ArrowUpRight, Newspaper, Sparkles } from "lucide-react";
 
 import { AppShell } from "@/components/soliq/AppShell";
 import { AssetRow, Delta, ScoreRing, SectionTitle, Sparkline, StatCard } from "@/components/soliq/primitives";
+import { WhaleSignalCard, WhaleStrip } from "@/components/soliq/WhaleSignal";
 import { Button } from "@/components/ui/button";
 import {
   aiPicks,
@@ -60,6 +61,10 @@ function Home() {
         </div>
       </section>
 
+      <div className="mt-4">
+        <WhaleStrip />
+      </div>
+
       <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
         {marketStats.map((s) => (
           <StatCard key={s.label} label={s.label} value={s.value} delta={s.delta} />
@@ -92,6 +97,12 @@ function Home() {
           </ul>
         </div>
 
+        <div>
+          <WhaleSignalCard />
+        </div>
+      </div>
+
+      <div className="mt-5 grid gap-5 lg:grid-cols-3">
         <div className="panel p-5">
           <SectionTitle title="Your portfolio" subtitle="Demo holdings" />
           <p className="num font-display text-2xl font-bold">{fmtUsd(portfolioValue)}</p>
