@@ -100,7 +100,7 @@ export function StockResearch({ initial = "AAPL" }: { initial?: string }) {
   }, [options, activeExpiry]);
 
   const p = research.data?.profile;
-  const hits = (universe.data ?? []).slice(0, 24);
+  const hits = term.trim().length >= 1 ? (universe.data ?? []).slice(0, 24) : [];
 
   return (
     <div className="space-y-4">
