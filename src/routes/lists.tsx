@@ -1,8 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Bell, BellOff, ListChecks, Plus, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { Bell, BellOff, ListChecks, Loader2, Plus, Trash2 } from "lucide-react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/soliq/AppShell";
@@ -10,7 +10,9 @@ import { AssetRow, Delta } from "@/components/soliq/primitives";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useProfile, useSession } from "@/hooks/use-soliq-account";
-import { assets, byId, fmtUsd, watchlists as seedLists } from "@/lib/market-data";
+import { useMarket } from "@/hooks/use-market";
+import { fmtUsd } from "@/lib/format";
+import type { LiveAsset } from "@/lib/market-types";
 import { FREE_ALERT_LIMIT, isPaid } from "@/lib/membership";
 import { createAlert, deleteAlert, listAlerts, setAlertActive } from "@/lib/soliq.functions";
 
@@ -20,7 +22,8 @@ export const Route = createFileRoute("/lists")({
       { title: "Watchlists & Price Alerts — SOLIQ" },
       {
         name: "description",
-        content: "Build SOLIQ watchlists, group assets by thesis and get in-app alert notifications when prices cross your targets.",
+        content:
+          "Build SOLIQ watchlists from the live market universe and get in-app alert notifications when prices cross your targets.",
       },
       { property: "og:title", content: "Watchlists & Price Alerts — SOLIQ" },
       { property: "og:description", content: "Unlimited watchlists with working price alerts and notifications." },
@@ -31,7 +34,19 @@ export const Route = createFileRoute("/lists")({
   component: Lists,
 });
 
-function AlertsPanel({ listName, assetIds }: { listName: string; assetIds: string[] }) {
+type UserList = { id: string; name: string; assetIds: string[] };
+
+const defaultLists: UserList[] = [{ id: "my-watchlist", name: "My Watchlist", assetIds: [] }];
+
+function AlertsPanel({
+  listName,
+  assetIds,
+  universe,
+}: {
+  listName: string;
+  assetIds: string[];
+  universe: LiveAsset[];
+}) {
   const { isSignedIn } = useSession();
   const { tier } = useProfile();
   const queryClient = useQueryClient();
@@ -40,10 +55,15 @@ function AlertsPanel({ listName, assetIds }: { listName: string; assetIds: strin
   const removeAlert = useServerFn(deleteAlert);
   const toggleAlert = useServerFn(setAlertActive);
 
-  const pool = assetIds.length ? assetIds : assets.map((a) => a.id);
-  const [assetId, setAssetId] = useState(pool[0]!);
+  const pool = useMemo(() => {
+    const ids = assetIds.length ? assetIds : universe.slice(0, 60).map((a) => a.id);
+    return ids.map((id) => universe.find((a) => a.id === id)).filter((a): a is LiveAsset => !!a);
+  }, [assetIds, universe]);
+
+  const [assetId, setAssetId] = useState("");
   const [direction, setDirection] = useState<"above" | "below">("above");
   const [threshold, setThreshold] = useState("");
+  const active = pool.find((a) => a.id === assetId) ?? pool[0];
 
   const alertsQuery = useQuery({
     queryKey: ["alerts"],
@@ -59,7 +79,7 @@ function AlertsPanel({ listName, assetIds }: { listName: string; assetIds: strin
 
   const create = useMutation({
     mutationFn: () =>
-      addAlert({ data: { listName, assetId, direction, threshold: Number(threshold) } }),
+      addAlert({ data: { listName, assetId: active?.id ?? "", direction, threshold: Number(threshold) } }),
     onSuccess: (res) => {
       if (res.limitReached) {
         toast.error(`Free plan is limited to ${FREE_ALERT_LIMIT} alerts. Upgrade for unlimited alerts.`);
@@ -88,8 +108,6 @@ function AlertsPanel({ listName, assetIds }: { listName: string; assetIds: strin
     );
   }
 
-  const current = byId(assetId);
-
   return (
     <div className="panel p-5">
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -108,18 +126,15 @@ function AlertsPanel({ listName, assetIds }: { listName: string; assetIds: strin
           </label>
           <select
             id="alert-asset"
-            value={assetId}
+            value={active?.id ?? ""}
             onChange={(e) => setAssetId(e.target.value)}
             className="num mt-1 h-9 w-full rounded-md border border-border bg-surface-2/40 px-2 text-sm"
           >
-            {pool.map((id) => {
-              const a = byId(id);
-              return a ? (
-                <option key={id} value={id}>
-                  {a.symbol}
-                </option>
-              ) : null;
-            })}
+            {pool.map((a) => (
+              <option key={a.id} value={a.id}>
+                {a.symbol}
+              </option>
+            ))}
           </select>
         </div>
         <div className="min-w-24">
@@ -138,7 +153,7 @@ function AlertsPanel({ listName, assetIds }: { listName: string; assetIds: strin
         </div>
         <div className="min-w-28 flex-1">
           <label className="text-[11px] text-muted-foreground" htmlFor="alert-price">
-            Target price {current ? `(now ${fmtUsd(current.price)})` : ""}
+            Target price {active ? `(now ${fmtUsd(active.price)})` : ""}
           </label>
           <Input
             id="alert-price"
@@ -153,7 +168,9 @@ function AlertsPanel({ listName, assetIds }: { listName: string; assetIds: strin
           variant="hero"
           size="sm"
           className="h-9"
-          disabled={!threshold || Number.isNaN(Number(threshold)) || Number(threshold) <= 0 || create.isPending}
+          disabled={
+            !active || !threshold || Number.isNaN(Number(threshold)) || Number(threshold) <= 0 || create.isPending
+          }
           onClick={() => create.mutate()}
         >
           <Plus className="size-4" /> Arm alert
@@ -161,9 +178,7 @@ function AlertsPanel({ listName, assetIds }: { listName: string; assetIds: strin
       </div>
 
       <div className="mt-4 divide-y divide-border/60">
-        {alerts.length === 0 && (
-          <p className="py-5 text-center text-xs text-muted-foreground">No alerts armed yet.</p>
-        )}
+        {alerts.length === 0 && <p className="py-5 text-center text-xs text-muted-foreground">No alerts armed yet.</p>}
         {alerts.map((a) => (
           <div key={a.id} className="flex items-center gap-3 py-2.5">
             <span className="num w-14 text-sm">{a.asset_symbol}</span>
@@ -210,15 +225,34 @@ function AlertsPanel({ listName, assetIds }: { listName: string; assetIds: strin
 }
 
 function Lists() {
-  const [lists, setLists] = useState(seedLists);
-  const [activeId, setActiveId] = useState(seedLists[0]!.id);
+  const market = useMarket();
+  const universe = market.data?.rows ?? [];
+  const [lists, setLists] = useState<UserList[]>(defaultLists);
+  const [activeId, setActiveId] = useState(defaultLists[0]!.id);
   const [name, setName] = useState("");
+  const [search, setSearch] = useState("");
   const active = lists.find((l) => l.id === activeId) ?? lists[0]!;
+
+  const listAssets = active.assetIds
+    .map((id) => universe.find((a) => a.id === id))
+    .filter((a): a is LiveAsset => !!a);
+
+  const listPerf = listAssets.length
+    ? listAssets.reduce((s, a) => s + a.change24h, 0) / listAssets.length
+    : 0;
+
+  const picker = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    const base = q
+      ? universe.filter((a) => a.symbol.toLowerCase().includes(q) || a.name.toLowerCase().includes(q))
+      : universe;
+    return base.slice(0, 60);
+  }, [universe, search]);
 
   const createList = () => {
     if (!name.trim()) return;
     const id = `${name.toLowerCase().replace(/\s+/g, "-")}-${lists.length}`;
-    setLists([...lists, { id, name: name.trim(), assetIds: [], perf: 0, alerts: 0 }]);
+    setLists([...lists, { id, name: name.trim(), assetIds: [] }]);
     setActiveId(id);
     setName("");
   };
@@ -242,7 +276,9 @@ function Lists() {
       <h1 className="flex items-center gap-2 text-xl font-bold lg:text-2xl">
         <ListChecks className="size-5 text-primary" /> Watchlists
       </h1>
-      <p className="text-sm text-muted-foreground">Unlimited lists, grouped by thesis — with working price alerts.</p>
+      <p className="text-sm text-muted-foreground">
+        Unlimited lists built from {universe.length || "the"} live markets — with working price alerts.
+      </p>
 
       <div className="mt-4 grid gap-5 lg:grid-cols-[300px_1fr]">
         <aside className="panel p-4">
@@ -259,21 +295,27 @@ function Lists() {
             </Button>
           </div>
           <div className="mt-3 space-y-1">
-            {lists.map((l) => (
-              <button
-                key={l.id}
-                onClick={() => setActiveId(l.id)}
-                className={`flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2.5 text-left text-sm transition-colors ${
-                  l.id === active.id ? "bg-primary/12 text-primary" : "hover:bg-accent"
-                }`}
-              >
-                <span className="truncate">
-                  {l.name}
-                  <span className="num ml-2 text-[11px] text-muted-foreground">{l.assetIds.length}</span>
-                </span>
-                <Delta value={l.perf} />
-              </button>
-            ))}
+            {lists.map((l) => {
+              const rows = l.assetIds
+                .map((id) => universe.find((a) => a.id === id))
+                .filter((a): a is LiveAsset => !!a);
+              const perf = rows.length ? rows.reduce((s, a) => s + a.change24h, 0) / rows.length : 0;
+              return (
+                <button
+                  key={l.id}
+                  onClick={() => setActiveId(l.id)}
+                  className={`flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2.5 text-left text-sm transition-colors ${
+                    l.id === active.id ? "bg-primary/12 text-primary" : "hover:bg-accent"
+                  }`}
+                >
+                  <span className="truncate">
+                    {l.name}
+                    <span className="num ml-2 text-[11px] text-muted-foreground">{l.assetIds.length}</span>
+                  </span>
+                  <Delta value={perf} />
+                </button>
+              );
+            })}
           </div>
         </aside>
 
@@ -282,7 +324,9 @@ function Lists() {
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <h2 className="font-display text-lg font-semibold">{active.name}</h2>
-                <p className="text-xs text-muted-foreground">{active.assetIds.length} assets</p>
+                <p className="text-xs text-muted-foreground">
+                  {active.assetIds.length} assets · avg 24h {listPerf.toFixed(2)}%
+                </p>
               </div>
               <Button
                 variant="bear"
@@ -299,29 +343,40 @@ function Lists() {
               </Button>
             </div>
             <div className="mt-3">
-              {active.assetIds.map((id) => {
-                const a = byId(id);
-                return a ? <AssetRow key={id} asset={a} /> : null;
-              })}
-              {active.assetIds.length === 0 && (
+              {market.isLoading && !universe.length ? (
+                <div className="flex items-center justify-center gap-2 py-8 text-sm text-muted-foreground">
+                  <Loader2 className="size-4 animate-spin" /> Loading live markets…
+                </div>
+              ) : listAssets.length ? (
+                listAssets.map((a) => <AssetRow key={a.id} asset={a} />)
+              ) : (
                 <p className="py-6 text-center text-sm text-muted-foreground">
-                  Empty list — add assets from the picker below.
+                  Empty list — add live markets from the picker below.
                 </p>
               )}
             </div>
           </div>
 
-          <AlertsPanel listName={active.name} assetIds={active.assetIds} />
+          <AlertsPanel listName={active.name} assetIds={active.assetIds} universe={universe} />
 
           <div className="panel p-5">
-            <h3 className="font-display text-sm font-semibold">Add or remove assets</h3>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <h3 className="font-display text-sm font-semibold">Add or remove markets</h3>
+              <Input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search live universe"
+                className="h-8 max-w-44 text-xs"
+              />
+            </div>
             <div className="mt-3 flex flex-wrap gap-2">
-              {assets.map((a) => {
+              {picker.map((a) => {
                 const inList = active.assetIds.includes(a.id);
                 return (
                   <button
                     key={a.id}
                     onClick={() => toggleAsset(a.id)}
+                    title={a.name}
                     className={`num rounded-full border px-3 py-1.5 text-xs transition-colors ${
                       inList
                         ? "border-primary/40 bg-primary/15 text-primary"
@@ -332,6 +387,7 @@ function Lists() {
                   </button>
                 );
               })}
+              {!picker.length && <p className="text-xs text-muted-foreground">No markets match that search.</p>}
             </div>
           </div>
         </section>
