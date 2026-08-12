@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import { AppShell } from "@/components/soliq/AppShell";
 import { MarketsBoard } from "@/components/soliq/MarketsBoard";
+import { StockResearch } from "@/components/soliq/StockResearch";
 import { WhaleStrip } from "@/components/soliq/WhaleSignal";
 import { Button } from "@/components/ui/button";
 import type { Timeframe } from "@/lib/futures.server";
@@ -33,6 +34,7 @@ const tabs = [
   { id: "equities", label: "Equities", decks: ["stocks"] as const, headline: "Megacaps · semis · crypto equities" },
   { id: "benchmarks", label: "Benchmarks & rates", decks: ["indices"] as const, headline: "S&P · Nasdaq · VIX · 10Y" },
   { id: "search", label: "Symbol search", decks: ["stocks"] as const, headline: "Search any listed ticker" },
+  { id: "research", label: "Research & options", decks: ["stocks"] as const, headline: "Fundamentals and options chains" },
 ];
 
 function StocksDesk() {
@@ -61,6 +63,9 @@ function StocksDesk() {
       </div>
 
       <div className="mt-4">
+        {active.id === "research" ? (
+          <StockResearch />
+        ) : (
         <MarketsBoard
           key={active.id}
           tf={tf}
@@ -69,6 +74,7 @@ function StocksDesk() {
           headline={active.headline}
           searchable={active.id === "search"}
         />
+        )}
       </div>
     </AppShell>
   );

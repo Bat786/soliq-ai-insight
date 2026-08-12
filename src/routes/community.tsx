@@ -3,14 +3,13 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { Lock } from "lucide-react";
-import { Heart, MessageCircle, Trophy, UserPlus, Users } from "lucide-react";
+import { Trophy, Users } from "lucide-react";
 import { useState } from "react";
 
 import { AppShell, MemberBadge } from "@/components/soliq/AppShell";
 import { SectionTitle } from "@/components/soliq/primitives";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { communityPosts, leaderboard } from "@/lib/market-data";
 import { useProfile, useSession } from "@/hooks/use-soliq-account";
 import { isPaid } from "@/lib/membership";
 import { createCommunityPost } from "@/lib/soliq.functions";
@@ -33,9 +32,7 @@ export const Route = createFileRoute("/community")({
 });
 
 function Community() {
-  const [posts, setPosts] = useState(communityPosts);
   const [draft, setDraft] = useState("");
-  const [liked, setLiked] = useState<string[]>([]);
 
   const { isSignedIn } = useSession();
   const { data: profile, tier } = useProfile();
@@ -84,6 +81,19 @@ function Community() {
     },
     onError: () => toast.error("Could not publish that post."),
   });
+
+  const leaders = Object.values(
+    (memberPosts.data ?? []).reduce<Record<string, { author: string; handle: string; tier: "free" | "pro" | "elite"; posts: number }>>(
+      (acc, p) => {
+        const key = p.handle;
+        acc[key] = { author: p.author, handle: p.handle, tier: p.tier, posts: (acc[key]?.posts ?? 0) + 1 };
+        return acc;
+      },
+      {},
+    ),
+  )
+    .sort((a, b) => b.posts - a.posts)
+    .slice(0, 10);
 
   return (
     <AppShell>
@@ -155,66 +165,36 @@ function Community() {
             </article>
           ))}
 
-          {posts.map((p) => {
-            const isLiked = liked.includes(p.id);
-            return (
-              <article key={p.id} className="panel p-5">
-                <header className="flex items-center gap-3">
-                  <span className="grid size-9 place-items-center rounded-full bg-primary/15 text-xs font-semibold text-primary">
-                    {p.author.slice(0, 2).toUpperCase()}
-                  </span>
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium">
-                      {p.author} <span className="text-[11px] text-muted-foreground">{p.handle}</span>
-                    </p>
-                    <p className="num text-[11px] text-muted-foreground">
-                      {p.role} · rep {p.rep.toLocaleString()} · {p.time}
-                    </p>
-                  </div>
-                  <Button variant="subtle" size="sm" className="ml-auto">
-                    <UserPlus className="size-4" /> Follow
-                  </Button>
-                </header>
-                <p className="mt-3 text-sm leading-relaxed">{p.body}</p>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {p.tags.map((t) => (
-                    <span key={t} className="rounded-md bg-surface-2 px-2 py-0.5 text-[10px] text-muted-foreground">
-                      #{t}
-                    </span>
-                  ))}
-                </div>
-                <footer className="mt-3 flex items-center gap-4 text-xs text-muted-foreground">
-                  <button
-                    onClick={() => setLiked(isLiked ? liked.filter((i) => i !== p.id) : [...liked, p.id])}
-                    className={`flex items-center gap-1.5 ${isLiked ? "text-primary" : "hover:text-foreground"}`}
-                  >
-                    <Heart className="size-4" /> <span className="num">{p.likes + (isLiked ? 1 : 0)}</span>
-                  </button>
-                  <span className="flex items-center gap-1.5">
-                    <MessageCircle className="size-4" /> <span className="num">{p.comments}</span>
-                  </span>
-                </footer>
-              </article>
-            );
-          })}
+          {!memberPosts.data?.length && (
+            <p className="panel p-8 text-center text-sm text-muted-foreground">
+              No ideas posted yet — Premium members can start the conversation.
+            </p>
+          )}
         </section>
 
         <aside className="panel h-fit p-5">
-          <SectionTitle title="Leaderboard" subtitle="Ranked by reputation" action={<Trophy className="size-4 text-warn" />} />
+          <SectionTitle title="Leaderboard" subtitle="Ranked by published ideas" action={<Trophy className="size-4 text-warn" />} />
           <div className="divide-y divide-border/60">
-            {leaderboard.map((u, i) => (
+            {leaders.map((u, i) => (
               <div key={u.handle} className="flex items-center gap-3 py-3">
                 <span className="num w-5 text-xs text-muted-foreground">{i + 1}</span>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium">{u.name}</p>
-                  <p className="text-[11px] text-muted-foreground">{u.cat}</p>
+                  <p className="truncate text-sm font-medium">{u.author}</p>
+                  <p className="text-[11px] text-muted-foreground">
+                    {u.handle} · {u.tier === "free" ? "Member" : u.tier === "pro" ? "Pro" : "Elite"}
+                  </p>
                 </div>
                 <div className="text-right">
-                  <p className="num text-sm">{u.score.toLocaleString()}</p>
-                  <p className="num text-[11px] text-bull">{u.win}% hit rate</p>
+                  <p className="num text-sm">{u.posts}</p>
+                  <p className="num text-[11px] text-muted-foreground">ideas</p>
                 </div>
               </div>
             ))}
+            {!leaders.length && (
+              <p className="py-4 text-xs text-muted-foreground">
+                The leaderboard fills up as members publish ideas.
+              </p>
+            )}
           </div>
         </aside>
       </div>

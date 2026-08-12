@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { byId, fmtUsd } from "@/lib/market-data";
+import { fmtUsd } from "@/lib/format";
 import { FREE_ALERT_LIMIT, isPaid, type Tier } from "@/lib/membership";
 
 const RETRIGGER_MS = 60 * 60 * 1000;
@@ -81,7 +81,9 @@ export const createAlert = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    const asset = byId(data.assetId);
+    const { loadUniverse } = await import("@/lib/live-market.server");
+    const universe = await loadUniverse();
+    const asset = universe.find((a) => a.id === data.assetId || a.symbol.toUpperCase() === data.assetId.toUpperCase());
     if (!asset) throw new Error("Unknown asset");
 
     const profile = await supabase.from("profiles").select("membership_tier").eq("id", userId).maybeSingle();
@@ -143,8 +145,11 @@ export const evaluateAlerts = createServerFn({ method: "POST" })
     const now = Date.now();
     let triggered = 0;
 
+    const { loadUniverse } = await import("@/lib/live-market.server");
+    const universe = (alerts ?? []).length ? await loadUniverse() : [];
+
     for (const alert of alerts ?? []) {
-      const asset = byId(alert.asset_id);
+      const asset = universe.find((a) => a.id === alert.asset_id);
       if (!asset) continue;
       const threshold = Number(alert.threshold);
       const hit = alert.direction === "above" ? asset.price >= threshold : asset.price <= threshold;

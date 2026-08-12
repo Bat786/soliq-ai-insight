@@ -1,15 +1,25 @@
 import { TrendingDown, TrendingUp } from "lucide-react";
 import type { ReactNode } from "react";
 
-import { type Asset, fmtPct, fmtUsd } from "@/lib/market-data";
+import { fmtPct, fmtUsd } from "@/lib/format";
+
+/** Minimal shape any live market row satisfies (crypto universe, tape rows, wallet holdings). */
+export type AssetLike = {
+  symbol: string;
+  name: string;
+  price: number;
+  change24h: number;
+  marketCap?: number;
+  image?: string | null;
+  series?: number[];
+};
 
 export function Sparkline({ data, up, className = "" }: { data: number[]; up: boolean; className?: string }) {
+  if (!data || data.length < 2) return <div className={`h-8 w-full ${className}`} />;
   const min = Math.min(...data);
   const max = Math.max(...data);
   const span = max - min || 1;
-  const pts = data
-    .map((v, i) => `${(i / (data.length - 1)) * 100},${28 - ((v - min) / span) * 26}`)
-    .join(" ");
+  const pts = data.map((v, i) => `${(i / (data.length - 1)) * 100},${28 - ((v - min) / span) * 26}`).join(" ");
   const stroke = up ? "var(--bull)" : "var(--bear)";
   return (
     <svg viewBox="0 0 100 30" preserveAspectRatio="none" className={`h-8 w-full ${className}`}>
@@ -72,31 +82,38 @@ export function RiskBar({ risk }: { risk: number }) {
   );
 }
 
-export function AssetPill({ asset }: { asset: Asset }) {
+export function AssetPill({ asset }: { asset: AssetLike }) {
   return (
     <div className="flex items-center gap-2.5">
-      <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-surface-2 text-[10px] font-semibold">
-        {asset.symbol.slice(0, 3)}
-      </span>
+      {asset.image ? (
+        <img src={asset.image} alt="" loading="lazy" className="size-8 shrink-0 rounded-lg bg-surface-2" />
+      ) : (
+        <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-surface-2 text-[10px] font-semibold">
+          {asset.symbol.slice(0, 3)}
+        </span>
+      )}
       <div className="min-w-0">
         <p className="truncate text-sm font-medium">{asset.name}</p>
         <p className="num text-[11px] text-muted-foreground">
-          {asset.symbol} · {fmtUsd(asset.marketCap)}
+          {asset.symbol}
+          {asset.marketCap ? ` · ${fmtUsd(asset.marketCap)}` : ""}
         </p>
       </div>
     </div>
   );
 }
 
-export function AssetRow({ asset }: { asset: Asset }) {
+export function AssetRow({ asset }: { asset: AssetLike }) {
   return (
     <div className="flex items-center gap-3 border-b border-border/60 py-3 last:border-0">
       <div className="min-w-0 flex-1">
         <AssetPill asset={asset} />
       </div>
-      <div className="hidden w-16 shrink-0 sm:block">
-        <Sparkline data={asset.series} up={asset.change24h >= 0} />
-      </div>
+      {!!asset.series?.length && (
+        <div className="hidden w-16 shrink-0 sm:block">
+          <Sparkline data={asset.series} up={asset.change24h >= 0} />
+        </div>
+      )}
       <div className="w-24 shrink-0 text-right">
         <p className="num text-sm">{fmtUsd(asset.price)}</p>
         <Delta value={asset.change24h} />
@@ -104,7 +121,6 @@ export function AssetRow({ asset }: { asset: Asset }) {
     </div>
   );
 }
-
 
 export function StatCard({ label, value, delta }: { label: string; value: string; delta?: number }) {
   return (
