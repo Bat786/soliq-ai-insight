@@ -193,7 +193,7 @@ function Scanner() {
   const [activePreset, setActivePreset] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [aiSummary, setAiSummary] = useState<string | null>(null);
-  const [desk, setDesk] = useState<DeskId>("stocks");
+  const [view, setView] = useState<"crypto" | DeskId>("crypto");
   const [tf, setTf] = useState<Timeframe>("5m");
 
   const set = <K extends keyof ScanFilters>(key: K, value: ScanFilters[K]) =>
@@ -241,6 +241,22 @@ function Scanner() {
           </div>
         </div>
 
+        <div className="scroll-none flex gap-1.5 overflow-x-auto pb-1">
+          {deskTabs.map((d) => (
+            <Button
+              key={d.id}
+              size="sm"
+              variant={view === d.id ? "hero" : "subtle"}
+              onClick={() => setView(d.id)}
+              className="shrink-0"
+            >
+              {d.label}
+            </Button>
+          ))}
+        </div>
+
+        {view === "crypto" ? (
+        <>
         <CommandBar
           onResult={(f, name, summary) => {
             setFilters({ ...emptyFilters, ...f });
@@ -375,40 +391,26 @@ function Scanner() {
           market behaviour and clearly labelled as such — not exchange-verified on-chain feeds.
         </p>
 
-        <section className="pt-2">
-          <div className="flex flex-wrap items-end justify-between gap-3">
-            <div>
-              <h2 className="font-display text-lg font-bold">Cross-asset scanner</h2>
-              <p className="text-sm text-muted-foreground">
-                Same indicator engine across stocks, futures, forex and benchmarks — RSI, MACD, VWAP, EMA and 1m→1h
-                conviction.
-              </p>
-            </div>
-            <div className="scroll-none flex gap-2 overflow-x-auto">
-              {crossDesks.map((d) => (
-                <Chip key={d.id} active={desk === d.id} onClick={() => setDesk(d.id)}>
-                  {d.label}
-                </Chip>
-              ))}
-            </div>
-          </div>
-          <div className="mt-3">
-            <MarketsBoard key={desk} tf={tf} onTf={setTf} decks={[desk]} headline={crossHeadline(desk)} searchable />
-          </div>
-        </section>
+        </>
+        ) : (
+          <MarketsBoard
+            key={view}
+            tf={tf}
+            onTf={setTf}
+            decks={[view as DeskId]}
+            headline={deskTabs.find((d) => d.id === view)?.headline ?? "Live tape"}
+            searchable
+          />
+        )}
       </div>
     </AppShell>
   );
 }
 
-const crossDesks = [
-  { id: "stocks", label: "Stocks" },
-  { id: "futures", label: "Futures" },
-  { id: "fx", label: "Forex 24/7" },
-  { id: "indices", label: "Benchmarks" },
-  { id: "crypto", label: "Crypto majors" },
-] as const;
-
-function crossHeadline(id: DeskId) {
-  return crossDesks.find((d) => d.id === id)?.label ?? "Live tape";
-}
+const deskTabs = [
+  { id: "crypto" as const, label: "AI crypto scan", headline: "Live crypto universe with AI conviction" },
+  { id: "stocks" as const, label: "Stocks", headline: "Megacaps · semis · crypto equities" },
+  { id: "futures" as const, label: "Futures", headline: "NQ · ES · oil · gold · silver · BTC" },
+  { id: "fx" as const, label: "Forex 24/7", headline: "Majors and crosses, around the clock" },
+  { id: "indices" as const, label: "Benchmarks", headline: "S&P · Nasdaq · VIX · 10Y" },
+];
