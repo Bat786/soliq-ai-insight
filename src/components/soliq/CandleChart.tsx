@@ -161,16 +161,21 @@ function palette() {
 
 export type Overlays = { ma20: boolean; ma50: boolean; vwap: boolean; rsi: boolean; volume: boolean; signals: boolean };
 
+export type RawBar = { t: number; open: number; high: number; low: number; close: number; volume: number };
+
 export default function CandleChart({
   points,
   volumes,
+  bars,
   interval,
   overlays,
   height = 420,
   onHover,
 }: {
-  points: Point[];
+  points?: Point[] | undefined;
   volumes?: VolPoint[] | undefined;
+  /** Real OHLCV bars from the provider — used verbatim instead of aggregating. */
+  bars?: RawBar[] | undefined;
   interval: IntervalId;
   overlays: Overlays;
   height?: number | undefined;
@@ -182,8 +187,23 @@ export default function CandleChart({
   hoverRef.current = onHover;
   const [themeKey, setThemeKey] = useState(0);
 
-  const effective = useMemo(() => resolveInterval(points, interval), [points, interval]);
-  const candles = useMemo(() => toCandles(points, effective, volumes), [points, effective, volumes]);
+  const series = points ?? [];
+  const candles = useMemo(() => {
+    if (bars && bars.length > 0) {
+      return [...bars]
+        .sort((a, b) => a.t - b.t)
+        .map((b) => ({
+          time: Math.floor(b.t / 1000) as UTCTimestamp,
+          open: b.open,
+          high: b.high,
+          low: b.low,
+          close: b.close,
+          volume: b.volume,
+        }));
+    }
+    return toCandles(series, resolveInterval(series, interval), volumes);
+  }, [bars, series, interval, volumes]);
+
 
   useEffect(() => {
     const obs = new MutationObserver(() => setThemeKey((k) => k + 1));
