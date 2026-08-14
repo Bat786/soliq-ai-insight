@@ -23,8 +23,12 @@ export type Candle = {
 
 export const intervals = [
   { id: "1m", label: "1m", ms: 60_000 },
+  { id: "2m", label: "2m", ms: 2 * 60_000 },
+  { id: "3m", label: "3m", ms: 3 * 60_000 },
   { id: "5m", label: "5m", ms: 5 * 60_000 },
+  { id: "10m", label: "10m", ms: 10 * 60_000 },
   { id: "15m", label: "15m", ms: 15 * 60_000 },
+  { id: "30m", label: "30m", ms: 30 * 60_000 },
   { id: "1h", label: "1H", ms: 3_600_000 },
   { id: "4h", label: "4H", ms: 4 * 3_600_000 },
   { id: "1d", label: "1D", ms: 86_400_000 },
