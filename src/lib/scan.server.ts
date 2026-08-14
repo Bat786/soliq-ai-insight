@@ -161,11 +161,11 @@ async function groupedDay(dayOffset: number): Promise<{ day: string; bars: Map<s
 async function groupedScan(): Promise<{ rows: ScanRow[]; scanned: number; day: string | null }> {
   let latest: { day: string; bars: Map<string, GroupedBar> } | null = null;
   let offset = 1;
-  for (; offset <= 6 && !latest; offset += 1) latest = await groupedDay(offset);
+  for (; offset <= 5 && !latest; offset += 1) latest = await groupedDay(offset);
   if (!latest) return { rows: [], scanned: 0, day: null };
 
   let prior: { day: string; bars: Map<string, GroupedBar> } | null = null;
-  for (let i = offset; i <= offset + 6 && !prior; i += 1) prior = await groupedDay(i);
+  for (let i = offset; i <= offset + 4 && !prior; i += 1) prior = await groupedDay(i);
 
   const rows: ScanRow[] = [];
   for (const [ticker, bar] of latest.bars) {
