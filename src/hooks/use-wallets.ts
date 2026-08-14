@@ -306,7 +306,12 @@ export function useSolanaAdapterLink() {
   const providerName = wallet?.adapter.name ?? "Solana wallet";
 
   useEffect(() => {
-    if (!connected || !address || !isSignedIn) return;
+    if (!connected || !address) return;
+    if (!isSignedIn) {
+      toast.info(`${providerName} connected`, { description: "Sign in to save this wallet to your SOLIQ account." });
+      return;
+    }
+
     if (linkedRef.current === address) return;
     linkedRef.current = address;
     void runLink({ data: { chain: "solana", provider: providerName, address, label: providerName } })
