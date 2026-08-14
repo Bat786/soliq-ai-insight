@@ -3,24 +3,74 @@ import { WalletModalProvider } from "@solana/wallet-adapter-react-ui";
 import { PhantomWalletAdapter } from "@solana/wallet-adapter-phantom";
 import { SolflareWalletAdapter } from "@solana/wallet-adapter-solflare";
 import { clusterApiUrl } from "@solana/web3.js";
-import { useMemo, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { toast } from "sonner";
 
 import "@solana/wallet-adapter-react-ui/styles.css";
+
+export type Cluster = "mainnet-beta" | "devnet";
+
+const CLUSTER_KEY = "soliq.cluster";
+
+type ClusterCtx = { cluster: Cluster; setCluster: (c: Cluster) => void; endpoint: string };
+const ClusterContext = createContext<ClusterCtx>({
+  cluster: "mainnet-beta",
+  setCluster: () => undefined,
+  endpoint: clusterApiUrl("mainnet-beta"),
+});
+
+/** Which Solana cluster the terminal is reading from. */
+export const useCluster = () => useContext(ClusterContext);
 
 /**
  * Real Solana wallet-adapter context. Backpack, Glow and every other
  * Wallet-Standard wallet is auto-detected by the adapter, so only the two
- * legacy injected adapters need to be listed explicitly.
+ * legacy injected adapters need to be listed explicitly. The chosen wallet is
+ * persisted under a SOLIQ-specific key so sessions survive reloads.
  */
 export function WalletContextProvider({ children }: { children: ReactNode }) {
-  const endpoint = useMemo(() => clusterApiUrl("mainnet-beta"), []);
+  const [cluster, setClusterState] = useState<Cluster>("mainnet-beta");
+
+  // localStorage is browser-only — hydrate after mount to avoid SSR mismatch.
+  useEffect(() => {
+    const stored = window.localStorage.getItem(CLUSTER_KEY);
+    if (stored === "devnet" || stored === "mainnet-beta") setClusterState(stored);
+  }, []);
+
+  const setCluster = useCallback((next: Cluster) => {
+    setClusterState(next);
+    window.localStorage.setItem(CLUSTER_KEY, next);
+  }, []);
+
+  const endpoint = useMemo(() => clusterApiUrl(cluster), [cluster]);
   const wallets = useMemo(() => [new PhantomWalletAdapter(), new SolflareWalletAdapter()], []);
 
+  const onError = useCallback((error: Error & { name?: string }) => {
+    const name = error.name ?? "";
+    const message = error.message ?? "";
+    if (/WalletNotSelected/i.test(name)) return;
+    if (/User rejected|WalletConnectionError.*reject|rejected the request/i.test(`${name} ${message}`)) {
+      toast.error("Connection cancelled in your wallet");
+      return;
+    }
+    if (/WalletNotReadyError|NotInstalled/i.test(name)) {
+      toast.error("That wallet isn't installed in this browser", {
+        description: "Install the extension, or open SOLIQ inside the wallet app's browser on mobile.",
+      });
+      return;
+    }
+    toast.error("Wallet error", { description: message.slice(0, 140) || name || undefined });
+  }, []);
+
+  const ctx = useMemo(() => ({ cluster, setCluster, endpoint }), [cluster, setCluster, endpoint]);
+
   return (
-    <ConnectionProvider endpoint={endpoint}>
-      <WalletProvider wallets={wallets} autoConnect>
-        <WalletModalProvider>{children}</WalletModalProvider>
-      </WalletProvider>
-    </ConnectionProvider>
+    <ClusterContext.Provider value={ctx}>
+      <ConnectionProvider endpoint={endpoint}>
+        <WalletProvider wallets={wallets} autoConnect onError={onError} localStorageKey="soliq.wallet">
+          <WalletModalProvider>{children}</WalletModalProvider>
+        </WalletProvider>
+      </ConnectionProvider>
+    </ClusterContext.Provider>
   );
 }
