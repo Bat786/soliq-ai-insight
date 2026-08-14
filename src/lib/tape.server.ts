@@ -613,9 +613,10 @@ export async function loadTapeDetail(key: string, interval: Timeframe): Promise<
     // No feed answered — surface a syncing row so the terminal stays usable.
     return { ...toRow(inst, []), bars: [], interval };
   }
-
-
+  const tf = barsByTf(base);
+  return { ...toRow(inst, base), bars: tf[interval].slice(-400), interval };
 }
+
 
 
 
