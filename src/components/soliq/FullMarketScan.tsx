@@ -2,7 +2,7 @@ import { useState } from "react";
 
 import { Input } from "@/components/ui/input";
 import { useCryptoScan, useMarketScan } from "@/hooks/use-scan";
-import { fmtCompact, fmtPct, fmtUsd } from "@/lib/format";
+import { fmtNum, fmtPct, fmtUsd } from "@/lib/format";
 import type { ScanRow } from "@/lib/scan.server";
 
 const sessionLabel: Record<string, string> = {
@@ -28,7 +28,7 @@ function Table({ title, rows }: { title: string; rows: ScanRow[] }) {
                 <span className={`num w-16 text-xs ${r.changePct >= 0 ? "text-bull" : "text-bear"}`}>
                   {fmtPct(r.changePct)}
                 </span>
-                <span className="num w-16 text-[11px] text-muted-foreground">{fmtCompact(r.volume)}</span>
+                <span className="num w-16 text-[11px] text-muted-foreground">{fmtNum(r.volume)}</span>
               </div>
             </div>
           ))}
@@ -128,7 +128,7 @@ export function CryptoScanBoard() {
                     <span className={`num w-16 text-right text-xs ${r.changePct >= 0 ? "text-bull" : "text-bear"}`}>
                       {fmtPct(r.changePct)}
                     </span>
-                    <span className="num w-16 text-right text-[11px] text-muted-foreground">{fmtCompact(r.volume)}</span>
+                    <span className="num w-16 text-right text-[11px] text-muted-foreground">{fmtNum(r.volume)}</span>
                   </div>
                 </div>
               ))}
