@@ -37,15 +37,7 @@ export type MarketScan = {
   notes: string[];
 };
 
-type Entry = { at: number; value: unknown };
-const cache = new Map<string, Entry>();
-
 const num = (v: unknown, d = 0) => (typeof v === "number" && Number.isFinite(v) ? v : d);
-
-function key(): string | null {
-  const raw = process.env["MASSIVE_API_KEY"] ?? process.env["POLYGON_API_KEY"];
-  return raw ? raw.replace(/\s+/g, "") : null;
-}
 
 async function snapshot<T>(path: string, ttlMs: number): Promise<T | null> {
   // Route through the shared metered/queued Massive client so the scanner
