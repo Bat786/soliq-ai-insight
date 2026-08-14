@@ -26,6 +26,7 @@ import { Route as StocksRouteImport } from './routes/stocks'
 import { Route as WalletsRouteImport } from './routes/wallets'
 import { Route as WhalesRouteImport } from './routes/whales'
 import { Route as AssetIdRouteImport } from './routes/asset.$id'
+import { Route as SymbolMarketSymbolRouteImport } from './routes/symbol.$market.$symbol'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -112,6 +113,11 @@ const AssetIdRoute = AssetIdRouteImport.update({
   path: '/asset/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SymbolMarketSymbolRoute = SymbolMarketSymbolRouteImport.update({
+  id: '/symbol/$market/$symbol',
+  path: '/symbol/$market/$symbol',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -131,6 +137,7 @@ export interface FileRoutesByFullPath {
   '/wallets': typeof WalletsRoute
   '/whales': typeof WhalesRoute
   '/asset/$id': typeof AssetIdRoute
+  '/symbol/$market/$symbol': typeof SymbolMarketSymbolRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -150,6 +157,7 @@ export interface FileRoutesByTo {
   '/wallets': typeof WalletsRoute
   '/whales': typeof WhalesRoute
   '/asset/$id': typeof AssetIdRoute
+  '/symbol/$market/$symbol': typeof SymbolMarketSymbolRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -170,6 +178,7 @@ export interface FileRoutesById {
   '/wallets': typeof WalletsRoute
   '/whales': typeof WhalesRoute
   '/asset/$id': typeof AssetIdRoute
+  '/symbol/$market/$symbol': typeof SymbolMarketSymbolRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -191,6 +200,7 @@ export interface FileRouteTypes {
     | '/wallets'
     | '/whales'
     | '/asset/$id'
+    | '/symbol/$market/$symbol'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -210,6 +220,7 @@ export interface FileRouteTypes {
     | '/wallets'
     | '/whales'
     | '/asset/$id'
+    | '/symbol/$market/$symbol'
   id:
     | '__root__'
     | '/'
@@ -229,6 +240,7 @@ export interface FileRouteTypes {
     | '/wallets'
     | '/whales'
     | '/asset/$id'
+    | '/symbol/$market/$symbol'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -249,6 +261,7 @@ export interface RootRouteChildren {
   WalletsRoute: typeof WalletsRoute
   WhalesRoute: typeof WhalesRoute
   AssetIdRoute: typeof AssetIdRoute
+  SymbolMarketSymbolRoute: typeof SymbolMarketSymbolRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -372,6 +385,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AssetIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/symbol/$market/$symbol': {
+      id: '/symbol/$market/$symbol'
+      path: '/symbol/$market/$symbol'
+      fullPath: '/symbol/$market/$symbol'
+      preLoaderRoute: typeof SymbolMarketSymbolRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -393,6 +413,7 @@ const rootRouteChildren: RootRouteChildren = {
   WalletsRoute: WalletsRoute,
   WhalesRoute: WhalesRoute,
   AssetIdRoute: AssetIdRoute,
+  SymbolMarketSymbolRoute: SymbolMarketSymbolRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

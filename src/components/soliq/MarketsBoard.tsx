@@ -1,3 +1,4 @@
+import { Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { Gauge, Globe, Loader2, RadioTower, Search } from "lucide-react";
 
@@ -181,14 +182,23 @@ export function MarketsBoard({
           {search.data && search.data.length > 0 && (
             <div className="mt-2 flex flex-wrap gap-1.5">
               {search.data.slice(0, 10).map((h) => (
-                <button
-                  key={h.symbol}
-                  type="button"
-                  onClick={() => setSelected(h.symbol)}
-                  className="num rounded-md border border-border px-2 py-1 text-[10px] text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground"
-                >
-                  {h.symbol} · {h.name.slice(0, 22)}
-                </button>
+                <span key={h.symbol} className="inline-flex items-center overflow-hidden rounded-md border border-border">
+                  <button
+                    type="button"
+                    onClick={() => setSelected(h.symbol)}
+                    className="num px-2 py-1 text-[10px] text-muted-foreground transition-colors hover:text-foreground"
+                  >
+                    {h.symbol} · {h.name.slice(0, 22)}
+                  </button>
+                  <Link
+                    to="/symbol/$market/$symbol"
+                    params={{ market: "stocks", symbol: h.symbol }}
+                    className="border-l border-border px-1.5 py-1 text-[10px] text-primary"
+                    title={`Open ${h.symbol} dashboard`}
+                  >
+                    →
+                  </Link>
+                </span>
               ))}
             </div>
           )}
@@ -206,7 +216,16 @@ export function MarketsBoard({
           <SectionTitle title={group} subtitle={`${list.length} instruments · multi-timeframe scoring`} />
           <div className="grid gap-3 lg:grid-cols-2 xl:grid-cols-3">
             {list.map((r) => (
-              <MarketCard key={r.key} row={r} tf={tf} active={active === r.key} onSelect={() => setSelected(r.key)} />
+              <div key={r.key} className="space-y-1">
+                <MarketCard row={r} tf={tf} active={active === r.key} onSelect={() => setSelected(r.key)} />
+                <Link
+                  to="/symbol/$market/$symbol"
+                  params={{ market: r.desk, symbol: r.code }}
+                  className="block text-right text-[10px] text-muted-foreground transition-colors hover:text-primary"
+                >
+                  Open full dashboard →
+                </Link>
+              </div>
             ))}
           </div>
         </div>

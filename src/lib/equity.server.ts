@@ -275,3 +275,57 @@ export async function loadUniverse(search?: string, limit = 200): Promise<Univer
     type: String(r["type"] ?? "CS"),
   }));
 }
+
+/* ----------------------------- short interest ----------------------------- */
+
+export type ShortInterest = {
+  settlementDate: string;
+  shortVolume: number | null;
+  shortInterest: number | null;
+  daysToCover: number | null;
+  avgDailyVolume: number | null;
+};
+
+/** Latest reported short interest / short volume rows (plan dependent). */
+export async function loadShortInterest(ticker: string): Promise<ShortInterest[]> {
+  const t = ticker.trim().toUpperCase();
+  const json = await get<{ results?: Record<string, unknown>[] }>(
+    `/stocks/vX/short-interest?ticker=${encodeURIComponent(t)}&limit=6&order=desc&sort=settlement_date`,
+    6 * 60 * 60_000,
+  );
+  return (json?.results ?? []).map((r) => ({
+    settlementDate: String(r["settlement_date"] ?? ""),
+    shortVolume: num(r["short_volume"]),
+    shortInterest: num(r["short_interest"]),
+    daysToCover: num(r["days_to_cover"]),
+    avgDailyVolume: num(r["avg_daily_volume"]),
+  }));
+}
+
+export type FloatStats = {
+  shares: number | null;
+  float: number | null;
+  freeFloatPct: number | null;
+  shortPctFloat: number | null;
+  daysToCover: number | null;
+  marketCap: number | null;
+};
+
+/** Float / short-squeeze mechanics assembled from reference + short interest. */
+export async function loadFloatStats(ticker: string): Promise<FloatStats> {
+  const [profile, shorts] = await Promise.all([
+    loadProfile(ticker).catch(() => null),
+    loadShortInterest(ticker).catch(() => [] as ShortInterest[]),
+  ]);
+  const latest = shorts[0];
+  const shares = profile?.shares ?? null;
+  const si = latest?.shortInterest ?? null;
+  return {
+    shares,
+    float: shares,
+    freeFloatPct: null,
+    shortPctFloat: shares && si ? Number(((si / shares) * 100).toFixed(2)) : null,
+    daysToCover: latest?.daysToCover ?? null,
+    marketCap: profile?.marketCap ?? null,
+  };
+}

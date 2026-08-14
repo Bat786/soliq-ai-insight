@@ -23,8 +23,12 @@ export type Candle = {
 
 export const intervals = [
   { id: "1m", label: "1m", ms: 60_000 },
+  { id: "2m", label: "2m", ms: 2 * 60_000 },
+  { id: "3m", label: "3m", ms: 3 * 60_000 },
   { id: "5m", label: "5m", ms: 5 * 60_000 },
+  { id: "10m", label: "10m", ms: 10 * 60_000 },
   { id: "15m", label: "15m", ms: 15 * 60_000 },
+  { id: "30m", label: "30m", ms: 30 * 60_000 },
   { id: "1h", label: "1H", ms: 3_600_000 },
   { id: "4h", label: "4H", ms: 4 * 3_600_000 },
   { id: "1d", label: "1D", ms: 86_400_000 },
@@ -161,16 +165,21 @@ function palette() {
 
 export type Overlays = { ma20: boolean; ma50: boolean; vwap: boolean; rsi: boolean; volume: boolean; signals: boolean };
 
+export type RawBar = { t: number; open: number; high: number; low: number; close: number; volume: number };
+
 export default function CandleChart({
   points,
   volumes,
+  bars,
   interval,
   overlays,
   height = 420,
   onHover,
 }: {
-  points: Point[];
+  points?: Point[] | undefined;
   volumes?: VolPoint[] | undefined;
+  /** Real OHLCV bars from the provider — used verbatim instead of aggregating. */
+  bars?: RawBar[] | undefined;
   interval: IntervalId;
   overlays: Overlays;
   height?: number | undefined;
@@ -182,8 +191,23 @@ export default function CandleChart({
   hoverRef.current = onHover;
   const [themeKey, setThemeKey] = useState(0);
 
-  const effective = useMemo(() => resolveInterval(points, interval), [points, interval]);
-  const candles = useMemo(() => toCandles(points, effective, volumes), [points, effective, volumes]);
+  const series = points ?? [];
+  const candles = useMemo(() => {
+    if (bars && bars.length > 0) {
+      return [...bars]
+        .sort((a, b) => a.t - b.t)
+        .map((b) => ({
+          time: Math.floor(b.t / 1000) as UTCTimestamp,
+          open: b.open,
+          high: b.high,
+          low: b.low,
+          close: b.close,
+          volume: b.volume,
+        }));
+    }
+    return toCandles(series, resolveInterval(series, interval), volumes);
+  }, [bars, series, interval, volumes]);
+
 
   useEffect(() => {
     const obs = new MutationObserver(() => setThemeKey((k) => k + 1));
