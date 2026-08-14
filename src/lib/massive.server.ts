@@ -168,6 +168,21 @@ export async function massivePrevBar(assetClass: AssetClass, symbol: string): Pr
   return toBars(json)[0] ?? null;
 }
 
+/** Bars at any desk timeframe (1m → 1d) for any asset class. */
+export async function massiveCustomBars(
+  assetClass: AssetClass,
+  symbol: string,
+  tf: import("@/lib/timeframes").DeskTf,
+): Promise<Bar[] | null> {
+  const { tfSpec } = await import("@/lib/timeframes");
+  const g = tfSpec(tf);
+  const ticker = massiveTicker(assetClass, symbol);
+  const path = `/v2/aggs/ticker/${encodeURIComponent(ticker)}/range/${g.mult}/${g.span}/${isoDay(g.days)}/${isoDay(0)}?adjusted=true&sort=asc&limit=50000`;
+  const json = await massiveGet<AggResponse>(path, { ttl: g.ttl, scope: `aggs:${assetClass}:${g.span}` });
+  const bars = toBars(json).slice(-1800);
+  return bars.length > 4 ? bars : null;
+}
+
 /* --------------------- whole-market daily summary (board) -------------------- */
 
 const groupedLocale: Record<AssetClass, string | null> = {
