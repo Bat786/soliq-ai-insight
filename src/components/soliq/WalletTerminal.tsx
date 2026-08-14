@@ -1,3 +1,4 @@
+import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import { Link } from "@tanstack/react-router";
 import { Copy, ExternalLink, Eye, Link2Off, Star, Wallet } from "lucide-react";
 import { useState } from "react";
@@ -5,7 +6,7 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useDetectedWallets, useWallets, walletProviders } from "@/hooks/use-wallets";
+import { useDetectedWallets, useSolanaAdapterLink, useWallets, walletProviders } from "@/hooks/use-wallets";
 
 const short = (a: string) => `${a.slice(0, 5)}…${a.slice(-4)}`;
 const usd = (n: number) => `$${n.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
@@ -13,6 +14,7 @@ const usd = (n: number) => `$${n.toLocaleString(undefined, { maximumFractionDigi
 export function WalletTerminal() {
   const { isSignedIn, wallets, balances, balanceFor, totalUsd, connect, watch, remove, makePrimary } = useWallets();
   const detected = useDetectedWallets();
+  const solana = useSolanaAdapterLink();
   const [watchAddress, setWatchAddress] = useState("");
 
 
@@ -46,11 +48,28 @@ export function WalletTerminal() {
       </div>
 
       <div className="panel p-5">
-        <p className="text-sm font-semibold">Connect a wallet</p>
+        <p className="text-sm font-semibold">Connect a Solana wallet</p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Phantom, Solflare, Backpack, Glow and every Wallet-Standard wallet are detected automatically. Open SOLIQ in
+          its own browser tab — extensions refuse to inject into embedded preview frames.
+        </p>
+        <div className="soliq-wallet-adapter mt-4 flex flex-wrap items-center gap-3">
+          <WalletMultiButton />
+          {solana.connected && solana.address && (
+            <span className="num text-[11px] text-muted-foreground">
+              {solana.providerName} · {short(solana.address)}
+            </span>
+          )}
+        </div>
+      </div>
+
+      <div className="panel p-5">
+        <p className="text-sm font-semibold">Connect an EVM wallet</p>
         <p className="mt-1 text-xs text-muted-foreground">
           Approve the connection request in your wallet. SOLIQ only reads your public address — never a signature that
           moves funds.
         </p>
+
         <div className="mt-4 grid gap-2 sm:grid-cols-2">
           {walletProviders.map((p) => {
             const ready = p.universal || detected[p.id];

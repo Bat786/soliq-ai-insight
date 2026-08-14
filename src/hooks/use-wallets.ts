@@ -1,6 +1,7 @@
+import { useWallet } from "@solana/wallet-adapter-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { useSession } from "@/hooks/use-soliq-account";
@@ -20,10 +21,12 @@ export type WalletProviderMeta = {
 
 export const WALLETCONNECT_PROJECT_ID = "3107d184dd8ba1e8a4d698c20ea61dbe";
 
+/**
+ * Only EVM wallets are listed here. Solana wallets (Phantom, Solflare,
+ * Backpack, Glow…) are handled by the official @solana/wallet-adapter
+ * modal, which owns detection, connect and install-redirect logic.
+ */
 export const walletProviders: WalletProviderMeta[] = [
-  { id: "phantom", name: "Phantom", chain: "solana", blurb: "Solana · the default power wallet", site: "https://phantom.app" },
-  { id: "solflare", name: "Solflare", chain: "solana", blurb: "Solana · staking native", site: "https://solflare.com" },
-  { id: "backpack", name: "Backpack", chain: "solana", blurb: "Solana · xNFT terminal", site: "https://backpack.app" },
   { id: "metamask", name: "MetaMask", chain: "evm", blurb: "Ethereum & EVM chains", site: "https://metamask.io" },
   {
     id: "walletconnect",
@@ -284,4 +287,38 @@ export function useWallets() {
     makePrimary,
 
   };
+}
+
+
+/**
+ * Bridges the official Solana wallet-adapter session into SOLIQ's linked
+ * wallets: as soon as a real wallet connects, its public key is stored
+ * read-only on the account.
+ */
+export function useSolanaAdapterLink() {
+  const { publicKey, connected, wallet, disconnect } = useWallet();
+  const { isSignedIn } = useSession();
+  const queryClient = useQueryClient();
+  const runLink = useServerFn(linkWallet);
+  const linkedRef = useRef<string | null>(null);
+
+  const address = publicKey?.toBase58() ?? null;
+  const providerName = wallet?.adapter.name ?? "Solana wallet";
+
+  useEffect(() => {
+    if (!connected || !address || !isSignedIn) return;
+    if (linkedRef.current === address) return;
+    linkedRef.current = address;
+    void runLink({ data: { chain: "solana", provider: providerName, address, label: providerName } })
+      .then(() => {
+        void queryClient.invalidateQueries({ queryKey: ["wallets"] });
+        void queryClient.invalidateQueries({ queryKey: ["wallet-balances"] });
+        toast.success(`${providerName} linked`, {
+          description: `${address.slice(0, 6)}…${address.slice(-4)}`,
+        });
+      })
+      .catch(() => toast.error("Could not link that wallet"));
+  }, [address, connected, isSignedIn, providerName, queryClient, runLink]);
+
+  return { address, connected, providerName, disconnect };
 }

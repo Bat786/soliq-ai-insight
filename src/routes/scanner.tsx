@@ -11,6 +11,7 @@ import type { DeskId } from "@/lib/tape.server";
 import { Delta, RiskBar, ScoreRing, Sparkline } from "@/components/soliq/primitives";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { CryptoScanBoard, FullMarketScan } from "@/components/soliq/FullMarketScan";
 import { useMarket } from "@/hooks/use-market";
 import {
   applyFilters,
@@ -193,7 +194,7 @@ function Scanner() {
   const [activePreset, setActivePreset] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [aiSummary, setAiSummary] = useState<string | null>(null);
-  const [view, setView] = useState<"crypto" | DeskId>("crypto");
+  const [view, setView] = useState<"crypto" | "market" | "launches" | DeskId>("crypto");
   const [tf, setTf] = useState<Timeframe>("5m");
 
   const set = <K extends keyof ScanFilters>(key: K, value: ScanFilters[K]) =>
@@ -392,6 +393,10 @@ function Scanner() {
         </p>
 
         </>
+        ) : view === "market" ? (
+          <FullMarketScan />
+        ) : view === "launches" ? (
+          <CryptoScanBoard />
         ) : (
           <MarketsBoard
             key={view}
@@ -409,6 +414,8 @@ function Scanner() {
 
 const deskTabs = [
   { id: "crypto" as const, label: "AI crypto scan", headline: "Live crypto universe with AI conviction" },
+  { id: "market" as const, label: "Full US market", headline: "Every listed ticker, one snapshot call" },
+  { id: "launches" as const, label: "Pump.fun & majors", headline: "Fresh Solana launches and top crypto volume" },
   { id: "stocks" as const, label: "Stocks", headline: "Megacaps · semis · crypto equities" },
   { id: "futures" as const, label: "Futures", headline: "NQ · ES · oil · gold · silver · BTC" },
   { id: "fx" as const, label: "Forex 24/7", headline: "Majors and crosses, around the clock" },
