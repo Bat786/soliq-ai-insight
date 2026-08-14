@@ -583,7 +583,7 @@ export async function loadTapeBoard(desk?: DeskId): Promise<MarketBoard> {
 
 
 export async function loadTapeDetail(key: string, interval: Timeframe): Promise<MarketDetail> {
-  const inst = findInstrument(key) ?? {
+  let inst = findInstrument(key) ?? {
     key: key.toUpperCase(),
     code: key.toUpperCase(),
     name: key.toUpperCase(),
@@ -603,15 +603,17 @@ export async function loadTapeDetail(key: string, interval: Timeframe): Promise<
   if (base.length < 5) base = await fallbackBars(inst);
   // Contracts and index levels the plan doesn't cover directly fall back to
   // their live ETF proxy tape rather than erroring the whole chart.
-  if (base.length < 5 && inst.proxy) {
-    base = await massiveTapeBars({ ...inst, symbol: inst.proxy, proxy: undefined }, interval).catch(() => []);
-    if (base.length < 5) base = await loadBars(inst.proxy, { interval: "5m", range: "5d" }).catch(() => []);
-    if (base.length > 4) inst = { ...inst, name: `${inst.name} · ${inst.proxy} proxy` };
+  const proxy = inst.proxy;
+  if (base.length < 5 && proxy) {
+    base = await massiveTapeBars({ ...inst, symbol: proxy, proxy: undefined }, interval).catch(() => []);
+    if (base.length < 5) base = await loadBars(proxy, { interval: "5m", range: "5d" }).catch(() => []);
+    if (base.length > 4) inst = { ...inst, name: `${inst.name} · ${proxy} proxy` };
   }
   if (base.length < 5) {
     // No feed answered — surface a syncing row so the terminal stays usable.
     return { ...toRow(inst, []), bars: [], interval };
   }
+
 
 }
 
