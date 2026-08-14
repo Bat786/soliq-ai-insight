@@ -63,7 +63,7 @@ function apiKey(): string | null {
 }
 
 /** GET a Massive path (already query-stringed) with metering, caching and entitlement memory. */
-async function get<T>(path: string, opts: { ttl?: number; scope?: string } = {}): Promise<T | null> {
+export async function massiveGet<T>(path: string, opts: { ttl?: number; scope?: string } = {}): Promise<T | null> {
   const ttl = opts.ttl ?? 60_000;
   const scope = opts.scope ?? path;
   const hit = cache.get(path);
@@ -144,7 +144,7 @@ export async function massiveBars(
   const g = grid[tf];
   const ticker = massiveTicker(assetClass, symbol);
   const path = `/v2/aggs/ticker/${encodeURIComponent(ticker)}/range/${g.mult}/${g.span}/${isoDay(g.days)}/${isoDay(0)}?adjusted=true&sort=asc&limit=50000`;
-  const json = await get<AggResponse>(path, { ttl: g.ttl, scope: `aggs:${assetClass}:${g.span}` });
+  const json = await massiveGet<AggResponse>(path, { ttl: g.ttl, scope: `aggs:${assetClass}:${g.span}` });
   const bars = toBars(json).slice(-1500);
   return bars.length > 4 ? bars : null;
 }
@@ -153,7 +153,7 @@ export async function massiveBars(
 export async function massiveDailyBars(assetClass: AssetClass, symbol: string, days = 400): Promise<Bar[] | null> {
   const ticker = massiveTicker(assetClass, symbol);
   const path = `/v2/aggs/ticker/${encodeURIComponent(ticker)}/range/1/day/${isoDay(days)}/${isoDay(0)}?adjusted=true&sort=asc&limit=5000`;
-  const json = await get<AggResponse>(path, { ttl: 10 * 60_000, scope: `aggs:${assetClass}:day` });
+  const json = await massiveGet<AggResponse>(path, { ttl: 10 * 60_000, scope: `aggs:${assetClass}:day` });
   const bars = toBars(json);
   return bars.length > 4 ? bars : null;
 }
@@ -161,7 +161,7 @@ export async function massiveDailyBars(assetClass: AssetClass, symbol: string, d
 /** Previous-day OHLCV bar (cheap "is it up or down today" probe). */
 export async function massivePrevBar(assetClass: AssetClass, symbol: string): Promise<Bar | null> {
   const ticker = massiveTicker(assetClass, symbol);
-  const json = await get<AggResponse>(`/v2/aggs/ticker/${encodeURIComponent(ticker)}/prev?adjusted=true`, {
+  const json = await massiveGet<AggResponse>(`/v2/aggs/ticker/${encodeURIComponent(ticker)}/prev?adjusted=true`, {
     ttl: 5 * 60_000,
     scope: `prev:${assetClass}`,
   });
@@ -188,7 +188,7 @@ async function groupedDay(assetClass: AssetClass, dayOffset: number): Promise<Ma
   if (!locale) return out;
   const day = isoDay(dayOffset);
   const path = `/v2/aggs/grouped/locale/${locale}/${day}?adjusted=true`;
-  const json = await get<{ results?: Record<string, string | number>[] }>(path, {
+  const json = await massiveGet<{ results?: Record<string, string | number>[] }>(path, {
     // Closed sessions never change; today's summary refreshes on a short clock.
     ttl: 12 * 3600_000,
     // Per-day scope: the plan rejects the in-progress session, and that must not
@@ -260,7 +260,7 @@ export type MarketStatus = {
 };
 
 export async function massiveMarketStatus(): Promise<MarketStatus | null> {
-  const json = await get<Record<string, unknown>>("/v1/marketstatus/now", { ttl: 60_000, scope: "marketstatus" });
+  const json = await massiveGet<Record<string, unknown>>("/v1/marketstatus/now", { ttl: 60_000, scope: "marketstatus" });
   if (!json) return null;
   return {
     market: String(json["market"] ?? "unknown"),
@@ -287,7 +287,7 @@ export type TickerOverview = {
 };
 
 export async function massiveTickerOverview(ticker: string): Promise<TickerOverview | null> {
-  const json = await get<{ results?: Record<string, unknown> }>(
+  const json = await massiveGet<{ results?: Record<string, unknown> }>(
     `/v3/reference/tickers/${encodeURIComponent(ticker.toUpperCase())}`,
     { ttl: 24 * 3600_000, scope: "reference:ticker" },
   );
@@ -312,7 +312,7 @@ export type MassiveSearchHit = { symbol: string; name: string; market: string; t
 export async function massiveSearch(q: string): Promise<MassiveSearchHit[]> {
   const term = q.trim();
   if (term.length < 1) return [];
-  const json = await get<{ results?: Record<string, unknown>[] }>(
+  const json = await massiveGet<{ results?: Record<string, unknown>[] }>(
     `/v3/reference/tickers?search=${encodeURIComponent(term)}&active=true&limit=20`,
     { ttl: 6 * 3600_000, scope: "reference:search" },
   );
@@ -338,7 +338,7 @@ export type MassiveNews = {
 
 export async function massiveNews(ticker?: string, limit = 12): Promise<MassiveNews[]> {
   const qs = ticker ? `ticker=${encodeURIComponent(ticker.toUpperCase())}&` : "";
-  const json = await get<{ results?: Record<string, unknown>[] }>(
+  const json = await massiveGet<{ results?: Record<string, unknown>[] }>(
     `/v2/reference/news?${qs}order=desc&limit=${limit}`,
     { ttl: 5 * 60_000, scope: "reference:news" },
   );

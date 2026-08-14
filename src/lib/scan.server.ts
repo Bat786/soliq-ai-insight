@@ -7,7 +7,7 @@
  * are computed here; the API only supplies raw data.
  */
 
-const BASE = "https://api.polygon.io";
+import { massiveGet } from "@/lib/massive.server";
 
 export type ScanRow = {
   ticker: string;
@@ -48,21 +48,9 @@ function key(): string | null {
 }
 
 async function snapshot<T>(path: string, ttlMs: number): Promise<T | null> {
-  const hit = cache.get(path);
-  if (hit && Date.now() - hit.at < ttlMs) return hit.value as T;
-  const k = key();
-  if (!k) return (hit?.value as T) ?? null;
-  const sep = path.includes("?") ? "&" : "?";
-  try {
-    const res = await fetch(`${BASE}${path}${sep}apiKey=${k}`, { headers: { Accept: "application/json" } });
-    if (!res.ok) return (hit?.value as T) ?? null;
-    const json = (await res.json()) as { status?: string };
-    if (json.status === "NOT_AUTHORIZED" || json.status === "ERROR") return (hit?.value as T) ?? null;
-    cache.set(path, { at: Date.now(), value: json });
-    return json as T;
-  } catch {
-    return (hit?.value as T) ?? null;
-  }
+  // Route through the shared metered/queued Massive client so the scanner
+  // cannot burn the plan's request budget or trip 429s.
+  return massiveGet<T>(path, { ttl: ttlMs });
 }
 
 type SnapTicker = {
