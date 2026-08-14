@@ -10,6 +10,8 @@ import {
 import { useEffect, type ReactNode } from "react";
 
 import { SplashGate } from "@/components/soliq/Splash";
+import { WalletContextProvider } from "@/components/soliq/WalletContextProvider";
+
 import { ThemeProvider } from "@/components/soliq/ThemeProvider";
 import { Toaster } from "@/components/ui/sonner";
 
