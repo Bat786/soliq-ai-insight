@@ -18,34 +18,36 @@ export function WalletTerminal() {
   const [watchAddress, setWatchAddress] = useState("");
 
 
-  if (!isSignedIn) {
-    return (
-      <div className="panel p-6 text-center">
-        <Wallet className="mx-auto size-6 text-primary" />
-        <p className="mt-3 text-sm font-medium">Sign in to link wallets</p>
-        <p className="mt-1 text-xs text-muted-foreground">
-          Wallet links are read-only and stored privately on your account — SOLIQ never requests transactions.
-        </p>
-        <Button asChild variant="hero" size="sm" className="mt-4">
-          <Link to="/auth">Create free account</Link>
-        </Button>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-4">
-      <div className="panel p-5">
-        <div className="flex flex-wrap items-end justify-between gap-3">
-          <div>
-            <p className="text-xs text-muted-foreground">Tracked on-chain value</p>
-            <p className="num text-3xl font-bold">{usd(totalUsd)}</p>
+      {!isSignedIn ? (
+        <div className="panel flex flex-wrap items-center justify-between gap-3 p-5">
+          <div className="min-w-0">
+            <p className="flex items-center gap-2 text-sm font-semibold">
+              <Wallet className="size-4 text-primary" /> Connect now, save to your account after sign-in
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Wallet links are read-only and stored privately on your account — SOLIQ never requests transactions.
+            </p>
           </div>
-          <p className="text-[11px] text-muted-foreground">
-            {wallets.length} wallet{wallets.length === 1 ? "" : "s"} · {balances.length} synced · read-only
-          </p>
+          <Button asChild variant="hero" size="sm">
+            <Link to="/auth">Create free account</Link>
+          </Button>
         </div>
-      </div>
+      ) : (
+        <div className="panel p-5">
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <p className="text-xs text-muted-foreground">Tracked on-chain value</p>
+              <p className="num text-3xl font-bold">{usd(totalUsd)}</p>
+            </div>
+            <p className="text-[11px] text-muted-foreground">
+              {wallets.length} wallet{wallets.length === 1 ? "" : "s"} · {balances.length} synced · read-only
+            </p>
+          </div>
+        </div>
+      )}
+
 
       <div className="panel p-5">
         <p className="text-sm font-semibold">Connect a Solana wallet</p>
