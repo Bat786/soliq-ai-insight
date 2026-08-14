@@ -42,7 +42,7 @@ export const Route = createFileRoute("/symbol/$market/$symbol")({
 
 const markets: SymbolMarket[] = ["stocks", "crypto", "fx", "indices", "futures"];
 
-function Stat({ label, value, tone }: { label: string; value: string; tone?: "bull" | "bear" }) {
+function Stat({ label, value, tone }: { label: string; value: string; tone?: "bull" | "bear" | undefined }) {
   return (
     <div className="panel p-3">
       <p className="text-[10px] tracking-wide text-muted-foreground uppercase">{label}</p>
