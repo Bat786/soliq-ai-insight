@@ -200,8 +200,12 @@ export type CryptoScan = {
   notes: string[];
 };
 
+type Entry = { at: number; value: unknown };
+const cache = new Map<string, Entry>();
+
 async function json<T>(url: string, ttlMs: number): Promise<T | null> {
   const hit = cache.get(url);
+
   if (hit && Date.now() - hit.at < ttlMs) return hit.value as T;
   try {
     const res = await fetch(url, { headers: { Accept: "application/json" } });
