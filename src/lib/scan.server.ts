@@ -117,12 +117,23 @@ export async function loadMarketScan(filters: ScanFiltersInput = {}): Promise<Ma
     snapshot<{ tickers?: SnapTicker[] }>("/v2/snapshot/locale/us/markets/stocks/tickers", 30_000),
   ]);
 
-  const all = Array.isArray(snap?.tickers) ? snap.tickers : [];
-  if (all.length === 0) notes.push("Full-market snapshot unavailable — check the Massive plan entitlement.");
+  let rows: ScanRow[] = Array.isArray(snap?.tickers)
+    ? snap.tickers.map(toRow).filter((r): r is ScanRow => r !== null)
+    : [];
+  let scanned = rows.length;
 
-  const candidates = all
-    .map(toRow)
-    .filter((r): r is ScanRow => r !== null)
+  if (rows.length === 0) {
+    // Plans without real-time snapshot entitlement still get the whole tape from
+    // the grouped daily bars — one call per session, every listed ticker.
+    const grouped = await groupedScan();
+    rows = grouped.rows;
+    scanned = grouped.scanned;
+    if (grouped.day) notes.push(`Whole-tape close scan for ${grouped.day} (plan has no real-time snapshot).`);
+    else notes.push("Full-market data unavailable right now.");
+  }
+
+  const candidates = rows
+
     .filter(
       (r) =>
         r.price >= minPrice &&
@@ -133,13 +144,60 @@ export async function loadMarketScan(filters: ScanFiltersInput = {}): Promise<Ma
 
   return {
     session: sess,
-    scanned: all.length,
+    scanned,
     gainers: [...candidates].sort((a, b) => b.changePct - a.changePct).slice(0, topN),
     losers: [...candidates].sort((a, b) => a.changePct - b.changePct).slice(0, topN),
     highVolume: [...candidates].sort((a, b) => b.volume - a.volume).slice(0, topN),
     updatedAt: Date.now(),
     notes,
   };
+}
+
+/* --------------------------- grouped-day fallback -------------------------- */
+
+type GroupedBar = { T?: string; c?: number; v?: number; vw?: number };
+
+async function groupedDay(dayOffset: number): Promise<{ day: string; bars: Map<string, GroupedBar> } | null> {
+  const day = new Date(Date.now() - dayOffset * 86_400_000).toISOString().slice(0, 10);
+  const res = await snapshot<{ results?: GroupedBar[] }>(
+    `/v2/aggs/grouped/locale/us/market/stocks/${day}?adjusted=true`,
+    10 * 60_000,
+  );
+  const results = Array.isArray(res?.results) ? res.results : [];
+  if (results.length === 0) return null;
+  const bars = new Map<string, GroupedBar>();
+  for (const b of results) if (typeof b.T === "string") bars.set(b.T, b);
+  return { day, bars };
+}
+
+async function groupedScan(): Promise<{ rows: ScanRow[]; scanned: number; day: string | null }> {
+  let latest: { day: string; bars: Map<string, GroupedBar> } | null = null;
+  let offset = 1;
+  for (; offset <= 6 && !latest; offset += 1) latest = await groupedDay(offset);
+  if (!latest) return { rows: [], scanned: 0, day: null };
+
+  let prior: { day: string; bars: Map<string, GroupedBar> } | null = null;
+  for (let i = offset; i <= offset + 6 && !prior; i += 1) prior = await groupedDay(i);
+
+  const rows: ScanRow[] = [];
+  for (const [ticker, bar] of latest.bars) {
+    const price = num(bar.c);
+    if (price <= 0) continue;
+    const prevBar = prior?.bars.get(ticker);
+    const prevClose = num(prevBar?.c);
+    const prevVolume = num(prevBar?.v);
+    const volume = num(bar.v);
+    rows.push({
+      ticker,
+      price,
+      changePct: prevClose > 0 ? ((price - prevClose) / prevClose) * 100 : 0,
+      volume,
+      prevClose,
+      relVolume: prevVolume > 0 ? volume / prevVolume : 0,
+      vwap: num(bar.vw),
+    });
+  }
+  return { rows, scanned: rows.length, day: latest.day };
 }
 
 /* ------------------------------ crypto scanner ----------------------------- */
