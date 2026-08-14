@@ -91,7 +91,7 @@ async function rpcBatch(url: string, calls: { method: string; params: unknown[] 
     body: JSON.stringify(calls.map((c, i) => ({ jsonrpc: "2.0", id: i + 1, ...c }))),
   });
   if (!res.ok) throw new Error(`rpc ${res.status}`);
-  const json = (await res.json()) as { id?: number; result?: unknown }[] | { result?: unknown };
+  const json = (await res.json()) as { id?: number; result?: unknown }[] | { id?: number; result?: unknown };
   const rows = Array.isArray(json) ? json : [json];
   const out: unknown[] = new Array(calls.length).fill(null);
   for (const row of rows) {
