@@ -1,4 +1,5 @@
 /** Server-only context builder + model call for SOLIQ AI. */
+import { ACCOUNT_SYSTEM_RULES } from "@/lib/account-context.server";
 
 const MODEL = "google/gemini-3.6-flash";
 
@@ -65,8 +66,6 @@ You cover four desks: crypto (Solana/DEX + majors), stocks, futures (ES, NQ, CL,
 Ground every claim in the LIVE MARKET CONTEXT provided. If a number is not in the context, say the tape does not show it instead of inventing it.
 Style: dense institutional desk notes in markdown — short bold headers, bullet lines, explicit levels and indicator readings, then a one-line verdict with a 0-100 conviction score.
 Always close with: *Research, not financial advice.*`;
-
-import { ACCOUNT_SYSTEM_RULES } from "@/lib/account-context.server";
 
 export async function askSoliqAi(messages: ChatTurn[], accountContext?: string): Promise<string> {
   const key = process.env["LOVABLE_API_KEY"];
