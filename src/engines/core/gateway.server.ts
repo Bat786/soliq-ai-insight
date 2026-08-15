@@ -164,7 +164,7 @@ export async function firstAvailable<T>(
         source: c.provider,
         sourceLabel: c.label,
         fetchedAt: hit.at,
-        policy: opts.policy,
+        ...(opts.policy ? { policy: opts.policy } : {}),
         fallback: i > 0,
       });
     } catch (error) {
