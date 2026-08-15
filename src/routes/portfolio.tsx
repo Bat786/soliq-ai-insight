@@ -3,6 +3,7 @@ import { Loader2, Wallet } from "lucide-react";
 import { useMemo } from "react";
 
 import { AppShell } from "@/components/soliq/AppShell";
+import { BankAccountsPanel } from "@/components/soliq/BankAccountsPanel";
 import { AssetPill, Delta, SectionTitle, StatCard } from "@/components/soliq/primitives";
 import { Button } from "@/components/ui/button";
 import { useMarket } from "@/hooks/use-market";
