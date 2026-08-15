@@ -61,6 +61,7 @@ const nav = [
   { to: "/backtest", label: "Backtest", icon: FlaskConical },
   { to: "/assistant", label: "AI Assistant", icon: Bot },
   { to: "/settings", label: "Settings", icon: Settings },
+  { to: "/support", label: "Support", icon: LifeBuoy },
 ] as const;
 
 export function Logo({ compact = false }: { compact?: boolean }) {
