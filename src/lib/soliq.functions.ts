@@ -31,22 +31,28 @@ export const getMyProfile = createServerFn({ method: "GET" })
   });
 
 /**
- * Activates a premium membership. Billing is not wired yet — this grants the
- * plan directly so the entitlement surfaces can be used end to end.
+ * Membership self-service. Members may only CANCEL (downgrade to free) here.
+ * Paid tiers are entitlements and must be granted exclusively by a trusted
+ * server-side path driven by a verified payment/subscription webhook — never
+ * by a client-invocable request, or anyone could unlock paid features for free.
  */
 export const setMembership = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { tier: Tier }) => z.object({ tier: z.enum(["free", "pro", "elite"]) }).parse(input))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    const paid = isPaid(data.tier);
+    if (isPaid(data.tier)) {
+      throw new Error(
+        "Paid memberships are activated by checkout. Complete payment to unlock Pro or Elite.",
+      );
+    }
     const now = new Date();
     const { data: profile, error } = await supabase
       .from("profiles")
       .update({
-        membership_tier: data.tier,
-        member_since: paid ? now.toISOString() : null,
-        renews_at: paid ? new Date(now.getTime() + 30 * 24 * 3600 * 1000).toISOString() : null,
+        membership_tier: "free",
+        member_since: null,
+        renews_at: null,
         updated_at: now.toISOString(),
       })
       .eq("id", userId)
