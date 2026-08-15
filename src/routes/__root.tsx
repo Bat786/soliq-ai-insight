@@ -146,13 +146,15 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <WalletContextProvider>
-        <ThemeProvider>
-          <SplashGate>
-            {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-            <Outlet />
-          </SplashGate>
-          <Toaster />
-        </ThemeProvider>
+        <EvmWalletProvider>
+          <ThemeProvider>
+            <SplashGate>
+              {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+              <Outlet />
+            </SplashGate>
+            <Toaster />
+          </ThemeProvider>
+        </EvmWalletProvider>
       </WalletContextProvider>
     </QueryClientProvider>
   );
