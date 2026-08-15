@@ -49,7 +49,10 @@ function Pricing() {
           : `${profile.membership_tier === "elite" ? "Elite" : "Pro"} membership active.`,
       );
     },
-    onError: () => toast.error("Could not update your membership. Please try again."),
+    onError: (e: Error) =>
+      toast.error("Membership not updated", {
+        description: e.message || "Please try again.",
+      }),
   });
 
   const choose = (next: Tier) => {

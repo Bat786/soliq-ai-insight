@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { emptyFilters, type LiveAsset, type ScanFilters } from "@/lib/market-types";
 
 export const getMarketSnapshot = createServerFn({ method: "GET" }).handler(async () => {
@@ -40,6 +41,7 @@ export const getAssetDetail = createServerFn({ method: "POST" })
 
 /** AI Command Center: natural language -> scanner filters. */
 export const parseScanCommand = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((input: { prompt: string }) => ({ prompt: String(input.prompt).slice(0, 500) }))
   .handler(async ({ data }) => {
     const key = process.env["LOVABLE_API_KEY"];
