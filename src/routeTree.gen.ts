@@ -24,6 +24,7 @@ import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as ScannerRouteImport } from './routes/scanner'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as StocksRouteImport } from './routes/stocks'
+import { Route as TerminalRouteImport } from './routes/terminal'
 import { Route as WalletsRouteImport } from './routes/wallets'
 import { Route as WhalesRouteImport } from './routes/whales'
 import { Route as AssetIdRouteImport } from './routes/asset.$id'
@@ -104,6 +105,11 @@ const StocksRoute = StocksRouteImport.update({
   path: '/stocks',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TerminalRoute = TerminalRouteImport.update({
+  id: '/terminal',
+  path: '/terminal',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const WalletsRoute = WalletsRouteImport.update({
   id: '/wallets',
   path: '/wallets',
@@ -141,6 +147,7 @@ export interface FileRoutesByFullPath {
   '/scanner': typeof ScannerRoute
   '/settings': typeof SettingsRoute
   '/stocks': typeof StocksRoute
+  '/terminal': typeof TerminalRoute
   '/wallets': typeof WalletsRoute
   '/whales': typeof WhalesRoute
   '/asset/$id': typeof AssetIdRoute
@@ -162,6 +169,7 @@ export interface FileRoutesByTo {
   '/scanner': typeof ScannerRoute
   '/settings': typeof SettingsRoute
   '/stocks': typeof StocksRoute
+  '/terminal': typeof TerminalRoute
   '/wallets': typeof WalletsRoute
   '/whales': typeof WhalesRoute
   '/asset/$id': typeof AssetIdRoute
@@ -184,6 +192,7 @@ export interface FileRoutesById {
   '/scanner': typeof ScannerRoute
   '/settings': typeof SettingsRoute
   '/stocks': typeof StocksRoute
+  '/terminal': typeof TerminalRoute
   '/wallets': typeof WalletsRoute
   '/whales': typeof WhalesRoute
   '/asset/$id': typeof AssetIdRoute
@@ -207,6 +216,7 @@ export interface FileRouteTypes {
     | '/scanner'
     | '/settings'
     | '/stocks'
+    | '/terminal'
     | '/wallets'
     | '/whales'
     | '/asset/$id'
@@ -228,6 +238,7 @@ export interface FileRouteTypes {
     | '/scanner'
     | '/settings'
     | '/stocks'
+    | '/terminal'
     | '/wallets'
     | '/whales'
     | '/asset/$id'
@@ -249,6 +260,7 @@ export interface FileRouteTypes {
     | '/scanner'
     | '/settings'
     | '/stocks'
+    | '/terminal'
     | '/wallets'
     | '/whales'
     | '/asset/$id'
@@ -271,6 +283,7 @@ export interface RootRouteChildren {
   ScannerRoute: typeof ScannerRoute
   SettingsRoute: typeof SettingsRoute
   StocksRoute: typeof StocksRoute
+  TerminalRoute: typeof TerminalRoute
   WalletsRoute: typeof WalletsRoute
   WhalesRoute: typeof WhalesRoute
   AssetIdRoute: typeof AssetIdRoute
@@ -384,6 +397,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StocksRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/terminal': {
+      id: '/terminal'
+      path: '/terminal'
+      fullPath: '/terminal'
+      preLoaderRoute: typeof TerminalRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/wallets': {
       id: '/wallets'
       path: '/wallets'
@@ -431,6 +451,7 @@ const rootRouteChildren: RootRouteChildren = {
   ScannerRoute: ScannerRoute,
   SettingsRoute: SettingsRoute,
   StocksRoute: StocksRoute,
+  TerminalRoute: TerminalRoute,
   WalletsRoute: WalletsRoute,
   WhalesRoute: WhalesRoute,
   AssetIdRoute: AssetIdRoute,
