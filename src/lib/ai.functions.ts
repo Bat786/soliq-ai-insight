@@ -17,12 +17,18 @@ const schema = z.object({
 
 export type AskInput = z.infer<typeof schema>;
 
-/** SOLIQ AI chat grounded in the live desk tape. */
+/** SOLIQ AI chat grounded in the live desk tape + the member's own account state. */
 export const askAssistant = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: AskInput) => schema.parse(input))
-  .handler(async ({ data }) => {
-    const { askSoliqAi } = await import("@/lib/ai.server");
-    const answer = await askSoliqAi(data.messages);
+  .handler(async ({ data, context }) => {
+    const [{ askSoliqAi }, { buildAccountContext }] = await Promise.all([
+      import("@/lib/ai.server"),
+      import("@/lib/account-context.server"),
+    ]);
+    // Read-only: scoped to the caller's own rows via their RLS client.
+    const account = await buildAccountContext(context.supabase, context.userId).catch(() => "");
+    const answer = await askSoliqAi(data.messages, account);
     return { answer };
   });
+
