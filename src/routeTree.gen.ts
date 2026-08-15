@@ -25,6 +25,7 @@ import { Route as ScannerRouteImport } from './routes/scanner'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as StatusRouteImport } from './routes/status'
 import { Route as StocksRouteImport } from './routes/stocks'
+import { Route as SupportRouteImport } from './routes/support'
 import { Route as TerminalRouteImport } from './routes/terminal'
 import { Route as WalletsRouteImport } from './routes/wallets'
 import { Route as WhalesRouteImport } from './routes/whales'
@@ -113,6 +114,11 @@ const StocksRoute = StocksRouteImport.update({
   path: '/stocks',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SupportRoute = SupportRouteImport.update({
+  id: '/support',
+  path: '/support',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TerminalRoute = TerminalRouteImport.update({
   id: '/terminal',
   path: '/terminal',
@@ -167,6 +173,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof SettingsRoute
   '/status': typeof StatusRoute
   '/stocks': typeof StocksRoute
+  '/support': typeof SupportRoute
   '/terminal': typeof TerminalRoute
   '/wallets': typeof WalletsRoute
   '/whales': typeof WhalesRoute
@@ -192,6 +199,7 @@ export interface FileRoutesByTo {
   '/settings': typeof SettingsRoute
   '/status': typeof StatusRoute
   '/stocks': typeof StocksRoute
+  '/support': typeof SupportRoute
   '/terminal': typeof TerminalRoute
   '/wallets': typeof WalletsRoute
   '/whales': typeof WhalesRoute
@@ -218,6 +226,7 @@ export interface FileRoutesById {
   '/settings': typeof SettingsRoute
   '/status': typeof StatusRoute
   '/stocks': typeof StocksRoute
+  '/support': typeof SupportRoute
   '/terminal': typeof TerminalRoute
   '/wallets': typeof WalletsRoute
   '/whales': typeof WhalesRoute
@@ -245,6 +254,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/status'
     | '/stocks'
+    | '/support'
     | '/terminal'
     | '/wallets'
     | '/whales'
@@ -270,6 +280,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/status'
     | '/stocks'
+    | '/support'
     | '/terminal'
     | '/wallets'
     | '/whales'
@@ -295,6 +306,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/status'
     | '/stocks'
+    | '/support'
     | '/terminal'
     | '/wallets'
     | '/whales'
@@ -321,6 +333,7 @@ export interface RootRouteChildren {
   SettingsRoute: typeof SettingsRoute
   StatusRoute: typeof StatusRoute
   StocksRoute: typeof StocksRoute
+  SupportRoute: typeof SupportRoute
   TerminalRoute: typeof TerminalRoute
   WalletsRoute: typeof WalletsRoute
   WhalesRoute: typeof WhalesRoute
@@ -444,6 +457,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StocksRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/support': {
+      id: '/support'
+      path: '/support'
+      fullPath: '/support'
+      preLoaderRoute: typeof SupportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/terminal': {
       id: '/terminal'
       path: '/terminal'
@@ -513,6 +533,7 @@ const rootRouteChildren: RootRouteChildren = {
   SettingsRoute: SettingsRoute,
   StatusRoute: StatusRoute,
   StocksRoute: StocksRoute,
+  SupportRoute: SupportRoute,
   TerminalRoute: TerminalRoute,
   WalletsRoute: WalletsRoute,
   WhalesRoute: WhalesRoute,
