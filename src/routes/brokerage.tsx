@@ -54,8 +54,8 @@ function Brokerage() {
   const openPortal = (input: BrokerageLinkInput = {}) => {
     link.mutate(
       {
+        // No customRedirect: the embedded portal reports back via window messages.
         connectionType: "read",
-        ...(typeof window === "undefined" ? {} : { redirectTo: `${window.location.origin}/brokerage` }),
         ...input,
       },
       {
