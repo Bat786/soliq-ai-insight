@@ -3,7 +3,7 @@ import { loadStripe, type Stripe } from "@stripe/stripe-js";
 // Declared locally so this client module has no cross-tree imports.
 type StripeEnv = "sandbox" | "live";
 
-const clientToken = import.meta.env.VITE_PAYMENTS_CLIENT_TOKEN as string | undefined;
+const clientToken = import.meta.env["VITE_PAYMENTS_CLIENT_TOKEN"] as string | undefined;
 
 /** Derive the environment from the token PREFIX. Never silently default to live. */
 function paymentsEnvironment(): StripeEnv {
