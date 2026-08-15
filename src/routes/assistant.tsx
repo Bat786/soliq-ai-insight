@@ -23,8 +23,12 @@ export const Route = createFileRoute("/assistant")({
       { property: "og:title", content: "SOLIQ AI — Investing Research Assistant" },
       { property: "og:description", content: "Live-tape answers across crypto, stocks, futures and forex desks." },
       { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://soliq-ai-insight.lovable.app/assistant" },
+      { property: "og:image", content: "https://soliq-ai-insight.lovable.app/og-soliq.jpg" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:image", content: "https://soliq-ai-insight.lovable.app/og-soliq.jpg" },
     ],
+    links: [{ rel: "canonical", href: "https://soliq-ai-insight.lovable.app/assistant" }],
   }),
   component: Assistant,
 });

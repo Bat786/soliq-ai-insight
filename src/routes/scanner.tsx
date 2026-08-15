@@ -41,8 +41,12 @@ export const Route = createFileRoute("/scanner")({
       { property: "og:title", content: "AI Universal Market Scanner — SOLIQ" },
       { property: "og:description", content: "Live multi-market scanner with AI conviction scores and natural-language commands." },
       { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://soliq-ai-insight.lovable.app/scanner" },
+      { property: "og:image", content: "https://soliq-ai-insight.lovable.app/og-soliq.jpg" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:image", content: "https://soliq-ai-insight.lovable.app/og-soliq.jpg" },
     ],
+    links: [{ rel: "canonical", href: "https://soliq-ai-insight.lovable.app/scanner" }],
   }),
   component: Scanner,
 });

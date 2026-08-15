@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://soliq-ai-insight.lovable.app/</loc><changefreq>daily</changefreq><priority>1.0</priority></url>
+  <url><loc>https://soliq-ai-insight.lovable.app/pricing</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://soliq-ai-insight.lovable.app/scanner</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://soliq-ai-insight.lovable.app/stocks</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://soliq-ai-insight.lovable.app/crypto</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://soliq-ai-insight.lovable.app/futures</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://soliq-ai-insight.lovable.app/whales</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://soliq-ai-insight.lovable.app/discover</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://soliq-ai-insight.lovable.app/backtest</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://soliq-ai-insight.lovable.app/assistant</loc><changefreq>weekly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://soliq-ai-insight.lovable.app/community</loc><changefreq>daily</changefreq><priority>0.6</priority></url>
+</urlset>

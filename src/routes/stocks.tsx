@@ -24,8 +24,12 @@ export const Route = createFileRoute("/stocks")({
         content: "Megacap and semi tape with indicator stacks, benchmarks and multi-timeframe signals.",
       },
       { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://soliq-ai-insight.lovable.app/stocks" },
+      { property: "og:image", content: "https://soliq-ai-insight.lovable.app/og-soliq.jpg" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:image", content: "https://soliq-ai-insight.lovable.app/og-soliq.jpg" },
     ],
+    links: [{ rel: "canonical", href: "https://soliq-ai-insight.lovable.app/stocks" }],
   }),
   component: StocksDesk,
 });

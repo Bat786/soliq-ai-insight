@@ -26,27 +26,84 @@ import { useTapeBoard } from "@/hooks/use-tape";
 import { enableDemo } from "@/lib/demo";
 import { plans } from "@/lib/membership";
 
+const SITE = "https://soliq-ai-insight.lovable.app";
+const OG_IMAGE = `${SITE}/og-soliq.jpg`;
+
+const SOCIALS = [
+  { label: "Instagram", href: "https://instagram.com/soliq.ai" },
+  { label: "TikTok", href: "https://tiktok.com/@soliq.ai" },
+  { label: "YouTube", href: "https://youtube.com/@soliq-ai" },
+  { label: "X", href: "https://x.com/soliq_ai" },
+];
+
+const LANDING_TITLE = "SOLIQ — AI Market Intelligence & Crypto Trading Platform";
+const LANDING_DESC =
+  "Free AI market intelligence platform: live stock, crypto, futures and FX scanners, Solana whale flow, options flow, real-time alerts, backtesting and AI research in one terminal.";
+
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "SOLIQ — The Financial Intelligence Platform" },
+      { title: LANDING_TITLE },
+      { name: "description", content: LANDING_DESC },
       {
-        name: "description",
+        name: "keywords",
         content:
-          "Markets, intelligence, portfolio and trading in one financial command center. Live multi-asset desks, AI research, wallet and brokerage intelligence — explore SOLIQ free.",
+          "AI market intelligence, crypto scanner, stock scanner, Solana whale tracker, options flow, futures signals, real-time stock alerts, backtesting platform, AI trading assistant, DEX analytics, portfolio tracker",
       },
-      { property: "og:title", content: "SOLIQ — The Financial Intelligence Platform" },
-      {
-        property: "og:description",
-        content:
-          "One command center for live markets, AI intelligence, wallet and brokerage portfolios, scanners and options flow.",
-      },
+      { property: "og:title", content: LANDING_TITLE },
+      { property: "og:description", content: LANDING_DESC },
       { property: "og:type", content: "website" },
+      { property: "og:url", content: `${SITE}/` },
+      { property: "og:image", content: OG_IMAGE },
+      { property: "og:site_name", content: "SOLIQ" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: LANDING_TITLE },
+      { name: "twitter:description", content: LANDING_DESC },
+      { name: "twitter:image", content: OG_IMAGE },
+    ],
+    links: [{ rel: "canonical", href: `${SITE}/` }],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "Organization",
+              "@id": `${SITE}/#org`,
+              name: "SOLIQ",
+              url: SITE,
+              logo: `${SITE}/icon-512.png`,
+              sameAs: SOCIALS.map((s) => s.href),
+            },
+            {
+              "@type": "WebSite",
+              "@id": `${SITE}/#website`,
+              url: SITE,
+              name: "SOLIQ",
+              publisher: { "@id": `${SITE}/#org` },
+            },
+            {
+              "@type": "SoftwareApplication",
+              name: "SOLIQ",
+              applicationCategory: "FinanceApplication",
+              operatingSystem: "Web, iOS, Android",
+              url: SITE,
+              description: LANDING_DESC,
+              offers: [
+                { "@type": "Offer", name: "Orbit", price: "0", priceCurrency: "USD" },
+                { "@type": "Offer", name: "Pro", price: "20", priceCurrency: "USD" },
+                { "@type": "Offer", name: "Elite", price: "30", priceCurrency: "USD" },
+              ],
+            },
+          ],
+        }),
+      },
     ],
   }),
   component: Landing,
 });
+
 
 const pct = (n: number) => `${n > 0 ? "+" : ""}${n.toFixed(2)}%`;
 const price = (n: number) => (n < 1 ? n.toPrecision(4) : n.toLocaleString(undefined, { maximumFractionDigits: 2 }));
@@ -347,11 +404,27 @@ function Landing() {
       </main>
 
       <footer className="border-t border-border/70 px-4 py-8">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 text-[11px] text-muted-foreground">
-          <p>SOLIQ · powered by AETHRON — Solana Blockchain Intelligence Engine</p>
-          <p>Market data is informational only and is not investment advice.</p>
+        <div className="mx-auto flex max-w-6xl flex-col gap-4 text-[11px] text-muted-foreground">
+          <nav aria-label="SOLIQ on social media" className="flex flex-wrap items-center gap-4">
+            {SOCIALS.map((s) => (
+              <a
+                key={s.label}
+                href={s.href}
+                target="_blank"
+                rel="me noopener noreferrer"
+                className="transition-colors hover:text-foreground"
+              >
+                {s.label}
+              </a>
+            ))}
+          </nav>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p>SOLIQ · powered by AETHRON — Solana Blockchain Intelligence Engine</p>
+            <p>Market data is informational only and is not investment advice.</p>
+          </div>
         </div>
       </footer>
+
     </div>
   );
 }

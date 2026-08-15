@@ -19,8 +19,12 @@ export const Route = createFileRoute("/crypto")({
         content: "Jupiter + DexScreener powered on-chain flow, liquidity and bullish-bearish signals for every token.",
       },
       { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://soliq-ai-insight.lovable.app/crypto" },
+      { property: "og:image", content: "https://soliq-ai-insight.lovable.app/og-soliq.jpg" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:image", content: "https://soliq-ai-insight.lovable.app/og-soliq.jpg" },
     ],
+    links: [{ rel: "canonical", href: "https://soliq-ai-insight.lovable.app/crypto" }],
   }),
   component: CryptoPage,
 });
