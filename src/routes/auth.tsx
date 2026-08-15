@@ -39,7 +39,7 @@ function Auth() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (isSignedIn) navigate({ to: "/", replace: true });
+    if (isSignedIn) navigate({ to: "/terminal", replace: true });
   }, [isSignedIn, navigate]);
 
   const submit = async (e: React.FormEvent) => {
@@ -81,7 +81,7 @@ function Auth() {
       return;
     }
     if (result.redirected) return;
-    navigate({ to: "/" });
+    navigate({ to: "/terminal" });
   };
 
   return (
