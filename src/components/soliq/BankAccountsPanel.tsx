@@ -6,7 +6,7 @@ import { toast } from "sonner";
 
 import { SectionTitle } from "@/components/soliq/primitives";
 import { Button } from "@/components/ui/button";
-import { useSession } from "@/hooks/use-session";
+import { useSession } from "@/hooks/use-soliq-account";
 import { createBankLinkToken, exchangeBankPublicToken, getBankSnapshot, unlinkBank } from "@/lib/bank.functions";
 import { fmtUsd } from "@/lib/format";
 
