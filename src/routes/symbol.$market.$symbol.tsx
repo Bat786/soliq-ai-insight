@@ -3,6 +3,7 @@ import { Loader2, Newspaper } from "lucide-react";
 import { useState } from "react";
 
 import { AppShell } from "@/components/soliq/AppShell";
+import { DataStatus } from "@/components/soliq/DataState";
 import { SymbolChart } from "@/components/soliq/SymbolChart";
 import { Button } from "@/components/ui/button";
 import { useSymbolDashboard } from "@/hooks/use-symbol";
