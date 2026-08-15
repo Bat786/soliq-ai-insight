@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { BadgeCheck, Check, CreditCard, Crown, ExternalLink, Sparkles, TriangleAlert } from "lucide-react";
+import { BadgeCheck, Check, CreditCard, Crown, ExternalLink, Lock, Sparkles, TriangleAlert } from "lucide-react";
 
 import { AppShell } from "@/components/soliq/AppShell";
 import { PaymentTestModeBanner } from "@/components/payments/PaymentTestModeBanner";
