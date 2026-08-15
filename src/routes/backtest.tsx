@@ -3,6 +3,7 @@ import { FlaskConical, Loader2, Play } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import { AppShell } from "@/components/soliq/AppShell";
+import { TierGate } from "@/components/soliq/TierGate";
 import { toCandles, resolveInterval, type Candle, type IntervalId } from "@/components/soliq/CandleChart";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,7 +30,11 @@ export const Route = createFileRoute("/backtest")({
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
-  component: BacktestPage,
+  component: () => (
+    <TierGate feature="backtesting" shell>
+      <BacktestPage />
+    </TierGate>
+  ),
 });
 
 type StrategyId = "ma-cross" | "rsi-revert" | "breakout";
