@@ -311,6 +311,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               <Button asChild size="sm" variant="ghost" className="hidden sm:inline-flex">
                 <Link to="/assistant">Ask SOLIQ AI</Link>
               </Button>
+              <HeaderWallets />
               <AppearanceMenu />
               <NotificationBell />
               <AccountMenu />
