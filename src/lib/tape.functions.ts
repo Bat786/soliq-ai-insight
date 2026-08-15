@@ -1,12 +1,10 @@
 import { createServerFn } from "@tanstack/react-start";
-
-const deskIds = ["fx", "futures", "stocks", "crypto", "indices"] as const;
-const intervals = ["1m", "5m", "15m", "1h", "4h"] as const;
+import { deskIds, tapeIntervals, type TapeDeskId, type TapeInterval } from "@/lib/tape-desks";
 
 export const getTapeBoard = createServerFn({ method: "GET" })
-  .inputValidator((input: { desk?: (typeof deskIds)[number] | undefined } | undefined) => ({
+  .inputValidator((input: { desk?: TapeDeskId | undefined } | undefined) => ({
     desk: (input?.desk && deskIds.includes(input.desk) ? input.desk : undefined) as
-      | (typeof deskIds)[number]
+      | TapeDeskId
       | undefined,
   }))
   .handler(async ({ data }) => {
@@ -15,9 +13,9 @@ export const getTapeBoard = createServerFn({ method: "GET" })
   });
 
 export const getTapeDetail = createServerFn({ method: "GET" })
-  .inputValidator((input: { key: string; interval: (typeof intervals)[number] }) => ({
+  .inputValidator((input: { key: string; interval: TapeInterval }) => ({
     key: String(input.key ?? "").slice(0, 20),
-    interval: intervals.includes(input.interval) ? input.interval : "5m",
+    interval: (tapeIntervals.includes(input.interval) ? input.interval : "5m") as TapeInterval,
   }))
   .handler(async ({ data }) => {
     const { loadTapeDetail } = await import("@/lib/tape.server");
