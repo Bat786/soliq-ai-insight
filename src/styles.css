@@ -272,10 +272,7 @@
 }
 .soliq-splash {
   animation: soliq-splash-out 2.4s ease-in forwards;
-}
-.soliq-splash[data-done="1"],
-.soliq-splash:not(:hover) {
-  /* never trap clicks once it has faded */
   pointer-events: none;
 }
+
 
