@@ -77,17 +77,18 @@ export async function upsertSubscriptionRecord(
     .upsert(record, { onConflict: "stripe_subscription_id" });
   if (error) console.error("subscriptions upsert failed:", error.message);
 
-  await syncProfileTier(userId);
+  await syncProfileTier(userId, env);
 }
 
 /** Recompute the cached tier on the profile from the member's billing records. */
-export async function syncProfileTier(userId: string) {
+export async function syncProfileTier(userId: string, env: StripeEnv) {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
   const { data: rows } = await supabaseAdmin
     .from("subscriptions")
     .select("price_id, status, current_period_end, cancel_at_period_end, created_at")
     .eq("user_id", userId)
+    .eq("environment", env)
     .order("created_at", { ascending: false });
 
   const now = Date.now();
@@ -136,5 +137,5 @@ export async function markSubscriptionCanceled(sub: StripeSubscriptionLike, env:
     .select("user_id");
 
   const userId = rows?.[0]?.user_id ?? sub.metadata?.["userId"];
-  if (userId) await syncProfileTier(userId);
+  if (userId) await syncProfileTier(userId, env);
 }
