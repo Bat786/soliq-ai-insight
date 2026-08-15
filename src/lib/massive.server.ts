@@ -21,36 +21,46 @@ export type AssetClass = "stocks" | "crypto" | "fx" | "indices";
 
 /* ------------------------------ rate metering ----------------------------- */
 
-// Requests per minute we allow ourselves. The observed plan ceiling is honoured
-// here so we stop self-inflicting 429s; raise it with MASSIVE_RPM when the plan
-// allows more (e.g. 100 on paid tiers, unlimited-ish on business).
-const rpm = () => {
-  const n = Number(process.env["MASSIVE_RPM"] ?? "");
-  return Number.isFinite(n) && n > 0 ? Math.floor(n) : 5;
+// Requests per minute we allow ourselves. Default is unlimited (the upgraded
+// plan has no documented per-minute wall); set MASSIVE_RPM to a number to cap
+// throughput again, or to "unlimited"/"0" to be explicit about no cap.
+const rpm = (): number => {
+  const raw = (process.env["MASSIVE_RPM"] ?? "").trim().toLowerCase();
+  if (!raw || raw === "unlimited" || raw === "0" || raw === "none") return Infinity;
+  const n = Number(raw);
+  return Number.isFinite(n) && n > 0 ? Math.floor(n) : Infinity;
 };
-const MIN_GAP = () => Math.max(160, Math.ceil(60_000 / rpm()) + 40);
+const MIN_GAP = () => {
+  const limit = rpm();
+  return Number.isFinite(limit) ? Math.max(60, Math.ceil(60_000 / limit) + 20) : 0;
+};
 
 const budget = { window: 0, used: 0 };
 let chain: Promise<unknown> = Promise.resolve();
 let lastAt = 0;
+/** Set when the API pushes back (429): no requests until this timestamp. */
+let cooldownUntil = 0;
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 function takeToken(): boolean {
+  const limit = rpm();
+  if (!Number.isFinite(limit)) return true;
   const now = Math.floor(Date.now() / 60_000);
   if (budget.window !== now) {
     budget.window = now;
     budget.used = 0;
   }
-  if (budget.used >= rpm()) return false;
+  if (budget.used >= limit) return false;
   budget.used += 1;
   return true;
 }
 
 function queued<T>(task: () => Promise<T>): Promise<T> {
+  const gap = MIN_GAP();
+  if (gap === 0) return task(); // unlimited: full parallelism, no serialising chain
   const run = chain.then(async () => {
-    const wait = MIN_GAP() - (Date.now() - lastAt);
-
+    const wait = gap - (Date.now() - lastAt);
     if (wait > 0) await sleep(wait);
     lastAt = Date.now();
     return task();
@@ -63,57 +73,117 @@ function queued<T>(task: () => Promise<T>): Promise<T> {
 
 type Entry = { at: number; value: unknown };
 const cache = new Map<string, Entry>();
-const denied = new Set<string>();
+const denied = new Map<string, string>();
+const served = { fresh: 0, cached: 0, stale: 0, throttled: 0, errors: 0 };
+let lastOkAt = 0;
+let lastErrorNote: string | null = null;
+
+/** Live health of the Massive pipeline, for the data-status surface. */
+export function massiveStatus() {
+  return {
+    configured: Boolean(apiKey()),
+    rpmLimit: Number.isFinite(rpm()) ? rpm() : null,
+    cooldownMs: Math.max(0, cooldownUntil - Date.now()),
+    cacheEntries: cache.size,
+    lastSuccessAt: lastOkAt ? new Date(lastOkAt).toISOString() : null,
+    lastError: lastErrorNote,
+    counters: { ...served },
+    /** Scopes the plan refused, with the provider's explanation. */
+    unentitled: [...denied.entries()].map(([scope, reason]) => ({ scope, reason })),
+  };
+}
 
 function apiKey(): string | null {
   const raw = process.env["MASSIVE_API_KEY"] ?? process.env["POLYGON_API_KEY"];
   return raw ? raw.replace(/\s+/g, "") : null;
 }
 
-/** GET a Massive path (already query-stringed) with metering, caching and entitlement memory. */
+/** GET a Massive path (already query-stringed) with metering, caching, backoff and entitlement memory. */
 export async function massiveGet<T>(path: string, opts: { ttl?: number; scope?: string } = {}): Promise<T | null> {
   const ttl = opts.ttl ?? 60_000;
   const scope = opts.scope ?? path;
   const hit = cache.get(path);
-  if (hit && Date.now() - hit.at < ttl) return hit.value as T;
-  if (denied.has(scope)) return (hit?.value as T) ?? null;
+  if (hit && Date.now() - hit.at < ttl) {
+    served.cached += 1;
+    return hit.value as T;
+  }
+  const stale = (): T | null => {
+    if (hit) served.stale += 1;
+    return (hit?.value as T) ?? null;
+  };
+  if (denied.has(scope)) return stale();
 
   const key = apiKey();
-  if (!key) return (hit?.value as T) ?? null;
-  if (!takeToken()) return (hit?.value as T) ?? null;
+  if (!key) return stale();
+  if (Date.now() < cooldownUntil) {
+    served.throttled += 1;
+    return stale();
+  }
+  if (!takeToken()) {
+    served.throttled += 1;
+    return stale();
+  }
 
   const sep = path.includes("?") ? "&" : "?";
   const url = `${BASE}${path}${sep}apiKey=${key}`;
-  try {
-    const res = await queued(() => fetch(url, { headers: { Accept: "application/json" } }));
-    if (res.status === 429) {
-      budget.used = rpm(); // burn the rest of this minute instead of retrying into the wall
-      return (hit?.value as T) ?? null;
-    }
-    const json = (await res.json()) as { status?: string; message?: string; error?: string };
-    if (!res.ok || json.status === "NOT_AUTHORIZED" || json.status === "ERROR") {
-      const note = `${json.message ?? json.error ?? ""}`;
-      if (/maximum requests per minute/i.test(note)) {
-        budget.used = rpm();
-        return (hit?.value as T) ?? null;
-      }
-      // "before end of day" / "doesn't include this data timeframe" is a
-      // window limit on the current session, not a dead scope — the same scope
-      // still serves closed sessions, so never blacklist it.
-      const windowLimited = /end of day|data timeframe|today's data/i.test(note);
-      if (!windowLimited && (json.status === "NOT_AUTHORIZED" || res.status === 403)) {
-        denied.add(scope);
-        console.warn(`[massive] not entitled: ${scope}`);
-      }
-      return (hit?.value as T) ?? null;
-    }
 
-    cache.set(path, { at: Date.now(), value: json });
-    return json as T;
-  } catch (e) {
-    console.warn(`[massive] ${path} failed: ${(e as Error).message}`);
-    return (hit?.value as T) ?? null;
+  // Exponential backoff: transient 429/5xx answers get up to three attempts
+  // with jittered waits before we fall back to whatever we already cached.
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      const res = await queued(() => fetch(url, { headers: { Accept: "application/json" } }));
+
+      if (res.status === 429 || res.status >= 500) {
+        const retryAfter = Number(res.headers.get("retry-after") ?? "");
+        const wait = Number.isFinite(retryAfter) && retryAfter > 0
+          ? retryAfter * 1000
+          : 400 * 2 ** attempt + Math.floor(Math.random() * 250);
+        lastErrorNote = `HTTP ${res.status} on ${scope}`;
+        if (attempt === 2) {
+          if (res.status === 429) cooldownUntil = Date.now() + Math.min(30_000, wait * 2);
+          served.errors += 1;
+          return stale();
+        }
+        await sleep(Math.min(8_000, wait));
+        continue;
+      }
+
+      const json = (await res.json()) as { status?: string; message?: string; error?: string };
+      if (!res.ok || json.status === "NOT_AUTHORIZED" || json.status === "ERROR") {
+        const note = `${json.message ?? json.error ?? `HTTP ${res.status}`}`;
+        lastErrorNote = `${scope}: ${note}`;
+        if (/maximum requests per minute/i.test(note)) {
+          cooldownUntil = Date.now() + 15_000;
+          served.throttled += 1;
+          return stale();
+        }
+        // "before end of day" / "doesn't include this data timeframe" is a
+        // window limit on the current session, not a dead scope — the same scope
+        // still serves closed sessions, so never blacklist it.
+        const windowLimited = /end of day|data timeframe|today's data/i.test(note);
+        if (!windowLimited && (json.status === "NOT_AUTHORIZED" || res.status === 403)) {
+          denied.set(scope, note);
+          console.warn(`[massive] not entitled: ${scope}`);
+        }
+        served.errors += 1;
+        return stale();
+      }
+
+      cache.set(path, { at: Date.now(), value: json });
+      served.fresh += 1;
+      lastOkAt = Date.now();
+      return json as T;
+    } catch (e) {
+      lastErrorNote = `${scope}: ${(e as Error).message}`;
+      if (attempt === 2) {
+        console.warn(`[massive] ${path} failed: ${(e as Error).message}`);
+        served.errors += 1;
+        return stale();
+      }
+      await sleep(300 * 2 ** attempt);
+    }
   }
+  return stale();
 }
 
 /* -------------------------------- aggregates ------------------------------- */
