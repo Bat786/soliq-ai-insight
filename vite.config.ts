@@ -23,7 +23,13 @@ export default defineConfig({
   },
   vite: {
     resolve: {
-      alias: [{ find: /^rpc-websockets$/, replacement: rpcWebsocketsBrowser }],
+      alias: [
+        { find: /^rpc-websockets$/, replacement: rpcWebsocketsBrowser },
+        // Solana libs reach for Node's Buffer in the browser; map it to the
+        // pure-JS polyfill so client boot (and hydration) never throws.
+        { find: /^buffer$/, replacement: "buffer/" },
+      ],
     },
+
   },
 });
