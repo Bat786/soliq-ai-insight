@@ -467,6 +467,36 @@ export type Database = {
           },
         ]
       }
+      broker_provider_secrets: {
+        Row: {
+          created_at: string
+          id: string
+          provider: string
+          provider_user_id: string
+          provider_user_secret: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          provider?: string
+          provider_user_id: string
+          provider_user_secret: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          provider?: string
+          provider_user_id?: string
+          provider_user_secret?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       broker_transactions: {
         Row: {
           account_id: string

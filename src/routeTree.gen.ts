@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AssistantRouteImport } from './routes/assistant'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as BacktestRouteImport } from './routes/backtest'
+import { Route as BrokerageRouteImport } from './routes/brokerage'
 import { Route as CommunityRouteImport } from './routes/community'
 import { Route as CryptoRouteImport } from './routes/crypto'
 import { Route as DiscoverRouteImport } from './routes/discover'
@@ -46,6 +47,11 @@ const AuthRoute = AuthRouteImport.update({
 const BacktestRoute = BacktestRouteImport.update({
   id: '/backtest',
   path: '/backtest',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BrokerageRoute = BrokerageRouteImport.update({
+  id: '/brokerage',
+  path: '/brokerage',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CommunityRoute = CommunityRouteImport.update({
@@ -124,6 +130,7 @@ export interface FileRoutesByFullPath {
   '/assistant': typeof AssistantRoute
   '/auth': typeof AuthRoute
   '/backtest': typeof BacktestRoute
+  '/brokerage': typeof BrokerageRoute
   '/community': typeof CommunityRoute
   '/crypto': typeof CryptoRoute
   '/discover': typeof DiscoverRoute
@@ -144,6 +151,7 @@ export interface FileRoutesByTo {
   '/assistant': typeof AssistantRoute
   '/auth': typeof AuthRoute
   '/backtest': typeof BacktestRoute
+  '/brokerage': typeof BrokerageRoute
   '/community': typeof CommunityRoute
   '/crypto': typeof CryptoRoute
   '/discover': typeof DiscoverRoute
@@ -165,6 +173,7 @@ export interface FileRoutesById {
   '/assistant': typeof AssistantRoute
   '/auth': typeof AuthRoute
   '/backtest': typeof BacktestRoute
+  '/brokerage': typeof BrokerageRoute
   '/community': typeof CommunityRoute
   '/crypto': typeof CryptoRoute
   '/discover': typeof DiscoverRoute
@@ -187,6 +196,7 @@ export interface FileRouteTypes {
     | '/assistant'
     | '/auth'
     | '/backtest'
+    | '/brokerage'
     | '/community'
     | '/crypto'
     | '/discover'
@@ -207,6 +217,7 @@ export interface FileRouteTypes {
     | '/assistant'
     | '/auth'
     | '/backtest'
+    | '/brokerage'
     | '/community'
     | '/crypto'
     | '/discover'
@@ -227,6 +238,7 @@ export interface FileRouteTypes {
     | '/assistant'
     | '/auth'
     | '/backtest'
+    | '/brokerage'
     | '/community'
     | '/crypto'
     | '/discover'
@@ -248,6 +260,7 @@ export interface RootRouteChildren {
   AssistantRoute: typeof AssistantRoute
   AuthRoute: typeof AuthRoute
   BacktestRoute: typeof BacktestRoute
+  BrokerageRoute: typeof BrokerageRoute
   CommunityRoute: typeof CommunityRoute
   CryptoRoute: typeof CryptoRoute
   DiscoverRoute: typeof DiscoverRoute
@@ -292,6 +305,13 @@ declare module '@tanstack/react-router' {
       path: '/backtest'
       fullPath: '/backtest'
       preLoaderRoute: typeof BacktestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/brokerage': {
+      id: '/brokerage'
+      path: '/brokerage'
+      fullPath: '/brokerage'
+      preLoaderRoute: typeof BrokerageRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/community': {
@@ -400,6 +420,7 @@ const rootRouteChildren: RootRouteChildren = {
   AssistantRoute: AssistantRoute,
   AuthRoute: AuthRoute,
   BacktestRoute: BacktestRoute,
+  BrokerageRoute: BrokerageRoute,
   CommunityRoute: CommunityRoute,
   CryptoRoute: CryptoRoute,
   DiscoverRoute: DiscoverRoute,

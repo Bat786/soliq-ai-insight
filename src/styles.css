@@ -263,3 +263,13 @@
   background: var(--surface-2);
   border-radius: var(--radius-md);
 }
+
+/* Fail-safe boot splash: hides itself purely in CSS so a slow or failed
+   hydration can never leave the app stuck behind the loading screen. */
+@keyframes soliq-splash-out {
+  0%, 82% { opacity: 1; visibility: visible; }
+  100% { opacity: 0; visibility: hidden; }
+}
+.soliq-splash {
+  animation: soliq-splash-out 4s ease-in forwards;
+}
