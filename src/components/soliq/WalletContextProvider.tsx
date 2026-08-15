@@ -42,7 +42,12 @@ export function WalletContextProvider({ children }: { children: ReactNode }) {
     window.localStorage.setItem(CLUSTER_KEY, next);
   }, []);
 
-  const endpoint = useMemo(() => clusterApiUrl(cluster), [cluster]);
+  // Swap the RPC by setting VITE_SOLANA_RPC_URL (e.g. a Helius/Alchemy mainnet
+  // endpoint); otherwise fall back to the public cluster URL.
+  const endpoint = useMemo(() => {
+    const custom = import.meta.env["VITE_SOLANA_RPC_URL"] as string | undefined;
+    return cluster === "mainnet-beta" && custom ? custom : clusterApiUrl(cluster);
+  }, [cluster]);
   const wallets = useMemo(() => [new PhantomWalletAdapter(), new SolflareWalletAdapter()], []);
 
   const onError = useCallback((error: Error & { name?: string }) => {
