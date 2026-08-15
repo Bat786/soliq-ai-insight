@@ -116,6 +116,16 @@ export async function collectDataStatus(): Promise<DataStatus> {
       detail: hasEnv("SNAPTRADE_CLIENT_ID") ? "Connected." : "No credentials configured.",
       fallback: "Manual portfolio entry.",
     },
+    {
+      id: "plaid",
+      name: "Plaid (bank & cash accounts)",
+      state: hasEnv("PLAID_CLIENT_ID") && hasEnv("PLAID_SECRET") ? "live" : "missing-key",
+      detail:
+        hasEnv("PLAID_CLIENT_ID") && hasEnv("PLAID_SECRET")
+          ? `Connected · ${(process.env["PLAID_ENV"] ?? "sandbox").toLowerCase()} environment.`
+          : "No credentials configured — bank linking disabled.",
+      fallback: "Wallet and brokerage balances only.",
+    },
   ];
 
   return { checkedAt: new Date().toISOString(), massive: { ...base, ...probe }, providers };
