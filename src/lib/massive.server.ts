@@ -21,8 +21,15 @@ export type AssetClass = "stocks" | "crypto" | "fx" | "indices";
 
 /* ------------------------------ rate metering ----------------------------- */
 
-const LIMIT = 90; // requests per minute we allow ourselves against the plan
-const MIN_GAP = 160;
+// Requests per minute we allow ourselves. The observed plan ceiling is honoured
+// here so we stop self-inflicting 429s; raise it with MASSIVE_RPM when the plan
+// allows more (e.g. 100 on paid tiers, unlimited-ish on business).
+const rpm = () => {
+  const n = Number(process.env["MASSIVE_RPM"] ?? "");
+  return Number.isFinite(n) && n > 0 ? Math.floor(n) : 5;
+};
+const MIN_GAP = () => Math.max(160, Math.ceil(60_000 / rpm()) + 40);
+
 const budget = { window: 0, used: 0 };
 let chain: Promise<unknown> = Promise.resolve();
 let lastAt = 0;
