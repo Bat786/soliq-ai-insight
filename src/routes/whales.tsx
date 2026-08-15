@@ -25,7 +25,12 @@ export const Route = createFileRoute("/whales")({
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { property: "og:url", content: "https://soliq-ai-insight.lovable.app/whales" },
+      { property: "og:image", content: "https://soliq-ai-insight.lovable.app/og-soliq.jpg" },
+      { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:image", content: "https://soliq-ai-insight.lovable.app/og-soliq.jpg" },
     ],
+    links: [{ rel: "canonical", href: "https://soliq-ai-insight.lovable.app/whales" }],
   }),
   component: () => (
     <TierGate feature="whaleFlow" shell>

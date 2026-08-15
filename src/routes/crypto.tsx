@@ -20,7 +20,12 @@ export const Route = createFileRoute("/crypto")({
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { property: "og:url", content: "https://soliq-ai-insight.lovable.app/crypto" },
+      { property: "og:image", content: "https://soliq-ai-insight.lovable.app/og-soliq.jpg" },
+      { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:image", content: "https://soliq-ai-insight.lovable.app/og-soliq.jpg" },
     ],
+    links: [{ rel: "canonical", href: "https://soliq-ai-insight.lovable.app/crypto" }],
   }),
   component: CryptoPage,
 });

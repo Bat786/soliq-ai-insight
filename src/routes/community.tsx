@@ -26,7 +26,12 @@ export const Route = createFileRoute("/community")({
       },
       { property: "og:title", content: "Community — SOLIQ" },
       { property: "og:description", content: "Share ideas, follow investors and climb the SOLIQ leaderboards." },
+      { property: "og:url", content: "https://soliq-ai-insight.lovable.app/community" },
+      { property: "og:image", content: "https://soliq-ai-insight.lovable.app/og-soliq.jpg" },
+      { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:image", content: "https://soliq-ai-insight.lovable.app/og-soliq.jpg" },
     ],
+    links: [{ rel: "canonical", href: "https://soliq-ai-insight.lovable.app/community" }],
   }),
   component: Community,
 });
