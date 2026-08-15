@@ -404,11 +404,27 @@ function Landing() {
       </main>
 
       <footer className="border-t border-border/70 px-4 py-8">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 text-[11px] text-muted-foreground">
-          <p>SOLIQ · powered by AETHRON — Solana Blockchain Intelligence Engine</p>
-          <p>Market data is informational only and is not investment advice.</p>
+        <div className="mx-auto flex max-w-6xl flex-col gap-4 text-[11px] text-muted-foreground">
+          <nav aria-label="SOLIQ on social media" className="flex flex-wrap items-center gap-4">
+            {SOCIALS.map((s) => (
+              <a
+                key={s.label}
+                href={s.href}
+                target="_blank"
+                rel="me noopener noreferrer"
+                className="transition-colors hover:text-foreground"
+              >
+                {s.label}
+              </a>
+            ))}
+          </nav>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p>SOLIQ · powered by AETHRON — Solana Blockchain Intelligence Engine</p>
+            <p>Market data is informational only and is not investment advice.</p>
+          </div>
         </div>
       </footer>
+
     </div>
   );
 }
