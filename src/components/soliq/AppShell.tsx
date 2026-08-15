@@ -26,6 +26,7 @@ import {
 import { useEffect, useState, type ReactNode } from "react";
 
 import { AppearanceMenu } from "@/components/soliq/AppearanceMenu";
+import { DemoBanner } from "@/components/soliq/DemoBanner";
 import { NotificationBell } from "@/components/soliq/NotificationBell";
 
 import { Button } from "@/components/ui/button";
@@ -44,7 +45,7 @@ import { fmtPct } from "@/lib/format";
 import { isPaid, planByTier, type Tier } from "@/lib/membership";
 
 const nav = [
-  { to: "/", label: "Home", icon: LayoutDashboard },
+  { to: "/terminal", label: "Home", icon: LayoutDashboard },
   { to: "/scanner", label: "Scanner", icon: Radar },
   { to: "/stocks", label: "Stocks", icon: BarChart3 },
   { to: "/futures", label: "Futures", icon: Activity },
@@ -259,7 +260,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
         <nav className="flex-1 space-y-1 px-3">
           {nav.map(({ to, label, icon: Icon }) => {
-            const active = to === "/" ? pathname === "/" : pathname.startsWith(to);
+            const active = pathname.startsWith(to);
             return (
               <Link
                 key={to}
@@ -292,6 +293,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       <div className="lg:pl-60">
         <header className="sticky top-0 z-30 glass">
+          <DemoBanner />
           <Ticker />
           <div className="flex items-center justify-between gap-3 px-4 py-3">
             <div className="lg:hidden">
@@ -318,7 +320,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <nav className="fixed inset-x-0 bottom-0 z-40 glass lg:hidden">
         <div className="scroll-none flex items-stretch gap-1 overflow-x-auto px-2 py-2">
           {nav.map(({ to, label, icon: Icon }) => {
-            const active = to === "/" ? pathname === "/" : pathname.startsWith(to);
+            const active = pathname.startsWith(to);
             const short =
               label === "AI Assistant" ? "AI" : label === "Whale Flow" ? "Whales" : label.split(" ")[0];
             return (
