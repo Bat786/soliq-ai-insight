@@ -42,14 +42,15 @@ function takeToken(): boolean {
     budget.window = now;
     budget.used = 0;
   }
-  if (budget.used >= LIMIT) return false;
+  if (budget.used >= rpm()) return false;
   budget.used += 1;
   return true;
 }
 
 function queued<T>(task: () => Promise<T>): Promise<T> {
   const run = chain.then(async () => {
-    const wait = MIN_GAP - (Date.now() - lastAt);
+    const wait = MIN_GAP() - (Date.now() - lastAt);
+
     if (wait > 0) await sleep(wait);
     lastAt = Date.now();
     return task();
