@@ -92,6 +92,10 @@ function Portfolio() {
         Live read-only holdings from your linked Solana and EVM wallets, priced against the market tape.
       </p>
 
+      <BankAccountsPanel />
+
+
+
       {!isSignedIn || wallets.length === 0 ? (
         <div className="panel mt-5 p-8 text-center">
           <Wallet className="mx-auto size-6 text-primary" />
