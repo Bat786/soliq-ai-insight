@@ -11,6 +11,7 @@ import { useEffect, type ReactNode } from "react";
 
 import { SplashGate } from "@/components/soliq/Splash";
 import { WalletContextProvider } from "@/components/soliq/WalletContextProvider";
+import { EvmWalletProvider } from "@/components/soliq/EvmWalletProvider";
 
 import { ThemeProvider } from "@/components/soliq/ThemeProvider";
 import { Toaster } from "@/components/ui/sonner";
