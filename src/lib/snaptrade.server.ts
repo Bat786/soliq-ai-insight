@@ -73,18 +73,80 @@ export async function registerSnapUser(userId: string): Promise<SnapUser> {
   return { userId: out.userId, userSecret: out.userSecret };
 }
 
+export type PortalOptions = {
+  /** "read" (default) or "trade" — SnapTrade connection scope. */
+  connectionType?: "read" | "trade";
+  /** Authorization (connection) UUID to repair instead of creating a new one. */
+  reconnect?: string;
+  redirectTo?: string;
+};
+
 /** Portal URL the member opens to link a brokerage (read-only by default). */
-export async function connectionPortalUrl(user: SnapUser, redirectTo?: string): Promise<string> {
+export async function connectionPortalUrl(user: SnapUser, opts: PortalOptions = {}): Promise<string> {
   const out = await call<{ redirectURI?: string }>("POST", "/snapTrade/login", {
     params: { userId: user.userId, userSecret: user.userSecret },
     body: {
-      connectionType: "read",
-      ...(redirectTo ? { customRedirect: redirectTo } : {}),
+      connectionType: opts.connectionType ?? "read",
+      ...(opts.reconnect ? { reconnect: opts.reconnect } : {}),
+      ...(opts.redirectTo ? { customRedirect: opts.redirectTo } : {}),
     },
   });
   if (!out.redirectURI) throw new Error("snaptrade:no-portal-url");
   return out.redirectURI;
 }
+
+export type BrokerConnection = {
+  id: string;
+  brokerage: string | null;
+  disabled: boolean;
+  disabledDate: number | null;
+  type: string | null;
+  createdAt: number | null;
+};
+
+type RawAuthorization = {
+  id: string;
+  brokerage?: { name?: string | null; display_name?: string | null } | null;
+  disabled?: boolean | null;
+  disabled_date?: string | null;
+  type?: string | null;
+  created_date?: string | null;
+};
+
+/** Brokerage authorizations (connections) the member holds. */
+export async function listConnections(user: SnapUser): Promise<BrokerConnection[]> {
+  const rows = await call<RawAuthorization[]>("GET", "/authorizations", {
+    params: { userId: user.userId, userSecret: user.userSecret },
+  });
+  return (rows ?? []).map((r) => ({
+    id: r.id,
+    brokerage: r.brokerage?.display_name ?? r.brokerage?.name ?? null,
+    disabled: Boolean(r.disabled),
+    disabledDate: r.disabled_date ? Date.parse(r.disabled_date) || null : null,
+    type: r.type ?? null,
+    createdAt: r.created_date ? Date.parse(r.created_date) || null : null,
+  }));
+}
+
+/** Single authorization detail — used right after a SUCCESS portal message. */
+export async function getConnection(user: SnapUser, authorizationId: string): Promise<BrokerConnection | null> {
+  try {
+    const r = await call<RawAuthorization>("GET", `/authorizations/${authorizationId}`, {
+      params: { userId: user.userId, userSecret: user.userSecret },
+    });
+    return {
+      id: r.id,
+      brokerage: r.brokerage?.display_name ?? r.brokerage?.name ?? null,
+      disabled: Boolean(r.disabled),
+      disabledDate: r.disabled_date ? Date.parse(r.disabled_date) || null : null,
+      type: r.type ?? null,
+      createdAt: r.created_date ? Date.parse(r.created_date) || null : null,
+    };
+  } catch {
+    return null;
+  }
+}
+
 
 /* --------------------------------- reading -------------------------------- */
 
