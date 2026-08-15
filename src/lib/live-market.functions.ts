@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { emptyFilters, type LiveAsset, type ScanFilters } from "@/lib/market-types";
 
 export const getMarketSnapshot = createServerFn({ method: "GET" }).handler(async () => {
