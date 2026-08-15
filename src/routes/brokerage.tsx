@@ -85,11 +85,7 @@ function Brokerage() {
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               <StatCard label="Market value" value={fmtUsd(snap.totals.marketValue)} />
               <StatCard label="Cash" value={fmtUsd(snap.totals.cash)} />
-              <StatCard
-                label="Unrealized P&L"
-                value={fmtUsd(snap.totals.unrealizedPnl)}
-                tone={snap.totals.unrealizedPnl >= 0 ? "bull" : "bear"}
-              />
+              <StatCard label="Unrealized P&L" value={fmtUsd(snap.totals.unrealizedPnl)} />
               <StatCard label="Positions" value={fmtNum(snap.totals.positions)} />
             </div>
 
