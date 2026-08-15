@@ -28,6 +28,7 @@ import { Route as TerminalRouteImport } from './routes/terminal'
 import { Route as WalletsRouteImport } from './routes/wallets'
 import { Route as WhalesRouteImport } from './routes/whales'
 import { Route as AssetIdRouteImport } from './routes/asset.$id'
+import { Route as CheckoutReturnRouteImport } from './routes/checkout.return'
 import { Route as SymbolMarketSymbolRouteImport } from './routes/symbol.$market.$symbol'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 
@@ -126,6 +127,11 @@ const AssetIdRoute = AssetIdRouteImport.update({
   path: '/asset/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CheckoutReturnRoute = CheckoutReturnRouteImport.update({
+  id: '/checkout/return',
+  path: '/checkout/return',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SymbolMarketSymbolRoute = SymbolMarketSymbolRouteImport.update({
   id: '/symbol/$market/$symbol',
   path: '/symbol/$market/$symbol',
@@ -158,6 +164,7 @@ export interface FileRoutesByFullPath {
   '/wallets': typeof WalletsRoute
   '/whales': typeof WhalesRoute
   '/asset/$id': typeof AssetIdRoute
+  '/checkout/return': typeof CheckoutReturnRoute
   '/symbol/$market/$symbol': typeof SymbolMarketSymbolRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
@@ -181,6 +188,7 @@ export interface FileRoutesByTo {
   '/wallets': typeof WalletsRoute
   '/whales': typeof WhalesRoute
   '/asset/$id': typeof AssetIdRoute
+  '/checkout/return': typeof CheckoutReturnRoute
   '/symbol/$market/$symbol': typeof SymbolMarketSymbolRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
@@ -205,6 +213,7 @@ export interface FileRoutesById {
   '/wallets': typeof WalletsRoute
   '/whales': typeof WhalesRoute
   '/asset/$id': typeof AssetIdRoute
+  '/checkout/return': typeof CheckoutReturnRoute
   '/symbol/$market/$symbol': typeof SymbolMarketSymbolRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
@@ -230,6 +239,7 @@ export interface FileRouteTypes {
     | '/wallets'
     | '/whales'
     | '/asset/$id'
+    | '/checkout/return'
     | '/symbol/$market/$symbol'
     | '/api/public/payments/webhook'
   fileRoutesByTo: FileRoutesByTo
@@ -253,6 +263,7 @@ export interface FileRouteTypes {
     | '/wallets'
     | '/whales'
     | '/asset/$id'
+    | '/checkout/return'
     | '/symbol/$market/$symbol'
     | '/api/public/payments/webhook'
   id:
@@ -276,6 +287,7 @@ export interface FileRouteTypes {
     | '/wallets'
     | '/whales'
     | '/asset/$id'
+    | '/checkout/return'
     | '/symbol/$market/$symbol'
     | '/api/public/payments/webhook'
   fileRoutesById: FileRoutesById
@@ -300,6 +312,7 @@ export interface RootRouteChildren {
   WalletsRoute: typeof WalletsRoute
   WhalesRoute: typeof WhalesRoute
   AssetIdRoute: typeof AssetIdRoute
+  CheckoutReturnRoute: typeof CheckoutReturnRoute
   SymbolMarketSymbolRoute: typeof SymbolMarketSymbolRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
 }
@@ -439,6 +452,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AssetIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/checkout/return': {
+      id: '/checkout/return'
+      path: '/checkout/return'
+      fullPath: '/checkout/return'
+      preLoaderRoute: typeof CheckoutReturnRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/symbol/$market/$symbol': {
       id: '/symbol/$market/$symbol'
       path: '/symbol/$market/$symbol'
@@ -476,6 +496,7 @@ const rootRouteChildren: RootRouteChildren = {
   WalletsRoute: WalletsRoute,
   WhalesRoute: WhalesRoute,
   AssetIdRoute: AssetIdRoute,
+  CheckoutReturnRoute: CheckoutReturnRoute,
   SymbolMarketSymbolRoute: SymbolMarketSymbolRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
 }

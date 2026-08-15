@@ -13,7 +13,7 @@ import { planByTier } from "@/lib/membership";
 
 export const Route = createFileRoute("/checkout/return")({
   // session_id comes from Stripe's server-side substitution of the placeholder.
-  validateSearch: (search: Record<string, unknown>): { session_id?: string } => ({
+  validateSearch: (search: Record<string, unknown>): { session_id?: string | undefined } => ({
     session_id: typeof search["session_id"] === "string" ? search["session_id"] : undefined,
   }),
   head: () => ({
