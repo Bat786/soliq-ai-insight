@@ -22,6 +22,7 @@ import {
   Building2,
   Wallet,
   Zap,
+  LifeBuoy,
 } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 
