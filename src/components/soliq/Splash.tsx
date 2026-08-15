@@ -24,7 +24,7 @@ export function Splash() {
   }, []);
 
   return (
-    <div className="hero-bg fixed inset-0 z-100 grid place-items-center bg-background px-6">
+    <div className="soliq-splash hero-bg fixed inset-0 z-100 grid place-items-center bg-background px-6">
       <div className="w-full max-w-sm text-center">
         <div className="relative mx-auto grid size-20 place-items-center">
           <span className="absolute inset-0 animate-[spin_5s_linear_infinite] rounded-full border border-primary/25 border-t-primary/80" />
