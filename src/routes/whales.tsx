@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Loader2, Waves } from "lucide-react";
 
 import { AppShell } from "@/components/soliq/AppShell";
+import { TierGate } from "@/components/soliq/TierGate";
 import { BullBearGauge } from "@/components/soliq/BullBearGauge";
 import { WhaleAlerts } from "@/components/soliq/WhaleAlerts";
 import { SectionTitle } from "@/components/soliq/primitives";
@@ -26,7 +27,11 @@ export const Route = createFileRoute("/whales")({
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
-  component: WhalesPage,
+  component: () => (
+    <TierGate feature="whaleFlow" shell>
+      <WhalesPage />
+    </TierGate>
+  ),
 });
 
 const time = (t: number) =>

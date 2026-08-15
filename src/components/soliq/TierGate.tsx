@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { Crown, Lock, Sparkles } from "lucide-react";
 import type { ReactNode } from "react";
 
+import { AppShell } from "@/components/soliq/AppShell";
 import { Button } from "@/components/ui/button";
 import { useProfile } from "@/hooks/use-soliq-account";
 import { FEATURES, canUse, type FeatureKey } from "@/lib/entitlements";
@@ -11,13 +12,23 @@ import { planByTier } from "@/lib/membership";
  * Client-side entitlement gate. UX only — every premium server function
  * re-checks the tier server-side.
  */
-export function TierGate({ feature, children }: { feature: FeatureKey; children: ReactNode }) {
+export function TierGate({
+  feature,
+  children,
+  shell = false,
+}: {
+  feature: FeatureKey;
+  children: ReactNode;
+  /** Wrap the locked state in the app shell (for whole-route gates). */
+  shell?: boolean;
+}) {
   const { tier, isSignedIn, isLoading } = useProfile();
   const required = FEATURES[feature].tier;
+  const frame = (node: ReactNode) => (shell ? <AppShell>{node}</AppShell> : <>{node}</>);
 
   if (isSignedIn && isLoading) {
-    return (
-      <div className="panel h-64 animate-pulse" aria-busy="true" aria-label="Checking membership" />
+    return frame(
+      <div className="panel h-64 animate-pulse" aria-busy="true" aria-label="Checking membership" />,
     );
   }
   if (canUse(feature, tier)) return <>{children}</>;
@@ -25,7 +36,7 @@ export function TierGate({ feature, children }: { feature: FeatureKey; children:
   const plan = planByTier(required);
   const isElite = required === "elite";
 
-  return (
+  return frame(
     <div className="panel mx-auto max-w-lg p-8 text-center">
       <span className="mx-auto grid size-11 place-items-center rounded-xl border border-primary/30 bg-primary/10 text-primary">
         {isElite ? <Crown className="size-5" /> : <Lock className="size-5" />}
@@ -47,6 +58,6 @@ export function TierGate({ feature, children }: { feature: FeatureKey; children:
           <Link to="/terminal">Back to terminal</Link>
         </Button>
       </div>
-    </div>
+    </div>,
   );
 }
