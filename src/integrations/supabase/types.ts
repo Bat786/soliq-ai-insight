@@ -310,6 +310,113 @@ export type Database = {
         }
         Relationships: []
       }
+      bank_accounts: {
+        Row: {
+          account_name: string | null
+          account_subtype: string | null
+          account_type: string | null
+          available_balance: number | null
+          connection_id: string
+          created_at: string
+          currency: string
+          current_balance: number | null
+          id: string
+          institution_name: string | null
+          last_synced_at: string | null
+          mask: string | null
+          official_name: string | null
+          provider_account_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          account_name?: string | null
+          account_subtype?: string | null
+          account_type?: string | null
+          available_balance?: number | null
+          connection_id: string
+          created_at?: string
+          currency?: string
+          current_balance?: number | null
+          id?: string
+          institution_name?: string | null
+          last_synced_at?: string | null
+          mask?: string | null
+          official_name?: string | null
+          provider_account_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          account_name?: string | null
+          account_subtype?: string | null
+          account_type?: string | null
+          available_balance?: number | null
+          connection_id?: string
+          created_at?: string
+          currency?: string
+          current_balance?: number | null
+          id?: string
+          institution_name?: string | null
+          last_synced_at?: string | null
+          mask?: string | null
+          official_name?: string | null
+          provider_account_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bank_accounts_connection_id_fkey"
+            columns: ["connection_id"]
+            isOneToOne: false
+            referencedRelation: "bank_connections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bank_connections: {
+        Row: {
+          access_token: string
+          created_at: string
+          id: string
+          institution_id: string | null
+          institution_name: string | null
+          item_id: string
+          last_synced_at: string | null
+          provider: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          access_token: string
+          created_at?: string
+          id?: string
+          institution_id?: string | null
+          institution_name?: string | null
+          item_id: string
+          last_synced_at?: string | null
+          provider?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          access_token?: string
+          created_at?: string
+          id?: string
+          institution_id?: string | null
+          institution_name?: string | null
+          item_id?: string
+          last_synced_at?: string | null
+          provider?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       broker_accounts: {
         Row: {
           account_name: string | null
