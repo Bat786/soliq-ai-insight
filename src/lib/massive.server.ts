@@ -86,15 +86,28 @@ export async function massiveGet<T>(path: string, opts: { ttl?: number; scope?: 
   const url = `${BASE}${path}${sep}apiKey=${key}`;
   try {
     const res = await queued(() => fetch(url, { headers: { Accept: "application/json" } }));
-    if (res.status === 429) return (hit?.value as T) ?? null;
-    const json = (await res.json()) as { status?: string; message?: string };
+    if (res.status === 429) {
+      budget.used = rpm(); // burn the rest of this minute instead of retrying into the wall
+      return (hit?.value as T) ?? null;
+    }
+    const json = (await res.json()) as { status?: string; message?: string; error?: string };
     if (!res.ok || json.status === "NOT_AUTHORIZED" || json.status === "ERROR") {
-      if (json.status === "NOT_AUTHORIZED" || res.status === 403) {
+      const note = `${json.message ?? json.error ?? ""}`;
+      if (/maximum requests per minute/i.test(note)) {
+        budget.used = rpm();
+        return (hit?.value as T) ?? null;
+      }
+      // "before end of day" / "doesn't include this data timeframe" is a
+      // window limit on the current session, not a dead scope — the same scope
+      // still serves closed sessions, so never blacklist it.
+      const windowLimited = /end of day|data timeframe|today's data/i.test(note);
+      if (!windowLimited && (json.status === "NOT_AUTHORIZED" || res.status === 403)) {
         denied.add(scope);
         console.warn(`[massive] not entitled: ${scope}`);
       }
       return (hit?.value as T) ?? null;
     }
+
     cache.set(path, { at: Date.now(), value: json });
     return json as T;
   } catch (e) {
