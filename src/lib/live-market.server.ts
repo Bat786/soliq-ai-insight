@@ -46,10 +46,14 @@ async function cached<T>(key: string, ttlMs: number, load: () => Promise<T>): Pr
 }
 
 async function cgFetch<T>(path: string): Promise<T> {
-  const res = await fetch(`${CG}${path}`, { headers: { accept: "application/json" } });
+  const key = process.env["COINGECKO_API_KEY"];
+  const res = await fetch(`${CG}${path}`, {
+    headers: { accept: "application/json", ...(key ? { "x-cg-demo-api-key": key } : {}) },
+  });
   if (!res.ok) throw new Error(`Market data provider failed [${res.status}]: ${await res.text()}`);
   return (await res.json()) as T;
 }
+
 
 /* ---------------- indicator math ---------------- */
 
