@@ -22,6 +22,7 @@ import {
   Building2,
   Wallet,
   Zap,
+  LifeBuoy,
 } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 
@@ -61,6 +62,7 @@ const nav = [
   { to: "/backtest", label: "Backtest", icon: FlaskConical },
   { to: "/assistant", label: "AI Assistant", icon: Bot },
   { to: "/settings", label: "Settings", icon: Settings },
+  { to: "/support", label: "Support", icon: LifeBuoy },
 ] as const;
 
 export function Logo({ compact = false }: { compact?: boolean }) {
@@ -212,6 +214,12 @@ function AccountMenu() {
             <Activity className="size-4" /> Data & feed status
           </Link>
         </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link to="/support">
+            <LifeBuoy className="size-4" /> Support & billing help
+          </Link>
+        </DropdownMenuItem>
+
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={signOut}>
           <LogOut className="size-4" /> Sign out

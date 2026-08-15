@@ -1,4 +1,5 @@
 /** Server-only context builder + model call for SOLIQ AI. */
+import { ACCOUNT_SYSTEM_RULES } from "@/lib/account-context.server";
 
 const MODEL = "google/gemini-3.6-flash";
 
@@ -66,7 +67,7 @@ Ground every claim in the LIVE MARKET CONTEXT provided. If a number is not in th
 Style: dense institutional desk notes in markdown — short bold headers, bullet lines, explicit levels and indicator readings, then a one-line verdict with a 0-100 conviction score.
 Always close with: *Research, not financial advice.*`;
 
-export async function askSoliqAi(messages: ChatTurn[]): Promise<string> {
+export async function askSoliqAi(messages: ChatTurn[], accountContext?: string): Promise<string> {
   const key = process.env["LOVABLE_API_KEY"];
   if (!key) throw new Error("AI is not configured for this workspace.");
   const context = await buildDeskContext();
@@ -79,6 +80,10 @@ export async function askSoliqAi(messages: ChatTurn[]): Promise<string> {
       messages: [
         { role: "system", content: SYSTEM },
         { role: "system", content: `LIVE MARKET CONTEXT (updated ${new Date().toUTCString()}):\n${context}` },
+        { role: "system", content: ACCOUNT_SYSTEM_RULES },
+        ...(accountContext
+          ? [{ role: "system" as const, content: `MEMBER ACCOUNT CONTEXT (read-only):\n${accountContext}` }]
+          : []),
         ...messages.slice(-12),
       ],
     }),
