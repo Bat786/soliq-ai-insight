@@ -73,12 +73,32 @@ export type TokenProfile = {
 
 export type CryptoDesk = {
   movers: TokenRow[];
+  traded: TokenRow[];
+  trending: TokenRow[];
   fresh: TokenRow[];
   metas: TrendingMeta[];
   profiles: TokenProfile[];
+  pools: OnchainPoolRow[];
+  newPools: OnchainPoolRow[];
   updatedAt: number;
   notes: string[];
 };
+
+/** GeckoTerminal on-chain pool row (Solana). */
+export type OnchainPoolRow = {
+  address: string;
+  name: string;
+  dex: string;
+  priceUsd: number;
+  change24h: number;
+  volume24h: number;
+  liquidity: number;
+  fdv: number;
+  createdAt: number;
+  buys24h: number;
+  sells24h: number;
+};
+
 
 const num = (v: unknown, d = 0) => (typeof v === "number" && Number.isFinite(v) ? v : d);
 
