@@ -249,16 +249,19 @@ function rows(raw: unknown): TokenRow[] {
 
 export async function loadCryptoDesk(): Promise<CryptoDesk> {
   const notes: string[] = [];
+  const { gtTrendingPools, gtNewPools } = await import("@/lib/coingecko.server");
 
-  const [movers, fresh, metas, profiles] = await Promise.all([
-    cached("jup:top", 45_000, () => jupFetch("/tokens/v2/toporganicscore/24h?limit=30").then(rows)).catch((e) => {
-      notes.push(`Jupiter movers unavailable (${(e as Error).message})`);
+  const jup = (label: string, key: string, path: string) =>
+    cached(key, 45_000, () => jupFetch(path).then(rows)).catch((e) => {
+      notes.push(`Jupiter ${label} unavailable (${(e as Error).message})`);
       return [] as TokenRow[];
-    }),
-    cached("jup:recent", 45_000, () => jupFetch("/tokens/v2/recent?limit=24").then(rows)).catch((e) => {
-      notes.push(`Jupiter launches unavailable (${(e as Error).message})`);
-      return [] as TokenRow[];
-    }),
+    });
+
+  const [movers, traded, trending, fresh, metas, profiles, pools, newPools] = await Promise.all([
+    jup("organic movers", "jup:top", "/tokens/v2/toporganicscore/24h?limit=30"),
+    jup("most traded", "jup:traded", "/tokens/v2/toptraded/24h?limit=30"),
+    jup("trending", "jup:trending", "/tokens/v2/toptrending/24h?limit=30"),
+    jup("launches", "jup:recent", "/tokens/v2/recent?limit=24"),
     cached("dex:metas", 120_000, () => dexFetch("/metas/trending/v1").then(toMetas)).catch((e) => {
       notes.push(`DexScreener metas unavailable (${(e as Error).message})`);
       return [] as TrendingMeta[];
@@ -269,10 +272,28 @@ export async function loadCryptoDesk(): Promise<CryptoDesk> {
       notes.push(`DexScreener profiles unavailable (${(e as Error).message})`);
       return [] as TokenProfile[];
     }),
+    gtTrendingPools("solana").catch(() => {
+      notes.push("GeckoTerminal trending pools unavailable.");
+      return [] as OnchainPoolRow[];
+    }),
+    gtNewPools("solana").catch(() => {
+      notes.push("GeckoTerminal new pools unavailable.");
+      return [] as OnchainPoolRow[];
+    }),
   ]);
 
-  return { movers, fresh, metas, profiles, updatedAt: Date.now(), notes };
+  return { movers, traded, trending, fresh, metas, profiles, pools, newPools, updatedAt: Date.now(), notes };
 }
+
+/** Jupiter token search (mint, symbol or name) normalized to desk rows. */
+export async function jupiterTokenSearch(query: string): Promise<TokenRow[]> {
+  const q = query.trim();
+  if (q.length < 2) return [];
+  return cached(`jup:search:${q.toLowerCase()}`, 30_000, () =>
+    jupFetch(`/tokens/v2/search?query=${encodeURIComponent(q)}`).then(rows),
+  ).catch(() => [] as TokenRow[]);
+}
+
 
 function toMetas(raw: unknown): TrendingMeta[] {
   if (!Array.isArray(raw)) return [];
