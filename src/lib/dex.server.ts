@@ -100,17 +100,23 @@ async function cached<T>(key: string, ttlMs: number, load: () => Promise<T>): Pr
   }
 }
 
+/**
+ * Jupiter API. A `jup_…` key unlocks the paid host (`api.jup.ag`) and is sent as
+ * `x-api-key`; without a key we fall back to the public lite host.
+ */
 async function jupFetch(path: string): Promise<unknown> {
   const key = process.env["JUPITER_API_KEY"];
-  const res = await fetch(`https://api.jup.ag${path}`, {
+  const host = key ? "https://api.jup.ag" : "https://lite-api.jup.ag";
+  const res = await fetch(`${host}${path}`, {
     headers: {
       Accept: "application/json",
-      ...(key ? { Authorization: `Bearer ${key}` } : {}),
+      ...(key ? { "x-api-key": key } : {}),
     },
   });
   if (!res.ok) throw new Error(`Jupiter ${res.status}`);
   return res.json();
 }
+
 
 async function dexFetch(path: string): Promise<unknown> {
   const res = await fetch(`https://api.dexscreener.com${path}`, { headers: { Accept: "application/json" } });
