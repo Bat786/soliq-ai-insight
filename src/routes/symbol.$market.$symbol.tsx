@@ -3,6 +3,7 @@ import { Loader2, Newspaper } from "lucide-react";
 import { useState } from "react";
 
 import { AppShell } from "@/components/soliq/AppShell";
+import { DataStatus } from "@/components/soliq/DataState";
 import { SymbolChart } from "@/components/soliq/SymbolChart";
 import { Button } from "@/components/ui/button";
 import { useSymbolDashboard } from "@/hooks/use-symbol";
@@ -85,6 +86,25 @@ function SymbolPage() {
                 {a ? `${pct(a.changePct)} (${a.changeAbs >= 0 ? "+" : ""}${a.changeAbs})` : ""}
               </span>
             </p>
+            <div className="mt-2">
+              <DataStatus
+                state={
+                  isLoading ? "loading"
+                  : isError ? "error"
+                  : !data || data.source === "none" ? "unavailable"
+                  : data.source === "tape" ? "delayed"
+                  : "live"
+                }
+                source={
+                  data?.source === "massive" ? "Massive"
+                  : data?.source === "tape" ? "Backup tape"
+                  : null
+                }
+                fetchedAt={data?.updatedAt ?? null}
+                ageMs={data ? Math.max(0, Date.now() - data.updatedAt) : null}
+                fallback={data?.source === "tape"}
+              />
+            </div>
           </div>
           <div className="ml-auto flex flex-wrap items-center gap-1">
             {deskTimeframes.map((t) => (

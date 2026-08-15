@@ -13,7 +13,14 @@ export const getMarketScan = createServerFn({ method: "GET" })
 
   .handler(async ({ data }) => {
     const { loadMarketScan } = await import("@/lib/scan.server");
-    return loadMarketScan(data);
+    const scan = await loadMarketScan(data);
+    // Snapshot the scan for history, alerting and realtime subscribers. Never
+    // let a persistence hiccup block the desk.
+    if (scan.gainers.length + scan.losers.length + scan.highVolume.length > 0) {
+      const { saveMarketScan } = await import("@/engines/core/repo.server");
+      await saveMarketScan(scan).catch(() => undefined);
+    }
+    return scan;
   });
 
 export const getCryptoScan = createServerFn({ method: "GET" }).handler(async () => {
