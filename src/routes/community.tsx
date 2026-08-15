@@ -42,7 +42,10 @@ function Community() {
 
   const memberPosts = useQuery({
     queryKey: ["community-posts"],
+    // The feed is members-only, so only query once a session exists.
+    enabled: isSignedIn,
     queryFn: async () => {
+
       const { data, error } = await supabase
         .from("community_posts")
         .select("id, body, tags, created_at, user_id")
