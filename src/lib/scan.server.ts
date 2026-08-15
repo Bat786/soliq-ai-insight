@@ -247,13 +247,15 @@ async function pumpLaunches(): Promise<CryptoScanRow[]> {
     .sort((a, b) => b.volume - a.volume);
 }
 
-/** CoinGecko majors — full-market page in one call, no key required. */
+/** CoinGecko majors — full-market page in one keyed, metered call. */
 async function geckoMajors(): Promise<CryptoScanRow[]> {
-  const data = await json<Record<string, unknown>[]>(
-    "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=volume_desc&per_page=50&page=1",
+  const { cgCached } = await import("@/lib/coingecko.server");
+  const data = await cgCached<Record<string, unknown>[]>(
+    "/coins/markets?vs_currency=usd&order=volume_desc&per_page=100&page=1",
     60_000,
   );
   if (!Array.isArray(data)) return [];
+
   return data.map((c) => ({
     symbol: String(c["symbol"] ?? "").toUpperCase(),
     name: String(c["name"] ?? ""),

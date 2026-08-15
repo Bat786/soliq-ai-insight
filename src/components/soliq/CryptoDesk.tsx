@@ -232,6 +232,77 @@ export function CryptoDesk() {
         </div>
       )}
 
+      {(data?.trending.length ?? 0) > 0 && (
+        <div className="space-y-2">
+          <SectionTitle title="Jupiter trending" subtitle="Highest trader attention across Solana over 24h" />
+          <div className="grid gap-3 lg:grid-cols-2 xl:grid-cols-3">
+            {data?.trending.slice(0, 6).map((r) => (
+              <TokenCard key={`trend-${r.mint}`} row={r} tf={tf} />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {(data?.traded.length ?? 0) > 0 && (
+        <div className="space-y-2">
+          <SectionTitle title="Most traded" subtitle="Largest Jupiter routed volume over 24h" />
+          <div className="panel divide-y divide-border/60 p-2">
+            {data?.traded.slice(0, 12).map((r) => (
+              <div key={`traded-${r.mint}`} className="flex items-center gap-3 px-2 py-2 text-[11px]">
+                <div className="min-w-0 flex-1">
+                  <p className="num font-semibold">{r.symbol}</p>
+                  <p className="truncate text-muted-foreground">{r.name}</p>
+                </div>
+                <p className="num w-20 text-right">{px(r.price)}</p>
+                <p className="num w-24 text-right text-muted-foreground">vol {compact(r.volume24h)}</p>
+                <p className="num w-24 text-right text-muted-foreground">liq {compact(r.liquidity)}</p>
+                <div className="w-16 text-right">
+                  <Delta value={r.changePct} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {((data?.pools.length ?? 0) > 0 || (data?.newPools.length ?? 0) > 0) && (
+        <div className="space-y-2">
+          <SectionTitle
+            title="Solana on-chain pools"
+            subtitle="GeckoTerminal trending and brand-new pools with live reserves and 24h trade counts"
+          />
+          <div className="grid gap-2 lg:grid-cols-2">
+            {[
+              { label: "Trending pools", list: data?.pools ?? [] },
+              { label: "New pools", list: data?.newPools ?? [] },
+            ].map((group) => (
+              <div key={group.label} className="panel p-2">
+                <p className="px-2 py-1 text-[10px] tracking-wide text-muted-foreground uppercase">{group.label}</p>
+                <div className="divide-y divide-border/60">
+                  {group.list.slice(0, 8).map((p) => (
+                    <div key={`${group.label}-${p.address}`} className="flex items-center gap-2 px-2 py-2 text-[11px]">
+                      <div className="min-w-0 flex-1">
+                        <p className="num truncate font-semibold">{p.name}</p>
+                        <p className="num truncate text-[10px] text-muted-foreground">
+                          {p.dex} · {p.buys24h}B / {p.sells24h}S · age {age(p.createdAt)}
+                        </p>
+                      </div>
+                      <p className="num w-20 text-right">{px(p.priceUsd)}</p>
+                      <p className="num w-20 text-right text-muted-foreground">liq {compact(p.liquidity)}</p>
+                      <div className="w-16 text-right">
+                        <Delta value={p.change24h} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+
+
       {(data?.metas.length ?? 0) > 0 && (
         <div className="space-y-2">
           <SectionTitle title="Trending metas" subtitle="Narrative rotation across DEX sectors" />
