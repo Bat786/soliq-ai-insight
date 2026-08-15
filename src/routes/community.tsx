@@ -42,7 +42,10 @@ function Community() {
 
   const memberPosts = useQuery({
     queryKey: ["community-posts"],
+    // The feed is members-only, so only query once a session exists.
+    enabled: isSignedIn,
     queryFn: async () => {
+
       const { data, error } = await supabase
         .from("community_posts")
         .select("id, body, tags, created_at, user_id")
@@ -165,11 +168,19 @@ function Community() {
             </article>
           ))}
 
-          {!memberPosts.data?.length && (
+          {!isSignedIn ? (
             <p className="panel p-8 text-center text-sm text-muted-foreground">
-              No ideas posted yet — Premium members can start the conversation.
+              The member feed is private. <Link to="/auth" className="text-primary hover:underline">Sign in</Link> to read
+              what the desk is trading.
             </p>
+          ) : (
+            !memberPosts.data?.length && (
+              <p className="panel p-8 text-center text-sm text-muted-foreground">
+                No ideas posted yet — Premium members can start the conversation.
+              </p>
+            )
           )}
+
         </section>
 
         <aside className="panel h-fit p-5">
