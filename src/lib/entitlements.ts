@@ -67,14 +67,23 @@ export function meetsTier(current: Tier, required: Tier): boolean {
   return TIER_RANK[current] >= TIER_RANK[required];
 }
 
-/** Gated feature registry — single source of truth for premium surfaces. */
+/**
+ * Gated feature registry — single source of truth for premium surfaces.
+ * Pro gets the "tell me something is happening" half; Elite gets everything,
+ * including every decision-grade module.
+ */
 export const FEATURES = {
   unlimitedAlerts: { tier: "pro" as Tier, label: "Unlimited real-time alerts" },
+  minuteAlerts: { tier: "pro" as Tier, label: "Minute-resolution alert evaluation" },
   communityPosting: { tier: "pro" as Tier, label: "Posting in the community terminal" },
   whaleFlow: { tier: "pro" as Tier, label: "Whale flow & unusual activity" },
+  tradingJournal: { tier: "pro" as Tier, label: "Trading journal" },
   backtesting: { tier: "elite" as Tier, label: "Strategy backtesting workspace" },
   deepResearch: { tier: "elite" as Tier, label: "AI deep-research reports" },
   scannerPresets: { tier: "elite" as Tier, label: "Advanced scanner presets" },
+  darkPool: { tier: "elite" as Tier, label: "Dark-pool tape & institutional positioning" },
+  aggregatedPortfolio: { tier: "elite" as Tier, label: "Aggregated cross-account portfolio analytics" },
+  prioritySignals: { tier: "elite" as Tier, label: "Priority signal delivery" },
 } as const;
 
 export type FeatureKey = keyof typeof FEATURES;
