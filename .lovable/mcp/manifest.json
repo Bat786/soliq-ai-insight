@@ -1,0 +1,135 @@
+{
+  "version": 1,
+  "sdk_version": "0.26.2",
+  "path": "/mcp",
+  "auth": {
+    "type": "oauth",
+    "issuer": "https://smaqedfqtkddmfhkzmek.supabase.co/auth/v1",
+    "accepted_audiences": [
+      "authenticated"
+    ]
+  },
+  "mcp": {
+    "server": {
+      "name": "soliq-ai-insights",
+      "version": "0.1.0",
+      "title": "SOLIQ AI Insights"
+    },
+    "tools": [
+      {
+        "name": "list_watchlists",
+        "title": "List watchlists",
+        "description": "List the signed-in member's SOLIQ watchlists with the symbols tracked on each one.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_alerts",
+        "title": "List price alerts",
+        "description": "List the signed-in member's SOLIQ price alerts, newest first.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "activeOnly": {
+              "type": "boolean",
+              "description": "Only return alerts that are still armed."
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "description": "Maximum number of alerts to return (default 25)."
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "create_alert",
+        "title": "Create price alert",
+        "description": "Arm a SOLIQ price alert for a symbol that fires when price crosses above or below a threshold.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "symbol": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 24,
+              "description": "Ticker or token symbol, e.g. SOL or NVDA."
+            },
+            "direction": {
+              "type": "string",
+              "enum": [
+                "above",
+                "below"
+              ],
+              "description": "Fire when price crosses above or below the threshold."
+            },
+            "threshold": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "description": "Trigger price in USD."
+            },
+            "listName": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 80,
+              "description": "Watchlist to attach the alert to."
+            },
+            "assetId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 80,
+              "description": "SOLIQ asset id, when known."
+            }
+          },
+          "required": [
+            "symbol",
+            "direction",
+            "threshold"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_portfolio",
+        "title": "Get portfolio",
+        "description": "Return the signed-in member's SOLIQ portfolios and their current positions.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}
