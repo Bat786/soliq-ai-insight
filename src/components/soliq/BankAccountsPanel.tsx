@@ -84,7 +84,7 @@ export function BankAccountsPanel() {
     setOpening(true);
     try {
       const [{ linkToken, error }, plaid] = await Promise.all([
-        mintToken({ data: { redirectUri: undefined } }),
+        mintToken({ data: {} }),
         loadPlaid(),
       ]);
       if (!linkToken) {
