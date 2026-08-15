@@ -28,6 +28,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { AppearanceMenu } from "@/components/soliq/AppearanceMenu";
 import { DemoBanner } from "@/components/soliq/DemoBanner";
 import { NotificationBell } from "@/components/soliq/NotificationBell";
+import { HeaderWallets } from "@/components/soliq/HeaderWallets";
 
 import { Button } from "@/components/ui/button";
 import {
