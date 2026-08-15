@@ -118,7 +118,7 @@ export async function saveCandles(
     asset_id: assetId,
     symbol,
     timeframe,
-    t: iso(b.time * (b.time > 1e12 ? 1 : 1000)),
+    t: iso(b.t > 1e12 ? b.t : b.t * 1000),
     open: b.open,
     high: b.high,
     low: b.low,
