@@ -206,6 +206,11 @@ function AccountMenu() {
             <ListChecks className="size-4" /> My alerts
           </Link>
         </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link to="/status">
+            <Activity className="size-4" /> Data & feed status
+          </Link>
+        </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={signOut}>
           <LogOut className="size-4" /> Sign out

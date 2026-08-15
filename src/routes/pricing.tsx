@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { BadgeCheck, Check, CreditCard, Crown, ExternalLink, Sparkles, TriangleAlert } from "lucide-react";
+import { BadgeCheck, Check, CreditCard, Crown, ExternalLink, Lock, Sparkles, TriangleAlert } from "lucide-react";
 
 import { AppShell } from "@/components/soliq/AppShell";
 import { PaymentTestModeBanner } from "@/components/payments/PaymentTestModeBanner";
@@ -169,6 +169,16 @@ function Pricing() {
                     ${(YEARLY_PRICE[plan.tier as "pro" | "elite"] / 12).toFixed(0)}/mo equivalent
                   </p>
                 )}
+                <p className="mt-4 text-[12px] leading-relaxed text-muted-foreground">{plan.description}</p>
+                <p
+                  className={`mt-4 rounded-lg border px-3 py-2 text-[11px] leading-relaxed ${
+                    plan.tier === "elite"
+                      ? "border-primary/40 bg-primary/10 text-primary"
+                      : "border-warn/35 bg-warn/8 text-warn"
+                  }`}
+                >
+                  {plan.fomo}
+                </p>
                 <ul className="mt-5 flex-1 space-y-2.5 text-sm">
                   {plan.features.map((f) => (
                     <li key={f} className="flex items-start gap-2">
@@ -176,7 +186,20 @@ function Pricing() {
                       <span className="text-muted-foreground">{f}</span>
                     </li>
                   ))}
+                  {plan.missing?.map((f) => (
+                    <li key={f} className="flex items-start gap-2 opacity-70">
+                      <Lock className="mt-0.5 size-4 shrink-0 text-bear" />
+                      <span className="text-muted-foreground line-through decoration-bear/50">{f}</span>
+                    </li>
+                  ))}
                 </ul>
+                {plan.missing?.length ? (
+                  <p className="mt-3 text-[11px] text-bear">
+                    {plan.tier === "free"
+                      ? "Locked on Orbit — you'll see the move after it happened."
+                      : "Locked on Pro — Elite is $10 more and unlocks all of it."}
+                  </p>
+                ) : null}
 
                 {plan.tier === "free" ? (
                   <Button
