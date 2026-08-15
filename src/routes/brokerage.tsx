@@ -1,12 +1,20 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Building2, ExternalLink, Loader2, RefreshCw } from "lucide-react";
+import { AlertTriangle, Building2, Loader2, PlugZap, RefreshCw } from "lucide-react";
+import { useState } from "react";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/soliq/AppShell";
+import { BrokeragePortal } from "@/components/soliq/BrokeragePortal";
 import { EnvelopeStatus } from "@/components/soliq/DataState";
 import { SectionTitle, StatCard } from "@/components/soliq/primitives";
 import { Button } from "@/components/ui/button";
-import { useBrokerage, useBrokerageLink } from "@/hooks/use-brokerage";
+import {
+  useBrokerage,
+  useBrokerageConnections,
+  useBrokerageLink,
+  useConfirmBrokerageConnection,
+  type BrokerageLinkInput,
+} from "@/hooks/use-brokerage";
 import { useSession } from "@/hooks/use-soliq-account";
 import { fmtNum, fmtUsd } from "@/lib/format";
 
@@ -34,20 +42,53 @@ export const Route = createFileRoute("/brokerage")({
 function Brokerage() {
   const { isSignedIn } = useSession();
   const query = useBrokerage(isSignedIn);
+  const connections = useBrokerageConnections(isSignedIn);
   const link = useBrokerageLink();
+  const confirm = useConfirmBrokerageConnection();
+  const [loginLink, setLoginLink] = useState<string | null>(null);
   const env = query.data;
   const snap = env?.data ?? null;
+  const conns = connections.data?.connections ?? [];
+  const broken = conns.filter((c) => c.disabled);
 
-  const connect = () => {
-    link.mutate(typeof window === "undefined" ? undefined : `${window.location.origin}/brokerage`, {
-      onSuccess: (res) => {
-        if (res.error || !res.url) {
-          toast.error(res.error ?? "Could not start the brokerage connection");
-          return;
-        }
-        window.open(res.url, "_blank", "noopener,noreferrer");
+  const openPortal = (input: BrokerageLinkInput = {}) => {
+    link.mutate(
+      {
+        // No customRedirect: the embedded portal reports back via window messages.
+        connectionType: "read",
+        ...input,
       },
-      onError: () => toast.error("Could not start the brokerage connection"),
+      {
+        onSuccess: (res) => {
+          if (res.error || !res.url) {
+            toast.error(res.error ?? "Could not start the brokerage connection");
+            return;
+          }
+          setLoginLink(res.url);
+        },
+        onError: () => toast.error("Could not start the brokerage connection"),
+      },
+    );
+  };
+
+  const connect = () => openPortal();
+  const reconnect = (authorizationId: string) => openPortal({ reconnect: authorizationId });
+
+  const handleSuccess = (authorizationId: string) => {
+    setLoginLink(null);
+    confirm.mutate(authorizationId, {
+      onSettled: () => {
+        void query.refetch();
+        void connections.refetch();
+      },
+    });
+    toast.success("Brokerage connected — syncing accounts and positions.");
+  };
+
+  const handleError = (data: { errorCode?: string; detail?: string }) => {
+    setLoginLink(null);
+    toast.error(data.detail ?? "SnapTrade could not complete the connection", {
+      ...(data.errorCode ? { description: `Error code ${data.errorCode}` } : {}),
     });
   };
 
@@ -70,6 +111,43 @@ function Brokerage() {
             </div>
           }
         />
+
+        <BrokeragePortal
+          loginLink={loginLink}
+          isOpen={Boolean(loginLink)}
+          close={() => setLoginLink(null)}
+          onSuccess={handleSuccess}
+          onError={handleError}
+          onExit={() => setLoginLink(null)}
+        />
+
+        {isSignedIn && broken.length ? (
+          <div className="glass space-y-2 rounded-xl border border-bear/40 p-4">
+            <p className="flex items-center gap-2 text-sm font-semibold text-bear">
+              <AlertTriangle className="size-4" /> {broken.length} connection{broken.length === 1 ? "" : "s"} need
+              attention
+            </p>
+            {broken.map((c) => (
+              <div key={c.id} className="flex flex-wrap items-center justify-between gap-2 text-xs">
+                <span className="text-muted-foreground">
+                  {c.brokerage ?? "Brokerage"} · disabled
+                  {c.disabledDate ? ` on ${new Date(c.disabledDate).toLocaleDateString()}` : ""}
+                </span>
+                <Button size="sm" variant="outline" onClick={() => reconnect(c.id)} disabled={link.isPending}>
+                  <PlugZap className="size-3.5" /> Reconnect
+                </Button>
+              </div>
+            ))}
+          </div>
+        ) : null}
+
+        {isSignedIn && conns.filter((c) => !c.disabled).length ? (
+          <div className="glass rounded-xl p-4">
+            <p className="text-xs text-muted-foreground">
+              Active connections: {conns.filter((c) => !c.disabled).map((c) => c.brokerage ?? "Brokerage").join(", ")}
+            </p>
+          </div>
+        ) : null}
 
         {!isSignedIn ? (
           <div className="glass rounded-xl p-8 text-center">
@@ -198,7 +276,7 @@ function Brokerage() {
             <Building2 className="mx-auto size-5 text-muted-foreground" />
             <p className="mt-3 text-sm text-muted-foreground">{env.reason ?? "No brokerage data available."}</p>
             <Button className="mt-4" size="sm" onClick={connect} disabled={link.isPending}>
-              <ExternalLink className="size-3.5" /> Link a brokerage
+              <Building2 className="size-3.5" /> Link a brokerage
             </Button>
           </div>
         ) : null}

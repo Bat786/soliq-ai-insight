@@ -10,11 +10,15 @@ import { failed, ok, unavailable, freshness, type DataEnvelope } from "@/engines
 import {
   accountHoldings,
   connectionPortalUrl,
+  getConnection,
   listAccounts,
+  listConnections,
   listActivities,
   registerSnapUser,
   snaptradeConfigured,
   type BrokerAccount,
+  type BrokerConnection,
+  type PortalOptions,
   type BrokerActivity,
   type BrokerPosition,
   type SnapUser,
@@ -58,12 +62,73 @@ async function snapUser(userId: string): Promise<SnapUser> {
   return registered;
 }
 
-/** URL of the SnapTrade portal where the member picks their brokerage. */
-export async function brokerageConnectUrl(userId: string, redirectTo?: string): Promise<string> {
+/** URL of the SnapTrade portal where the member picks (or repairs) their brokerage. */
+export async function brokerageConnectUrl(userId: string, opts: PortalOptions = {}): Promise<string> {
   if (!snaptradeConfigured()) throw new Error("Brokerage connections are not configured on this deployment.");
   const user = await snapUser(userId);
-  return connectionPortalUrl(user, redirectTo);
+  return connectionPortalUrl(user, opts);
 }
+
+/** Connections (authorizations) the member holds, including broken ones. */
+export async function loadBrokerageConnections(userId: string): Promise<BrokerConnection[]> {
+  if (!snaptradeConfigured()) return [];
+  try {
+    const user = await snapUser(userId);
+    const connections = await listConnections(user);
+    await syncConnectionRows(userId, connections);
+    return connections;
+  } catch {
+    return [];
+  }
+}
+
+/** After a portal SUCCESS message: record the new authorization server-side. */
+export async function recordBrokerageConnection(
+  userId: string,
+  authorizationId: string,
+): Promise<BrokerConnection | null> {
+  if (!snaptradeConfigured()) return null;
+  try {
+    const user = await snapUser(userId);
+    const detail = (await getConnection(user, authorizationId)) ?? null;
+    const connections = detail ? [detail] : await listConnections(user);
+    await syncConnectionRows(userId, connections);
+    return detail ?? connections.find((c) => c.id === authorizationId) ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/** Mirror authorization status into broker_connections (best effort). */
+async function syncConnectionRows(userId: string, connections: BrokerConnection[]): Promise<void> {
+  if (!connections.length) return;
+  try {
+    const admin = await db();
+    for (const c of connections) {
+      const { data: existing } = await admin
+        .from("broker_connections")
+        .select("id")
+        .eq("user_id", userId)
+        .eq("provider", PROVIDER)
+        .eq("connection_id", c.id)
+        .maybeSingle();
+      const row = {
+        user_id: userId,
+        provider: PROVIDER,
+        connection_id: c.id,
+        institution: c.brokerage,
+        status: c.disabled ? "broken" : "active",
+        disabled_reason: c.disabled ? "Connection disabled by the brokerage — reconnect required." : null,
+        last_synced_at: new Date().toISOString(),
+      };
+      if (existing?.id) await admin.from("broker_connections").update(row).eq("id", existing.id);
+      else await admin.from("broker_connections").insert(row);
+    }
+  } catch {
+    // advisory only
+  }
+}
+
 
 export type BrokerageSnapshot = {
   accounts: (BrokerAccount & { positions: BrokerPosition[] })[];
