@@ -19,6 +19,7 @@ import {
   UserRound,
   Users,
   Waves,
+  Building2,
   Wallet,
   Zap,
 } from "lucide-react";
@@ -52,6 +53,7 @@ const nav = [
   { to: "/lists", label: "Lists", icon: ListChecks },
   { to: "/portfolio", label: "Portfolio", icon: PieChart },
   { to: "/wallets", label: "Wallets", icon: Wallet },
+  { to: "/brokerage", label: "Brokerage", icon: Building2 },
   { to: "/discover", label: "Discover", icon: Compass },
   { to: "/community", label: "Community", icon: Users },
   { to: "/backtest", label: "Backtest", icon: FlaskConical },
