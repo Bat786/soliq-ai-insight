@@ -10,11 +10,15 @@ import { failed, ok, unavailable, freshness, type DataEnvelope } from "@/engines
 import {
   accountHoldings,
   connectionPortalUrl,
+  getConnection,
   listAccounts,
+  listConnections,
   listActivities,
   registerSnapUser,
   snaptradeConfigured,
   type BrokerAccount,
+  type BrokerConnection,
+  type PortalOptions,
   type BrokerActivity,
   type BrokerPosition,
   type SnapUser,
@@ -106,14 +110,15 @@ async function syncConnectionRows(userId: string, connections: BrokerConnection[
         .select("id")
         .eq("user_id", userId)
         .eq("provider", PROVIDER)
-        .eq("provider_connection_id", c.id)
+        .eq("connection_id", c.id)
         .maybeSingle();
       const row = {
         user_id: userId,
         provider: PROVIDER,
-        provider_connection_id: c.id,
+        connection_id: c.id,
         institution: c.brokerage,
         status: c.disabled ? "broken" : "active",
+        disabled_reason: c.disabled ? "Connection disabled by the brokerage — reconnect required." : null,
         last_synced_at: new Date().toISOString(),
       };
       if (existing?.id) await admin.from("broker_connections").update(row).eq("id", existing.id);
