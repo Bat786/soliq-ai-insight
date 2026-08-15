@@ -21,8 +21,15 @@ export type AssetClass = "stocks" | "crypto" | "fx" | "indices";
 
 /* ------------------------------ rate metering ----------------------------- */
 
-const LIMIT = 90; // requests per minute we allow ourselves against the plan
-const MIN_GAP = 160;
+// Requests per minute we allow ourselves. The observed plan ceiling is honoured
+// here so we stop self-inflicting 429s; raise it with MASSIVE_RPM when the plan
+// allows more (e.g. 100 on paid tiers, unlimited-ish on business).
+const rpm = () => {
+  const n = Number(process.env["MASSIVE_RPM"] ?? "");
+  return Number.isFinite(n) && n > 0 ? Math.floor(n) : 5;
+};
+const MIN_GAP = () => Math.max(160, Math.ceil(60_000 / rpm()) + 40);
+
 const budget = { window: 0, used: 0 };
 let chain: Promise<unknown> = Promise.resolve();
 let lastAt = 0;
@@ -35,14 +42,15 @@ function takeToken(): boolean {
     budget.window = now;
     budget.used = 0;
   }
-  if (budget.used >= LIMIT) return false;
+  if (budget.used >= rpm()) return false;
   budget.used += 1;
   return true;
 }
 
 function queued<T>(task: () => Promise<T>): Promise<T> {
   const run = chain.then(async () => {
-    const wait = MIN_GAP - (Date.now() - lastAt);
+    const wait = MIN_GAP() - (Date.now() - lastAt);
+
     if (wait > 0) await sleep(wait);
     lastAt = Date.now();
     return task();
@@ -78,15 +86,28 @@ export async function massiveGet<T>(path: string, opts: { ttl?: number; scope?: 
   const url = `${BASE}${path}${sep}apiKey=${key}`;
   try {
     const res = await queued(() => fetch(url, { headers: { Accept: "application/json" } }));
-    if (res.status === 429) return (hit?.value as T) ?? null;
-    const json = (await res.json()) as { status?: string; message?: string };
+    if (res.status === 429) {
+      budget.used = rpm(); // burn the rest of this minute instead of retrying into the wall
+      return (hit?.value as T) ?? null;
+    }
+    const json = (await res.json()) as { status?: string; message?: string; error?: string };
     if (!res.ok || json.status === "NOT_AUTHORIZED" || json.status === "ERROR") {
-      if (json.status === "NOT_AUTHORIZED" || res.status === 403) {
+      const note = `${json.message ?? json.error ?? ""}`;
+      if (/maximum requests per minute/i.test(note)) {
+        budget.used = rpm();
+        return (hit?.value as T) ?? null;
+      }
+      // "before end of day" / "doesn't include this data timeframe" is a
+      // window limit on the current session, not a dead scope — the same scope
+      // still serves closed sessions, so never blacklist it.
+      const windowLimited = /end of day|data timeframe|today's data/i.test(note);
+      if (!windowLimited && (json.status === "NOT_AUTHORIZED" || res.status === 403)) {
         denied.add(scope);
         console.warn(`[massive] not entitled: ${scope}`);
       }
       return (hit?.value as T) ?? null;
     }
+
     cache.set(path, { at: Date.now(), value: json });
     return json as T;
   } catch (e) {
