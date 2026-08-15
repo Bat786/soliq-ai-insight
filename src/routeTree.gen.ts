@@ -29,6 +29,7 @@ import { Route as WalletsRouteImport } from './routes/wallets'
 import { Route as WhalesRouteImport } from './routes/whales'
 import { Route as AssetIdRouteImport } from './routes/asset.$id'
 import { Route as SymbolMarketSymbolRouteImport } from './routes/symbol.$market.$symbol'
+import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -130,6 +131,12 @@ const SymbolMarketSymbolRoute = SymbolMarketSymbolRouteImport.update({
   path: '/symbol/$market/$symbol',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicPaymentsWebhookRoute =
+  ApiPublicPaymentsWebhookRouteImport.update({
+    id: '/api/public/payments/webhook',
+    path: '/api/public/payments/webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -152,6 +159,7 @@ export interface FileRoutesByFullPath {
   '/whales': typeof WhalesRoute
   '/asset/$id': typeof AssetIdRoute
   '/symbol/$market/$symbol': typeof SymbolMarketSymbolRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -174,6 +182,7 @@ export interface FileRoutesByTo {
   '/whales': typeof WhalesRoute
   '/asset/$id': typeof AssetIdRoute
   '/symbol/$market/$symbol': typeof SymbolMarketSymbolRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -197,6 +206,7 @@ export interface FileRoutesById {
   '/whales': typeof WhalesRoute
   '/asset/$id': typeof AssetIdRoute
   '/symbol/$market/$symbol': typeof SymbolMarketSymbolRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -221,6 +231,7 @@ export interface FileRouteTypes {
     | '/whales'
     | '/asset/$id'
     | '/symbol/$market/$symbol'
+    | '/api/public/payments/webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -243,6 +254,7 @@ export interface FileRouteTypes {
     | '/whales'
     | '/asset/$id'
     | '/symbol/$market/$symbol'
+    | '/api/public/payments/webhook'
   id:
     | '__root__'
     | '/'
@@ -265,6 +277,7 @@ export interface FileRouteTypes {
     | '/whales'
     | '/asset/$id'
     | '/symbol/$market/$symbol'
+    | '/api/public/payments/webhook'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -288,6 +301,7 @@ export interface RootRouteChildren {
   WhalesRoute: typeof WhalesRoute
   AssetIdRoute: typeof AssetIdRoute
   SymbolMarketSymbolRoute: typeof SymbolMarketSymbolRoute
+  ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -432,6 +446,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SymbolMarketSymbolRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/payments/webhook': {
+      id: '/api/public/payments/webhook'
+      path: '/api/public/payments/webhook'
+      fullPath: '/api/public/payments/webhook'
+      preLoaderRoute: typeof ApiPublicPaymentsWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -456,6 +477,7 @@ const rootRouteChildren: RootRouteChildren = {
   WhalesRoute: WhalesRoute,
   AssetIdRoute: AssetIdRoute,
   SymbolMarketSymbolRoute: SymbolMarketSymbolRoute,
+  ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
