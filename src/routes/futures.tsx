@@ -29,7 +29,6 @@ export const Route = createFileRoute("/futures")({
         content: "Multi-timeframe futures sentiment, volume and charting across index, energy, metals and crypto.",
       },
       { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
       { property: "og:url", content: "https://soliq-ai-insight.lovable.app/futures" },
       { property: "og:image", content: "https://soliq-ai-insight.lovable.app/og-soliq.jpg" },
       { name: "twitter:card", content: "summary_large_image" },

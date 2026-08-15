@@ -22,7 +22,6 @@ export const Route = createFileRoute("/discover")({
       { property: "og:title", content: "Discover — SOLIQ" },
       { property: "og:description", content: "Live trending markets, AI picks, new launches, metas and news." },
       { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
       { property: "og:url", content: "https://soliq-ai-insight.lovable.app/discover" },
       { property: "og:image", content: "https://soliq-ai-insight.lovable.app/og-soliq.jpg" },
       { name: "twitter:card", content: "summary_large_image" },

@@ -27,7 +27,6 @@ export const Route = createFileRoute("/backtest")({
         content: "Paper-money strategy testing on historical crypto data with equity curve and risk analytics.",
       },
       { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
       { property: "og:url", content: "https://soliq-ai-insight.lovable.app/backtest" },
       { property: "og:image", content: "https://soliq-ai-insight.lovable.app/og-soliq.jpg" },
       { name: "twitter:card", content: "summary_large_image" },

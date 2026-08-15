@@ -24,7 +24,6 @@ export const Route = createFileRoute("/whales")({
         content: "Market tide, dark pool prints and unusual options alerts scored into a live bull/bear signal.",
       },
       { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
       { property: "og:url", content: "https://soliq-ai-insight.lovable.app/whales" },
       { property: "og:image", content: "https://soliq-ai-insight.lovable.app/og-soliq.jpg" },
       { name: "twitter:card", content: "summary_large_image" },

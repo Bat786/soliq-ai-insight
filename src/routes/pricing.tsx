@@ -27,7 +27,6 @@ export const Route = createFileRoute("/pricing")({
         content: "Unlimited alerts, whale flow, verified badge and AI deep research from $20/month.",
       },
       { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
       { property: "og:url", content: "https://soliq-ai-insight.lovable.app/pricing" },
       { property: "og:image", content: "https://soliq-ai-insight.lovable.app/og-soliq.jpg" },
       { name: "twitter:card", content: "summary_large_image" },
