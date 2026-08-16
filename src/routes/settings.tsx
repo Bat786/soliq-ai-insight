@@ -328,7 +328,20 @@ function Settings() {
                 <Sparkles className="size-3.5" /> Manage plan
               </Link>
             </Button>
+            {billing.hasBillingAccount ? (
+              <Button
+                size="sm"
+                variant="subtle"
+                className="mt-2 w-full"
+                onClick={() => portal.mutate()}
+                disabled={portal.isPending}
+              >
+                {portal.isPending ? <Loader2 className="size-3.5 animate-spin" /> : <CreditCard className="size-3.5" />}
+                Billing portal — invoices & cancel
+              </Button>
+            ) : null}
           </section>
+
         </div>
       </div>
     </AppShell>
