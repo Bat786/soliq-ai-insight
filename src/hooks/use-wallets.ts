@@ -1,3 +1,5 @@
+import "@/lib/node-globals";
+
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
