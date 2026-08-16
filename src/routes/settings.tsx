@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { BellRing, Loader2, Palette, Save, ShieldCheck, Sparkles, Upload, UserRound } from "lucide-react";
+import { BellRing, CreditCard, Loader2, Palette, Save, ShieldCheck, Sparkles, Upload, UserRound } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import { useBilling, useBillingPortal } from "@/hooks/use-billing";
 import { useProfile, usePushPermission } from "@/hooks/use-soliq-account";
 import { supabase } from "@/integrations/supabase/client";
 import { planByTier } from "@/lib/membership";
@@ -40,6 +41,8 @@ const zones = ["UTC", "America/New_York", "America/Chicago", "America/Los_Angele
 
 function Settings() {
   const { data: profile, tier, isSignedIn, isLoading } = useProfile();
+  const billing = useBilling();
+  const portal = useBillingPortal();
   const queryClient = useQueryClient();
   const save = useServerFn(updateMyProfile);
   const { theme, setTheme } = useTheme();
