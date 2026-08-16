@@ -219,6 +219,12 @@ function AccountMenu() {
             <LifeBuoy className="size-4" /> Support & billing help
           </Link>
         </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link to="/terms">
+            <Scale className="size-4" /> Terms of Service
+          </Link>
+        </DropdownMenuItem>
+
 
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={signOut}>
