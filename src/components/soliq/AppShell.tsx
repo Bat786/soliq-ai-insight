@@ -23,6 +23,7 @@ import {
   Wallet,
   Zap,
   LifeBuoy,
+  Scale,
 } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 
