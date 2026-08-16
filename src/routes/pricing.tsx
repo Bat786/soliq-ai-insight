@@ -266,7 +266,12 @@ function Pricing() {
         )}
 
         <p className="mt-6 text-center text-[11px] text-muted-foreground">
-          Payments, tax and receipts are handled by our payment provider — SOLIQ never sees your card details.{" "}
+          Payments, tax and receipts are handled by our payment provider — SOLIQ never sees your card details. By
+          subscribing you agree to the{" "}
+          <Link to="/terms" className="text-primary">
+            Terms of Service
+          </Link>
+          .{" "}
           <Link to="/community" className="text-primary">
             See member perks in the community →
           </Link>
@@ -279,8 +284,17 @@ function Pricing() {
             <DialogTitle className="font-display">Complete your membership</DialogTitle>
           </DialogHeader>
           {checkoutElement}
+          <p className="text-[11px] leading-relaxed text-muted-foreground">
+            By completing this purchase you agree to the{" "}
+            <Link to="/terms" className="text-primary">
+              SOLIQ Terms of Service
+            </Link>{" "}
+            — including automatic renewal at the price shown, cancellation taking effect at the end of the paid
+            period, and the refund policy.
+          </p>
         </DialogContent>
       </Dialog>
+
     </AppShell>
   );
 }
