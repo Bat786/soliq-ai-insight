@@ -7,10 +7,11 @@
 import { Buffer } from "buffer";
 
 if (typeof globalThis !== "undefined") {
-  const g = globalThis as typeof globalThis & { Buffer?: typeof Buffer; global?: unknown; process?: unknown };
-  if (!g.Buffer) g.Buffer = Buffer;
-  if (!g.global) g.global = globalThis;
-  if (!g.process) g.process = { env: {} };
+  const g = globalThis as Record<string, unknown> & { Buffer?: typeof Buffer };
+  if (!g["Buffer"]) g["Buffer"] = Buffer;
+  if (!g["global"]) g["global"] = globalThis;
+  if (!g["process"]) g["process"] = { env: {} };
 }
+
 
 export {};
