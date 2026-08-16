@@ -23,13 +23,18 @@ export default defineConfig({
   },
   vite: {
     resolve: {
-      alias: [
-        { find: /^rpc-websockets$/, replacement: rpcWebsocketsBrowser },
-        // Solana libs reach for Node's Buffer in the browser; map it to the
-        // pure-JS polyfill so client boot (and hydration) never throws.
-        { find: /^buffer$/, replacement: "buffer/" },
-      ],
+      alias: [{ find: /^rpc-websockets$/, replacement: rpcWebsocketsBrowser }],
     },
-
+    // Solana libs reach for Node's `Buffer` at module scope. Only the browser
+    // needs the pure-JS polyfill — on the server the real Node builtin must win,
+    // otherwise the CJS polyfill is evaluated during SSR and throws on `require`.
+    environments: {
+      client: {
+        resolve: {
+          alias: [{ find: /^buffer$/, replacement: "buffer/" }],
+        },
+      },
+    },
   },
 });
+
