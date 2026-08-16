@@ -278,15 +278,20 @@ const SECTIONS: Section[] = [
     title: "Dispute Resolution",
     body: [
       "The parties will first attempt to resolve any dispute informally by contacting Support@SOLIQintel.com and negotiating in good faith for at least thirty days.",
-      "[PLACEHOLDER \u2014 LEGAL REVIEW REQUIRED: the binding-arbitration, arbitration-forum, class-action-waiver, and jury-trial-waiver terms for this section have not been finalized. This paragraph must be completed by counsel before launch.]",
+      "If the dispute is not resolved within that period, any dispute, claim, or controversy arising out of or relating to these Terms or the Services will be resolved exclusively by final and binding individual arbitration administered by the American Arbitration Association under its Consumer Arbitration Rules, before a single arbitrator, seated in Wilmington, Delaware, or conducted by videoconference or on documents only at your election where the rules allow. The Federal Arbitration Act governs the interpretation and enforcement of this section.",
+      "Class-action waiver: all claims must be brought in the parties' individual capacity, and not as a plaintiff or class member in any purported class, collective, consolidated, or representative proceeding. The arbitrator may not consolidate claims or preside over any form of class or representative proceeding, and may award relief only in favor of the individual party seeking relief and only to the extent necessary to provide relief warranted by that party's individual claim.",
+      "Jury-trial waiver: to the fullest extent permitted by law, each party knowingly and voluntarily waives any right to a trial by jury in any action arising out of or relating to these Terms or the Services.",
+      "Exceptions: either party may bring an individual claim in small-claims court where jurisdiction and venue requirements are met, and either party may seek injunctive or other equitable relief in court to protect its intellectual property or to prevent unauthorized access to the Services. If the class-action waiver above is found unenforceable as to any claim or request for relief, that claim or request will be severed and heard in court, and the remainder of this section will continue to apply in arbitration.",
+      "Opt-out: you may reject this arbitration agreement by sending written notice to Support@SOLIQintel.com within thirty days of first accepting these Terms, stating your name, the email on your account, and that you decline arbitration. Opting out does not affect any other part of these Terms.",
     ],
   },
   {
     n: 34,
     title: "Governing Law and Venue",
     body: [
-      "These Terms are governed by the laws of the State of [STATE], without regard to its conflict-of-laws rules, and the parties submit to the exclusive jurisdiction of the state and federal courts located in [STATE] for any dispute not subject to the dispute-resolution section above.",
-      "[PLACEHOLDER \u2014 LEGAL REVIEW REQUIRED: [STATE] must be set by counsel and must align with the entity's registration and the arbitration decision in Section 33.]",
+      "These Terms are governed by the laws of the State of Delaware, without regard to its conflict-of-laws rules, and the parties submit to the exclusive jurisdiction of the state and federal courts located in New Castle County, Delaware, for any dispute not subject to the dispute-resolution section above.",
+      "Nothing in this section limits mandatory consumer-protection rights you may hold under the laws of your place of residence.",
+
     ],
   },
   {
