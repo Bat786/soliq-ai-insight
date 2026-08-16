@@ -101,7 +101,7 @@ function Pricing() {
                   cadence === c ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                {c === "yearly" ? "Yearly · save 20%" : "Monthly"}
+                {c === "yearly" ? "Yearly · save 2 months" : "Monthly"}
               </button>
             ))}
           </div>

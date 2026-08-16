@@ -10,7 +10,7 @@ export const PRICE_IDS: Record<Exclude<Tier, "free">, Record<Cadence, string>> =
 };
 
 /** Yearly list price in USD (billed once per year). */
-export const YEARLY_PRICE: Record<Exclude<Tier, "free">, number> = { pro: 192, elite: 288 };
+export const YEARLY_PRICE: Record<Exclude<Tier, "free">, number> = { pro: 200, elite: 300 };
 
 export function priceIdFor(tier: Tier, cadence: Cadence): string | null {
   if (tier === "free") return null;
