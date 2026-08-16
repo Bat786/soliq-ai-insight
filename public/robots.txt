@@ -25,4 +25,4 @@ Allow: /
 User-agent: *
 Allow: /
 
-Sitemap: https://soliq-ai-insight.lovable.app/sitemap.xml
+Sitemap: https://soliqintel.com/sitemap.xml

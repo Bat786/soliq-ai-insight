@@ -6,6 +6,8 @@ import { clusterApiUrl } from "@solana/web3.js";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 
+import { isAndroid } from "@/lib/wallet-mobile";
+
 import "@solana/wallet-adapter-react-ui/styles.css";
 
 export type Cluster = "mainnet-beta" | "devnet";
@@ -48,7 +50,43 @@ export function WalletContextProvider({ children }: { children: ReactNode }) {
     const custom = import.meta.env["VITE_SOLANA_RPC_URL"] as string | undefined;
     return cluster === "mainnet-beta" && custom ? custom : clusterApiUrl(cluster);
   }, [cluster]);
-  const wallets = useMemo(() => [new PhantomWalletAdapter(), new SolflareWalletAdapter()], []);
+  // On Android, Solana Mobile's Mobile Wallet Adapter is the official standard
+  // for connecting native wallet apps from a regular mobile browser (there is
+  // no injected provider there). It is registered lazily and browser-only.
+  const [mobileAdapter, setMobileAdapter] = useState<unknown | null>(null);
+  useEffect(() => {
+    if (!isAndroid()) return;
+    let cancelled = false;
+    void import("@solana-mobile/wallet-adapter-mobile")
+      .then(({ SolanaMobileWalletAdapter, createDefaultAuthorizationResultCache, createDefaultWalletNotFoundHandler }) => {
+        if (cancelled) return;
+        setMobileAdapter(
+          new SolanaMobileWalletAdapter({
+            addressSelector: {
+              select: (addresses: string[]) => Promise.resolve(addresses[0]!),
+            },
+            appIdentity: { name: "SOLIQ", uri: window.location.origin, icon: "/favicon.ico" },
+            authorizationResultCache: createDefaultAuthorizationResultCache(),
+            chain: "solana:mainnet",
+            onWalletNotFound: createDefaultWalletNotFoundHandler(),
+          }),
+        );
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const wallets = useMemo(
+    () => [
+      ...(mobileAdapter ? [mobileAdapter as never] : []),
+      new PhantomWalletAdapter(),
+      new SolflareWalletAdapter(),
+    ],
+    [mobileAdapter],
+  );
+
 
   const onError = useCallback((error: Error & { name?: string }) => {
     const name = error.name ?? "";

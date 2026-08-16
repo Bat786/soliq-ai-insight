@@ -78,22 +78,35 @@ export type PortalOptions = {
   connectionType?: "read" | "trade";
   /** Authorization (connection) UUID to repair instead of creating a new one. */
   reconnect?: string;
+  /**
+   * Full-page redirect target. Only set this for the pop-out/redirect flow —
+   * when the portal is embedded in an iframe, a customRedirect makes SnapTrade
+   * navigate the frame away instead of emitting the postMessage events the
+   * embedded SDK listens for, which renders as a blank iframe.
+   */
   redirectTo?: string;
+  /** True when the URL will be loaded inside the embedded connection portal. */
+  embedded?: boolean;
 };
 
 /** Portal URL the member opens to link a brokerage (read-only by default). */
 export async function connectionPortalUrl(user: SnapUser, opts: PortalOptions = {}): Promise<string> {
+  const embedded = opts.embedded ?? !opts.redirectTo;
   const out = await call<{ redirectURI?: string }>("POST", "/snapTrade/login", {
     params: { userId: user.userId, userSecret: user.userSecret },
     body: {
       connectionType: opts.connectionType ?? "read",
+      // v4 is the iframe-embeddable Connection Portal; earlier versions do not
+      // post SUCCESS/ERROR/CLOSED events to the parent frame.
+      connectionPortalVersion: "v4",
       ...(opts.reconnect ? { reconnect: opts.reconnect } : {}),
-      ...(opts.redirectTo ? { customRedirect: opts.redirectTo } : {}),
+      ...(!embedded && opts.redirectTo ? { customRedirect: opts.redirectTo } : {}),
     },
   });
   if (!out.redirectURI) throw new Error("snaptrade:no-portal-url");
   return out.redirectURI;
 }
+
 
 export type BrokerConnection = {
   id: string;

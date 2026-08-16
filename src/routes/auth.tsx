@@ -207,9 +207,18 @@ function Auth() {
             </Button>
           </div>
 
-          <Button asChild variant="ghost" className="mt-4 w-full text-primary">
+          <p className="mt-4 text-center text-[11px] leading-relaxed text-muted-foreground">
+            By continuing you agree to the{" "}
+            <Link to="/terms" className="text-primary">
+              Terms of Service
+            </Link>
+            .
+          </p>
+
+          <Button asChild variant="ghost" className="mt-3 w-full text-primary">
             <Link to="/">Explore SOLIQ Free →</Link>
           </Button>
+
 
           <p className="mt-4 flex items-center justify-center gap-1.5 text-[11px] text-muted-foreground">
             <ShieldCheck className="size-3.5" /> Your watchlists, alerts and portfolio sync securely.

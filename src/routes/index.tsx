@@ -418,10 +418,25 @@ function Landing() {
               </a>
             ))}
           </nav>
+          <nav aria-label="Legal and support" className="flex flex-wrap items-center gap-4">
+            <Link to="/terms" className="transition-colors hover:text-foreground">
+              Terms of Service
+            </Link>
+            <Link to="/support" className="transition-colors hover:text-foreground">
+              Support
+            </Link>
+            <Link to="/pricing" className="transition-colors hover:text-foreground">
+              Pricing
+            </Link>
+            <Link to="/status" className="transition-colors hover:text-foreground">
+              Data status
+            </Link>
+          </nav>
           <div className="flex flex-wrap items-center justify-between gap-3">
             <p>SOLIQ · powered by AETHRON — Solana Blockchain Intelligence Engine</p>
             <p>Market data is informational only and is not investment advice.</p>
           </div>
+
         </div>
       </footer>
 
