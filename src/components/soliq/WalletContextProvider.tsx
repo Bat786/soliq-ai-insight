@@ -6,6 +6,8 @@ import { clusterApiUrl } from "@solana/web3.js";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 
+import { isAndroid } from "@/lib/wallet-mobile";
+
 import "@solana/wallet-adapter-react-ui/styles.css";
 
 export type Cluster = "mainnet-beta" | "devnet";
@@ -65,7 +67,7 @@ export function WalletContextProvider({ children }: { children: ReactNode }) {
             },
             appIdentity: { name: "SOLIQ", uri: window.location.origin, icon: "/favicon.ico" },
             authorizationResultCache: createDefaultAuthorizationResultCache(),
-            cluster: "solana:mainnet",
+            chain: "solana:mainnet",
             onWalletNotFound: createDefaultWalletNotFoundHandler(),
           }),
         );
