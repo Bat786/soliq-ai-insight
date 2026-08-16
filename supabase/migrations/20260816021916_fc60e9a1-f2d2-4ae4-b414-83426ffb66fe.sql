@@ -1,0 +1,1 @@
+DELETE FROM public.subscriptions WHERE stripe_customer_id = 'cus_test_soliq';
