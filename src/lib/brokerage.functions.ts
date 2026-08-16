@@ -5,19 +5,24 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 /** Mint a SnapTrade Connection Portal login link for the signed-in member. */
 export const createBrokerageLink = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { redirectTo?: string; connectionType?: "read" | "trade"; reconnect?: string }) => ({
+  .inputValidator((input: { redirectTo?: string; connectionType?: "read" | "trade"; reconnect?: string; embedded?: boolean }) => ({
     redirectTo: input?.redirectTo ?? undefined,
     connectionType: input?.connectionType === "trade" ? ("trade" as const) : ("read" as const),
     reconnect: input?.reconnect ?? undefined,
+    // Default to the embedded portal: the app opens the URL inside the
+    // SnapTrade React modal, which needs postMessage events (no customRedirect).
+    embedded: input?.embedded !== false,
   }))
   .handler(async ({ data, context }) => {
     const { brokerageConnectUrl } = await import("@/lib/brokerage.server");
     try {
       const url = await brokerageConnectUrl(context.userId, {
         connectionType: data.connectionType,
+        embedded: data.embedded,
         ...(data.reconnect ? { reconnect: data.reconnect } : {}),
-        ...(data.redirectTo ? { redirectTo: data.redirectTo } : {}),
+        ...(!data.embedded && data.redirectTo ? { redirectTo: data.redirectTo } : {}),
       });
+
       return { url, error: null as string | null };
     } catch (error) {
       const msg = error instanceof Error ? error.message : "";
