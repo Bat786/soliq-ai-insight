@@ -118,7 +118,7 @@ function WalletMenu() {
   const evm = useEvmWallet();
   const { mobile, solanaGap, evmGap } = useMobileGaps();
   const { pick, available, pending } = useSolanaPicker();
-  const { openWalletModal } = { openWalletModal: useWalletModal().setVisible };
+  const { setVisible: openWalletModal } = useWalletModal();
   const sol = useSolBalance();
 
   const solAddress = solana.publicKey?.toBase58() ?? null;
