@@ -57,7 +57,7 @@ export function WalletTerminal() {
           its own browser tab — extensions refuse to inject into embedded preview frames.
         </p>
         <div className="mt-4 flex flex-wrap items-center gap-3">
-          <HeaderWallets />
+          <HeaderWallets sync={false} />
           {solanaAdapter.connected && solanaAdapter.publicKey && (
             <span className="num text-[11px] text-muted-foreground">
               {solanaAdapter.wallet?.adapter.name} · {short(solanaAdapter.publicKey.toBase58())}

@@ -182,16 +182,19 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
  * default modal. On a plain mobile browser it swaps in wallet-app deep links,
  * which are the only paths that work there.
  */
-function WalletMenu({ className }: { className?: string | undefined }) {
+/** Mount once per page: persists the connected adapter wallet to the portfolio. */
+function SolanaPortfolioSync() {
+  useSolanaAdapterLink();
+  return null;
+}
+
+function WalletMenu({ className, sync }: { className?: string | undefined; sync: boolean }) {
   const solana = useWallet();
   const evm = useEvmWallet();
   const { mobile, solanaGap, evmGap } = useMobileGaps();
   const { pick, installed, loadable, pending } = useSolanaPicker();
   const sol = useSolBalance();
   const [open, setOpen] = useState(false);
-
-  // Persists the adapter connection to the user's SOLIQ portfolio.
-  useSolanaAdapterLink();
 
   const solAddress = solana.publicKey?.toBase58() ?? null;
   const connectedCount = (solana.connected ? 1 : 0) + (evm.connected ? 1 : 0);
@@ -220,6 +223,7 @@ function WalletMenu({ className }: { className?: string | undefined }) {
 
   return (
     <div className={cn("flex items-center gap-2", className)}>
+      {sync && <SolanaPortfolioSync />}
       {sol !== null && (
         <span className="num hidden text-xs text-muted-foreground md:inline" title="Connected wallet SOL balance">
           {sol.toFixed(3)} SOL
@@ -400,10 +404,17 @@ function WalletMenu({ className }: { className?: string | undefined }) {
  * Single entry point for wallet connections. Strictly client-rendered: the
  * adapters touch window/crypto on init.
  */
-export function HeaderWallets({ className }: { className?: string | undefined }) {
+export function HeaderWallets({
+  className,
+  sync = true,
+}: {
+  className?: string | undefined;
+  /** Only one mounted instance should own the portfolio-sync effect. */
+  sync?: boolean;
+}) {
   return (
     <ClientOnly fallback={<div className="h-8 w-32" aria-hidden />}>
-      <WalletMenu className={className} />
+      <WalletMenu className={className} sync={sync} />
     </ClientOnly>
   );
 }
