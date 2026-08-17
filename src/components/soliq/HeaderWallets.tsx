@@ -266,13 +266,26 @@ function WalletMenu({ className }: { className?: string | undefined }) {
                 </div>
               ) : (
                 <div className="space-y-2">
-                  {detected.map((a) => (
+                  {installed.map((a: Adapter) => (
                     <Row
                       key={a.name}
                       onClick={() => pick(a.name)}
                       icon={a.icon ? <img src={a.icon} alt="" /> : <Wallet2 />}
                       label={a.name}
                       hint={pending === a.name ? "Waiting for approval…" : "Detected in this browser"}
+                    />
+                  ))}
+
+                  {loadable.map((a: Adapter) => (
+                    <Row
+                      key={a.name}
+                      tone="muted"
+                      onClick={() => pick(a.name)}
+                      icon={a.icon ? <img src={a.icon} alt="" /> : <ExternalLink />}
+                      label={a.name}
+                      hint={
+                        pending === a.name ? "Opening wallet…" : "No extension found · continues on the wallet's site"
+                      }
                     />
                   ))}
 
@@ -293,7 +306,8 @@ function WalletMenu({ className }: { className?: string | undefined }) {
                     </>
                   )}
 
-                  {!detected.length && !(mobile && solanaGap) && (
+                  {!installed.length && !(mobile && solanaGap) && (
+
                     <p className="rounded-lg border border-dashed border-border px-3 py-2 text-[11px] text-muted-foreground">
                       No Solana wallet extension detected. Install one below, unlock it, then reload. Extensions do not
                       inject into embedded preview frames — open SOLIQ in its own tab.
