@@ -351,17 +351,17 @@ function mapActivity(r: UniversalActivity, index: number): BrokerActivity {
     currency?: { code?: string } | null;
   };
   return {
-    id: String(raw.id ?? `activity-${index}`),
+    id: String(raw["id"] ?? `activity-${index}`),
     accountId: raw.account?.id ?? null,
     symbol: raw.symbol?.symbol ?? raw.option_symbol?.ticker ?? null,
-    type: (raw.type as string | undefined) ?? null,
-    side: (raw.action as string | undefined) ?? null,
-    quantity: num(raw.units),
-    price: num(raw.price),
-    amount: num(raw.amount),
-    fees: num(raw.fee),
+    type: (raw["type"] as string | undefined) ?? null,
+    side: (raw["action"] as string | undefined) ?? null,
+    quantity: num(raw["units"]),
+    price: num(raw["price"]),
+    amount: num(raw["amount"]),
+    fees: num(raw["fee"]),
     currency: raw.currency?.code ?? "USD",
-    executedAt: ms(raw.trade_date ?? raw.settlement_date),
+    executedAt: ms(raw["trade_date"] ?? raw["settlement_date"]),
   };
 }
 

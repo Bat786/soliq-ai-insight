@@ -14,6 +14,7 @@ import {
   listAccounts,
   listConnections,
   listActivities,
+  refreshConnection,
   registerSnapUser,
   snaptradeConfigured,
   type BrokerAccount,
@@ -172,7 +173,10 @@ export async function loadBrokerageSnapshot(userId: string): Promise<DataEnvelop
       }),
     );
 
-    const activities = await listActivities(user).catch(() => [] as BrokerActivity[]);
+    const activities = await listActivities(
+      user,
+      accounts.map((a) => a.id),
+    ).catch(() => [] as BrokerActivity[]);
 
     const totals = withHoldings.reduce(
       (acc, a) => {
