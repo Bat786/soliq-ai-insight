@@ -186,7 +186,7 @@ function WalletMenu({ className }: { className?: string | undefined }) {
   const solana = useWallet();
   const evm = useEvmWallet();
   const { mobile, solanaGap, evmGap } = useMobileGaps();
-  const { pick, detected, pending } = useSolanaPicker();
+  const { pick, installed, loadable, pending } = useSolanaPicker();
   const sol = useSolBalance();
   const [open, setOpen] = useState(false);
 
