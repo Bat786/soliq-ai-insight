@@ -14,7 +14,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { useEvmWallet, evmChainName } from "@/components/soliq/EvmWalletProvider";
-import { useSolanaAdapterLink } from "@/hooks/use-wallets";
+import { useMobileWalletSession, useSolanaAdapterLink } from "@/hooks/use-wallets";
+import { backpackBrowseLink, buildConnectLink } from "@/lib/wallet-deeplink";
 import { cn } from "@/lib/utils";
 import {
   isMobileBrowser,
@@ -22,8 +23,6 @@ import {
   needsEvmDeepLink,
   needsSolanaDeepLink,
   openWalletApp,
-  phantomBrowseLink,
-  solflareBrowseLink,
 } from "@/lib/wallet-mobile";
 
 const short = (a: string) => `${a.slice(0, 4)}…${a.slice(-4)}`;
@@ -296,16 +295,22 @@ function WalletMenu({ className, sync }: { className?: string | undefined; sync:
                   {mobile && solanaGap && (
                     <>
                       <Row
-                        onClick={() => openWalletApp(phantomBrowseLink())}
+                        onClick={() => openWalletApp(buildConnectLink("phantom"))}
                         icon={<ExternalLink />}
                         label="Open in Phantom app"
-                        hint="Continue in the wallet's browser"
+                        hint="Approve in the app · returns here"
                       />
                       <Row
-                        onClick={() => openWalletApp(solflareBrowseLink())}
+                        onClick={() => openWalletApp(buildConnectLink("solflare"))}
                         icon={<ExternalLink />}
                         label="Open in Solflare app"
-                        hint="Continue in the wallet's browser"
+                        hint="Approve in the app · returns here"
+                      />
+                      <Row
+                        onClick={() => openWalletApp(backpackBrowseLink())}
+                        icon={<ExternalLink />}
+                        label="Open in Backpack app"
+                        hint="Continue in Backpack's browser"
                       />
                     </>
                   )}
