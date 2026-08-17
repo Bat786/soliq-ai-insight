@@ -1,7 +1,7 @@
 import { ClientOnly } from "@tanstack/react-router";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
-import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
-import { Wallet2, Link2Off, ExternalLink, QrCode } from "lucide-react";
+import { useWalletModal } from "@solana/wallet-adapter-react-ui";
+import { ChevronDown, ExternalLink, Link2Off, QrCode, Wallet2 } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -47,117 +47,8 @@ function useMobileGaps() {
   return state;
 }
 
-function EvmButton() {
-  const { address, chainId, connected, connecting, connect, disconnect, metamaskDetected } = useEvmWallet();
-  const { mobile, evmGap } = useMobileGaps();
-
-  if (connected && address) {
-    return (
-      <Button
-        size="sm"
-        variant="subtle"
-        onClick={disconnect}
-        title={`${address} · ${evmChainName(chainId) ?? "EVM"} — click to disconnect`}
-        className="num gap-1.5"
-      >
-        <span className="size-1.5 rounded-full bg-bull" />
-        {short(address)}
-        <span className="hidden text-[10px] text-muted-foreground sm:inline">{evmChainName(chainId) ?? "EVM"}</span>
-        <Link2Off className="size-3.5 opacity-60" />
-      </Button>
-    );
-  }
-
-  // Mobile browser with no injected provider: a QR modal is useless on the same
-  // device, so lead with the MetaMask app deep link and keep WalletConnect
-  // (which does mobile app-to-app linking) as the second option.
-  if (mobile && evmGap) {
-    return (
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button size="sm" variant="outline" disabled={connecting}>
-            <Wallet2 className="size-4" />
-            <span className="hidden sm:inline">{connecting ? "Connecting…" : "EVM"}</span>
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-60">
-          <DropdownMenuLabel className="text-[11px] font-normal text-muted-foreground">
-            Mobile browsers can&apos;t see wallet extensions — open your wallet app instead.
-          </DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => openWalletApp(metamaskDappLink())}>
-            <ExternalLink className="size-4" /> Open in MetaMask app
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => void connect("walletconnect")}>
-            <QrCode className="size-4" /> Other wallet (WalletConnect)
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    );
-  }
-
-  // Desktop: extension detection is correct — MetaMask when present, otherwise
-  // WalletConnect's QR to pair a phone.
-  const connector = metamaskDetected ? "metamask" : "walletconnect";
-  return (
-    <Button
-      size="sm"
-      variant="outline"
-      disabled={connecting}
-      onClick={() => void connect(connector)}
-      title={metamaskDetected ? "Connect MetaMask" : "Connect an EVM wallet via WalletConnect"}
-    >
-      <Wallet2 className="size-4" />
-      <span className="hidden sm:inline">{connecting ? "Connecting…" : "EVM"}</span>
-    </Button>
-  );
-}
-
-/**
- * Solana connect control. On desktop (and inside a wallet's in-app browser) the
- * official adapter modal owns everything. In a plain mobile browser there is no
- * provider to detect, so we deep-link into the wallet app rather than letting
- * the adapter dead-end on its install page.
- */
-function SolanaButton() {
-  const { connected } = useWallet();
-  const { mobile, solanaGap } = useMobileGaps();
-
-  if (!connected && mobile && solanaGap) {
-    return (
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button size="sm" variant="outline">
-            <Wallet2 className="size-4" />
-            <span className="hidden sm:inline">Solana</span>
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-64">
-          <DropdownMenuLabel className="text-[11px] font-normal text-muted-foreground">
-            Continue in your wallet app — SOLIQ opens inside its browser and connects there.
-          </DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => openWalletApp(phantomBrowseLink())}>
-            <ExternalLink className="size-4" /> Open in Phantom
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => openWalletApp(solflareBrowseLink())}>
-            <ExternalLink className="size-4" /> Open in Solflare
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          {/* Android: Mobile Wallet Adapter is registered and appears in this modal. */}
-          <div className="px-1 py-1">
-            <WalletMultiButton />
-          </div>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    );
-  }
-
-  return <WalletMultiButton />;
-}
-
-/** Live SOL balance for the connected adapter wallet, shown next to the button. */
-function SolBalance() {
+/** Live SOL balance for the connected adapter wallet. */
+function useSolBalance() {
   const { publicKey, connected } = useWallet();
   const { connection } = useConnection();
   const [sol, setSol] = useState<number | null>(null);
@@ -183,26 +74,187 @@ function SolBalance() {
     };
   }, [connected, publicKey, connection]);
 
-  if (sol === null) return null;
+  return sol;
+}
+
+/**
+ * Picking a Solana wallet is two steps in wallet-adapter: `select()` stores the
+ * choice, then `connect()` runs against the newly selected adapter. Because
+ * `select` is async state, we connect from an effect once the adapter matches.
+ */
+function useSolanaPicker() {
+  const { wallet, wallets, select, connect, connected, connecting } = useWallet();
+  const [pending, setPending] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!pending) return;
+    if (connected) {
+      setPending(null);
+      return;
+    }
+    if (wallet?.adapter.name !== pending || connecting) return;
+    void connect()
+      .catch(() => undefined)
+      .finally(() => setPending(null));
+  }, [pending, wallet, connected, connecting, connect]);
+
+  const pick = (name: string) => {
+    setPending(name);
+    select(name as Parameters<typeof select>[0]);
+  };
+
+  const available = wallets.filter((w) => w.readyState === "Installed" || w.readyState === "Loadable");
+  return { pick, available: available.length ? available : wallets, pending };
+}
+
+/**
+ * One "Connect wallet" entry point for both chains. The dropdown groups Solana
+ * (wallet-adapter) and EVM (injected / WalletConnect) options, and on a plain
+ * mobile browser it swaps in wallet-app deep links, which are the only paths
+ * that actually work there.
+ */
+function WalletMenu() {
+  const solana = useWallet();
+  const evm = useEvmWallet();
+  const { mobile, solanaGap, evmGap } = useMobileGaps();
+  const { pick, available, pending } = useSolanaPicker();
+  const { openWalletModal } = { openWalletModal: useWalletModal().setVisible };
+  const sol = useSolBalance();
+
+  const solAddress = solana.publicKey?.toBase58() ?? null;
+  const connectedCount = (solana.connected ? 1 : 0) + (evm.connected ? 1 : 0);
+  const busy = solana.connecting || evm.connecting || Boolean(pending);
+
+  const label =
+    connectedCount === 0
+      ? "Connect wallet"
+      : connectedCount === 2
+        ? "2 wallets"
+        : evm.connected && evm.address
+          ? short(evm.address)
+          : solAddress
+            ? short(solAddress)
+            : "Wallet";
+
   return (
-    <span className="num hidden text-xs text-muted-foreground md:inline" title="Connected wallet SOL balance">
-      {sol.toFixed(3)} SOL
-    </span>
+    <div className="soliq-wallet-adapter flex items-center gap-2">
+      {sol !== null && (
+        <span className="num hidden text-xs text-muted-foreground md:inline" title="Connected wallet SOL balance">
+          {sol.toFixed(3)} SOL
+        </span>
+      )}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button size="sm" variant={connectedCount ? "subtle" : "outline"} className="num gap-1.5" disabled={busy}>
+            {connectedCount ? <span className="size-1.5 rounded-full bg-bull" /> : <Wallet2 className="size-4" />}
+            <span className="max-w-[9rem] truncate">{busy ? "Connecting…" : label}</span>
+            <ChevronDown className="size-3.5 opacity-60" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-72">
+          {/* ------------------------------ Solana ------------------------------ */}
+          <DropdownMenuLabel className="text-[11px] uppercase tracking-wide text-muted-foreground">
+            Solana
+          </DropdownMenuLabel>
+          {solana.connected && solAddress ? (
+            <>
+              <DropdownMenuItem disabled className="num opacity-100">
+                <span className="size-1.5 rounded-full bg-bull" /> {short(solAddress)}
+                <span className="ml-auto text-[10px] text-muted-foreground">{solana.wallet?.adapter.name}</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => void solana.disconnect().catch(() => undefined)}>
+                <Link2Off className="size-4" /> Disconnect Solana
+              </DropdownMenuItem>
+            </>
+          ) : mobile && solanaGap ? (
+            <>
+              <DropdownMenuItem onClick={() => openWalletApp(phantomBrowseLink())}>
+                <ExternalLink className="size-4" /> Open in Phantom app
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => openWalletApp(solflareBrowseLink())}>
+                <ExternalLink className="size-4" /> Open in Solflare app
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => openWalletModal(true)}>
+                <Wallet2 className="size-4" /> More Solana wallets
+              </DropdownMenuItem>
+            </>
+          ) : (
+            <>
+              {available.slice(0, 4).map((w) => (
+                <DropdownMenuItem key={w.adapter.name} onClick={() => pick(w.adapter.name)}>
+                  {w.adapter.icon ? (
+                    <img src={w.adapter.icon} alt="" className="size-4 rounded" />
+                  ) : (
+                    <Wallet2 className="size-4" />
+                  )}
+                  {w.adapter.name}
+                </DropdownMenuItem>
+              ))}
+              <DropdownMenuItem onClick={() => openWalletModal(true)}>
+                <Wallet2 className="size-4" /> More Solana wallets
+              </DropdownMenuItem>
+            </>
+          )}
+
+          <DropdownMenuSeparator />
+
+          {/* -------------------------------- EVM ------------------------------- */}
+          <DropdownMenuLabel className="text-[11px] uppercase tracking-wide text-muted-foreground">
+            Ethereum &amp; EVM
+          </DropdownMenuLabel>
+          {evm.connected && evm.address ? (
+            <>
+              <DropdownMenuItem disabled className="num opacity-100">
+                <span className="size-1.5 rounded-full bg-bull" /> {short(evm.address)}
+                <span className="ml-auto text-[10px] text-muted-foreground">
+                  {evmChainName(evm.chainId) ?? "EVM"}
+                </span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => evm.disconnect()}>
+                <Link2Off className="size-4" /> Disconnect EVM
+              </DropdownMenuItem>
+            </>
+          ) : mobile && evmGap ? (
+            <>
+              <DropdownMenuItem onClick={() => openWalletApp(metamaskDappLink())}>
+                <ExternalLink className="size-4" /> Open in MetaMask app
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => void evm.connect("walletconnect")}>
+                <QrCode className="size-4" /> Other wallet (WalletConnect)
+              </DropdownMenuItem>
+            </>
+          ) : (
+            <>
+              {evm.metamaskDetected && (
+                <DropdownMenuItem onClick={() => void evm.connect("metamask")}>
+                  <Wallet2 className="size-4" /> MetaMask
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuItem onClick={() => void evm.connect("walletconnect")}>
+                <QrCode className="size-4" /> WalletConnect
+              </DropdownMenuItem>
+            </>
+          )}
+
+          <DropdownMenuSeparator />
+          <DropdownMenuLabel className="text-[11px] font-normal text-muted-foreground">
+            SOLIQ never holds your keys or seed phrase. Any action that needs a signature is reviewed and approved in
+            your wallet.
+          </DropdownMenuLabel>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
   );
 }
 
 /**
- * Solana (wallet-adapter) and EVM connect controls, side by side. Both are
- * strictly client-rendered: the adapters touch window/crypto on init.
+ * Single header entry point for wallet connections. Strictly client-rendered:
+ * the adapters touch window/crypto on init.
  */
 export function HeaderWallets() {
   return (
-    <ClientOnly fallback={<div className="h-8 w-24" aria-hidden />}>
-      <div className="soliq-wallet-adapter flex items-center gap-2">
-        <SolBalance />
-        <EvmButton />
-        <SolanaButton />
-      </div>
+    <ClientOnly fallback={<div className="h-8 w-32" aria-hidden />}>
+      <WalletMenu />
     </ClientOnly>
   );
 }
