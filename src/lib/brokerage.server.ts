@@ -131,6 +131,23 @@ async function syncConnectionRows(userId: string, connections: BrokerConnection[
 }
 
 
+/**
+ * Ask each live connection for fresh holdings. Manual refresh is a paid
+ * SnapTrade capability; when the plan does not include it every call reports
+ * `false` and we tell the member the daily sync still applies.
+ */
+export async function refreshBrokerageHoldings(userId: string): Promise<{ requested: number; accepted: number }> {
+  if (!snaptradeConfigured()) return { requested: 0, accepted: 0 };
+  try {
+    const user = await snapUser(userId);
+    const connections = (await listConnections(user)).filter((c) => !c.disabled);
+    const results = await Promise.all(connections.map((c) => refreshConnection(user, c.id)));
+    return { requested: connections.length, accepted: results.filter(Boolean).length };
+  } catch {
+    return { requested: 0, accepted: 0 };
+  }
+}
+
 export type BrokerageSnapshot = {
   accounts: (BrokerAccount & { positions: BrokerPosition[] })[];
   activities: BrokerActivity[];
