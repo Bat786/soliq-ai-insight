@@ -26,7 +26,7 @@ import { useTapeBoard } from "@/hooks/use-tape";
 import { enableDemo } from "@/lib/demo";
 import { plans } from "@/lib/membership";
 
-const SITE = "https://soliq-ai-insight.lovable.app";
+const SITE = "https://soliqintel.com";
 const OG_IMAGE = `${SITE}/og-soliq.jpg`;
 
 const SOCIALS = [

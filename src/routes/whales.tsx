@@ -24,12 +24,12 @@ export const Route = createFileRoute("/whales")({
         content: "Market tide, dark pool prints and unusual options alerts scored into a live bull/bear signal.",
       },
       { property: "og:type", content: "website" },
-      { property: "og:url", content: "https://soliq-ai-insight.lovable.app/whales" },
-      { property: "og:image", content: "https://soliq-ai-insight.lovable.app/og-soliq.jpg" },
+      { property: "og:url", content: "https://soliqintel.com/whales" },
+      { property: "og:image", content: "https://soliqintel.com/og-soliq.jpg" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:image", content: "https://soliq-ai-insight.lovable.app/og-soliq.jpg" },
+      { name: "twitter:image", content: "https://soliqintel.com/og-soliq.jpg" },
     ],
-    links: [{ rel: "canonical", href: "https://soliq-ai-insight.lovable.app/whales" }],
+    links: [{ rel: "canonical", href: "https://soliqintel.com/whales" }],
   }),
   component: () => (
     <TierGate feature="whaleFlow" shell>

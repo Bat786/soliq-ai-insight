@@ -27,12 +27,12 @@ export const Route = createFileRoute("/backtest")({
         content: "Paper-money strategy testing on historical crypto data with equity curve and risk analytics.",
       },
       { property: "og:type", content: "website" },
-      { property: "og:url", content: "https://soliq-ai-insight.lovable.app/backtest" },
-      { property: "og:image", content: "https://soliq-ai-insight.lovable.app/og-soliq.jpg" },
+      { property: "og:url", content: "https://soliqintel.com/backtest" },
+      { property: "og:image", content: "https://soliqintel.com/og-soliq.jpg" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:image", content: "https://soliq-ai-insight.lovable.app/og-soliq.jpg" },
+      { name: "twitter:image", content: "https://soliqintel.com/og-soliq.jpg" },
     ],
-    links: [{ rel: "canonical", href: "https://soliq-ai-insight.lovable.app/backtest" }],
+    links: [{ rel: "canonical", href: "https://soliqintel.com/backtest" }],
   }),
   component: () => (
     <TierGate feature="backtesting" shell>
