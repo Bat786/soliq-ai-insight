@@ -4,9 +4,13 @@
  * module *first* in any file that pulls in Solana libraries — ESM evaluates
  * imports in source order, so the globals exist before web3.js runs.
  */
-import bufferModule from "buffer";
+// Namespace import only: depending on how the bundler interops the CJS `buffer`
+// package it may expose `Buffer` as a named export, on `default`, or both, and a
+// named/default import of the wrong shape is a hard module-load error.
+import * as bufferModule from "buffer";
 
-const Buffer = (bufferModule as unknown as { Buffer: unknown }).Buffer ?? bufferModule;
+const ns = bufferModule as unknown as { Buffer?: unknown; default?: { Buffer?: unknown } };
+const Buffer = ns.Buffer ?? ns.default?.Buffer ?? ns.default;
 
 if (typeof globalThis !== "undefined") {
   const g = globalThis as Record<string, unknown> & { Buffer?: unknown };
