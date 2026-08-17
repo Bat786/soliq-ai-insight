@@ -112,10 +112,21 @@ export async function collectDataStatus(): Promise<DataStatus> {
     {
       id: "snaptrade",
       name: "SnapTrade (brokerage accounts)",
-      state: hasEnv("SNAPTRADE_CLIENT_ID") ? "live" : "missing-key",
-      detail: hasEnv("SNAPTRADE_CLIENT_ID") ? "Connected." : "No credentials configured.",
-      fallback: "Manual portfolio entry.",
+      state: !hasEnv("SNAPTRADE_CLIENT_ID")
+        ? "missing-key"
+        : snaptrade.online
+          ? "live"
+          : "degraded",
+      detail: !hasEnv("SNAPTRADE_CLIENT_ID")
+        ? "No credentials configured."
+        : snaptrade.online
+          ? `SnapTrade API online · v${snaptrade.version ?? "?"}${
+              snaptrade.timestamp ? ` · reported ${new Date(snaptrade.timestamp).toISOString().slice(11, 19)}Z` : ""
+            }`
+          : "SnapTrade API is not responding to its status probe.",
+      fallback: snaptrade.online ? null : "Manual portfolio entry.",
     },
+
     {
       id: "plaid",
       name: "Plaid (bank & cash accounts)",
