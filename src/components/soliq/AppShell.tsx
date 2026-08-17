@@ -225,6 +225,11 @@ function AccountMenu() {
             <Scale className="size-4" /> Terms of Service
           </Link>
         </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link to="/privacy">
+            <Scale className="size-4" /> Privacy Policy
+          </Link>
+        </DropdownMenuItem>
 
 
         <DropdownMenuSeparator />

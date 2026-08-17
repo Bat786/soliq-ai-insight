@@ -4,10 +4,12 @@
  * module *first* in any file that pulls in Solana libraries — ESM evaluates
  * imports in source order, so the globals exist before web3.js runs.
  */
-import { Buffer } from "buffer";
+import bufferModule from "buffer";
+
+const Buffer = (bufferModule as unknown as { Buffer: unknown }).Buffer ?? bufferModule;
 
 if (typeof globalThis !== "undefined") {
-  const g = globalThis as Record<string, unknown> & { Buffer?: typeof Buffer };
+  const g = globalThis as Record<string, unknown> & { Buffer?: unknown };
   if (!g["Buffer"]) g["Buffer"] = Buffer;
   if (!g["global"]) g["global"] = globalThis;
   if (!g["process"]) g["process"] = { env: {} };

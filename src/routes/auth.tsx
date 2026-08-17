@@ -211,6 +211,10 @@ function Auth() {
             By continuing you agree to the{" "}
             <Link to="/terms" className="text-primary">
               Terms of Service
+            </Link>{" "}
+            and the{" "}
+            <Link to="/privacy" className="text-primary">
+              Privacy Policy
             </Link>
             .
           </p>

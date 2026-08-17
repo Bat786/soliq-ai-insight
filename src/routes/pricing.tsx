@@ -270,6 +270,18 @@ function Pricing() {
           subscribing you agree to the{" "}
           <Link to="/terms" className="text-primary">
             Terms of Service
+          </Link>{" "}
+          and{" "}
+          <Link to="/privacy" className="text-primary">
+            Privacy Policy
+          </Link>
+          , including{" "}
+          <Link to="/terms" hash="section-9" className="text-primary">
+            cancellation
+          </Link>{" "}
+          and{" "}
+          <Link to="/terms" hash="section-10" className="text-primary">
+            refunds
           </Link>
           .{" "}
           <Link to="/community" className="text-primary">
