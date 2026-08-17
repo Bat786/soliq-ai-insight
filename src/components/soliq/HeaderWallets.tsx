@@ -116,18 +116,24 @@ function useSolanaPicker() {
     select(name as Parameters<typeof select>[0]);
   };
 
-  const detected = useMemo(
-    () =>
-      wallets
-        .map((w) => w.adapter)
-        .filter(
-          (a: Adapter) =>
-            a.readyState === WalletReadyState.Installed || a.readyState === WalletReadyState.Loadable,
-        ),
-    [wallets],
+  const adapters = useMemo(() => wallets.map((w) => w.adapter), [wallets]);
+  /** Extensions actually injected in this browser — `connect()` opens their popup. */
+  const installed = useMemo(
+    () => adapters.filter((a: Adapter) => a.readyState === WalletReadyState.Installed),
+    [adapters],
+  );
+  /**
+   * Loadable adapters (Solflare web wallet, Phantom on iOS) navigate away on
+   * `connect()`. They are listed separately and labelled so a click never looks
+   * like a broken connect attempt.
+   */
+  const loadable = useMemo(
+    () => adapters.filter((a: Adapter) => a.readyState === WalletReadyState.Loadable),
+    [adapters],
   );
 
-  return { pick, detected, pending };
+  return { pick, installed, loadable, pending };
+
 }
 
 function Row({
