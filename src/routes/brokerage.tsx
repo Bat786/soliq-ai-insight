@@ -13,6 +13,7 @@ import {
   useBrokerageConnections,
   useBrokerageLink,
   useConfirmBrokerageConnection,
+  useRefreshBrokerageHoldings,
   type BrokerageLinkInput,
 } from "@/hooks/use-brokerage";
 import { useSession } from "@/hooks/use-soliq-account";
@@ -45,6 +46,7 @@ function Brokerage() {
   const connections = useBrokerageConnections(isSignedIn);
   const link = useBrokerageLink();
   const confirm = useConfirmBrokerageConnection();
+  const refresh = useRefreshBrokerageHoldings();
   const [loginLink, setLoginLink] = useState<string | null>(null);
   const env = query.data;
   const snap = env?.data ?? null;
@@ -69,6 +71,25 @@ function Brokerage() {
         onError: () => toast.error("Could not start the brokerage connection"),
       },
     );
+  };
+
+  // "Sync" asks SnapTrade for fresh holdings first (paid capability), then
+  // re-reads the desk regardless so the daily-sync data still lands.
+  const sync = () => {
+    if (!isSignedIn) return;
+    refresh.mutate(undefined, {
+      onSuccess: (res) => {
+        if (res.requested > 0 && res.accepted === 0) {
+          toast.message("Showing the latest daily sync", {
+            description: "On-demand refresh is not enabled for this SnapTrade plan.",
+          });
+        }
+      },
+      onSettled: () => {
+        void query.refetch();
+        void connections.refetch();
+      },
+    });
   };
 
   const connect = () => openPortal();
@@ -103,8 +124,8 @@ function Brokerage() {
           action={
             <div className="flex items-center gap-2">
               {env ? <EnvelopeStatus env={env} /> : null}
-              <Button size="sm" variant="outline" onClick={() => void query.refetch()} disabled={!isSignedIn}>
-                <RefreshCw className={`size-3.5 ${query.isFetching ? "animate-spin" : ""}`} /> Sync
+              <Button size="sm" variant="outline" onClick={sync} disabled={!isSignedIn || refresh.isPending}>
+                <RefreshCw className={`size-3.5 ${query.isFetching || refresh.isPending ? "animate-spin" : ""}`} /> Sync
               </Button>
               <Button size="sm" onClick={connect} disabled={!isSignedIn || link.isPending}>
                 {link.isPending ? <Loader2 className="size-3.5 animate-spin" /> : <Building2 className="size-3.5" />}
