@@ -157,10 +157,12 @@ const SECTIONS: Section[] = [
     n: 17,
     title: "Wallet Connections",
     body: [
-      "Connecting a self-custodial wallet grants SOLIQ read access to public addresses and, where you explicitly approve it, permission to request signatures for actions you initiate. SOLIQ never holds your private keys, seed phrase, or funds, and cannot move assets on your behalf without your in-wallet approval.",
-      "You are solely responsible for safeguarding your keys and for reviewing every transaction and approval before signing.",
+      "Connecting a self-custodial wallet grants SOLIQ read access to your public addresses and the publicly available on-chain activity associated with them. SOLIQ does not have custody of your funds and does not obtain your private keys or seed phrase, and cannot move assets on your behalf.",
+      "If you choose an action that requires a wallet signature \u2014 for example a swap you initiate through a connected protocol \u2014 the transaction is presented for your explicit review and authorization inside your own wallet. Nothing is signed or submitted without that in-wallet approval.",
+      "You are solely responsible for safeguarding your keys and for reviewing every transaction, approval, and spend allowance before signing.",
     ],
   },
+
   {
     n: 18,
     title: "Brokerage, Bank, and Trading Integrations",
