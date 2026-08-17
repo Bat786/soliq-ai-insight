@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { useSession } from "@/hooks/use-soliq-account";
+import { readConnectReturn } from "@/lib/wallet-deeplink";
 import { linkWallet, listWallets, setPrimaryWallet, unlinkWallet, walletBalances } from "@/lib/wallets.functions";
 
 export type WalletProviderId = "phantom" | "solflare" | "backpack" | "metamask" | "walletconnect";
@@ -330,4 +331,62 @@ export function useSolanaAdapterLink() {
   }, [address, connected, isSignedIn, providerName, queryClient, runLink]);
 
   return { address, connected, providerName, disconnect };
+}
+
+/**
+ * Completes a mobile universal-link connect (Phantom / Solflare). The wallet app
+ * redirects back with an encrypted payload; we decrypt it, expose the address
+ * and persist it on the SOLIQ account exactly like the extension flow.
+ */
+let mobileSessionCache: { address: string; providerName: string } | null = null;
+let mobileSessionHandled = false;
+
+export function useMobileWalletSession() {
+  const { isSignedIn } = useSession();
+  const queryClient = useQueryClient();
+  const runLink = useServerFn(linkWallet);
+  const [session, setSession] = useState<{ address: string; providerName: string } | null>(mobileSessionCache);
+
+  useEffect(() => {
+    if (mobileSessionHandled) {
+      setSession(mobileSessionCache);
+      return;
+    }
+    mobileSessionHandled = true;
+
+    let result: ReturnType<typeof readConnectReturn> = null;
+    try {
+      result = readConnectReturn();
+    } catch {
+      return;
+    }
+    if (!result) return;
+
+    if ("error" in result) {
+      toast.error("Wallet connection failed", { description: result.error.slice(0, 140) });
+      return;
+    }
+
+    const providerName = result.wallet === "phantom" ? "Phantom" : "Solflare";
+    mobileSessionCache = { address: result.address, providerName };
+    setSession(mobileSessionCache);
+
+    if (!isSignedIn) {
+      toast.info(`${providerName} connected`, { description: "Sign in to save this wallet to your SOLIQ account." });
+      return;
+    }
+    void runLink({
+      data: { chain: "solana", provider: providerName, address: result.address, label: providerName },
+    })
+      .then(() => {
+        void queryClient.invalidateQueries({ queryKey: ["wallets"] });
+        void queryClient.invalidateQueries({ queryKey: ["wallet-balances"] });
+        toast.success(`${providerName} linked`, {
+          description: `${result.address.slice(0, 6)}…${result.address.slice(-4)}`,
+        });
+      })
+      .catch(() => toast.error("Could not link that wallet"));
+  }, [isSignedIn, queryClient, runLink]);
+
+  return session;
 }

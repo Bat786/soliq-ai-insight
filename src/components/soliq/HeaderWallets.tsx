@@ -14,7 +14,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { useEvmWallet, evmChainName } from "@/components/soliq/EvmWalletProvider";
-import { useSolanaAdapterLink } from "@/hooks/use-wallets";
+import { useMobileWalletSession, useSolanaAdapterLink } from "@/hooks/use-wallets";
+import { backpackBrowseLink, buildConnectLink } from "@/lib/wallet-deeplink";
 import { cn } from "@/lib/utils";
 import {
   isMobileBrowser,
@@ -22,8 +23,6 @@ import {
   needsEvmDeepLink,
   needsSolanaDeepLink,
   openWalletApp,
-  phantomBrowseLink,
-  solflareBrowseLink,
 } from "@/lib/wallet-mobile";
 
 const short = (a: string) => `${a.slice(0, 4)}…${a.slice(-4)}`;
@@ -185,6 +184,7 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 /** Mount once per page: persists the connected adapter wallet to the portfolio. */
 function SolanaPortfolioSync() {
   useSolanaAdapterLink();
+  useMobileWalletSession();
   return null;
 }
 
@@ -194,15 +194,17 @@ function WalletMenu({ className, sync }: { className?: string | undefined; sync:
   const { mobile, solanaGap, evmGap } = useMobileGaps();
   const { pick, installed, loadable, pending } = useSolanaPicker();
   const sol = useSolBalance();
+  const mobileSession = useMobileWalletSession();
   const [open, setOpen] = useState(false);
 
-  const solAddress = solana.publicKey?.toBase58() ?? null;
-  const connectedCount = (solana.connected ? 1 : 0) + (evm.connected ? 1 : 0);
+  const solAddress = solana.publicKey?.toBase58() ?? mobileSession?.address ?? null;
+  const solConnected = solana.connected || Boolean(mobileSession);
+  const connectedCount = (solConnected ? 1 : 0) + (evm.connected ? 1 : 0);
   const busy = solana.connecting || evm.connecting || Boolean(pending);
 
   useEffect(() => {
-    if (solana.connected || evm.connected) setOpen(false);
-  }, [solana.connected, evm.connected]);
+    if (solConnected || evm.connected) setOpen(false);
+  }, [solConnected, evm.connected]);
 
   const label =
     connectedCount === 0
@@ -252,12 +254,14 @@ function WalletMenu({ className, sync }: { className?: string | undefined; sync:
             {/* ------------------------------ Solana ------------------------------ */}
             <div>
               <SectionLabel>Solana</SectionLabel>
-              {solana.connected && solAddress ? (
+              {solConnected && solAddress ? (
                 <div className="space-y-2">
                   <div className="flex items-center gap-2 rounded-lg border border-bull/30 bg-bull/10 px-3 py-2.5">
                     <CheckCircle2 className="size-4 text-bull" />
                     <span className="num text-sm">{short(solAddress)}</span>
-                    <span className="ml-auto text-[11px] text-muted-foreground">{solana.wallet?.adapter.name}</span>
+                    <span className="ml-auto text-[11px] text-muted-foreground">
+                      {solana.wallet?.adapter.name ?? mobileSession?.providerName}
+                    </span>
                   </div>
                   <Button
                     size="sm"
@@ -296,16 +300,22 @@ function WalletMenu({ className, sync }: { className?: string | undefined; sync:
                   {mobile && solanaGap && (
                     <>
                       <Row
-                        onClick={() => openWalletApp(phantomBrowseLink())}
+                        onClick={() => openWalletApp(buildConnectLink("phantom"))}
                         icon={<ExternalLink />}
                         label="Open in Phantom app"
-                        hint="Continue in the wallet's browser"
+                        hint="Approve in the app · returns here"
                       />
                       <Row
-                        onClick={() => openWalletApp(solflareBrowseLink())}
+                        onClick={() => openWalletApp(buildConnectLink("solflare"))}
                         icon={<ExternalLink />}
                         label="Open in Solflare app"
-                        hint="Continue in the wallet's browser"
+                        hint="Approve in the app · returns here"
+                      />
+                      <Row
+                        onClick={() => openWalletApp(backpackBrowseLink())}
+                        icon={<ExternalLink />}
+                        label="Open in Backpack app"
+                        hint="Continue in Backpack's browser"
                       />
                     </>
                   )}
