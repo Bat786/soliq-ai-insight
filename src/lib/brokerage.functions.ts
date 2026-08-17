@@ -51,6 +51,14 @@ export const getBrokerageConnections = createServerFn({ method: "GET" })
     return { connections: await loadBrokerageConnections(context.userId) };
   });
 
+/** Ask the brokerage for fresh holdings now (paid SnapTrade capability). */
+export const refreshBrokerageHoldings = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { refreshBrokerageHoldings: refresh } = await import("@/lib/brokerage.server");
+    return refresh(context.userId);
+  });
+
 /** Portal SUCCESS callback — persist the freshly created/repaired connection. */
 export const confirmBrokerageConnection = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -64,3 +72,4 @@ export const confirmBrokerageConnection = createServerFn({ method: "POST" })
       : null;
     return { connection };
   });
+

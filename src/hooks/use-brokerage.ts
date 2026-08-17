@@ -6,7 +6,9 @@ import {
   createBrokerageLink,
   getBrokerageConnections,
   getBrokerageSnapshot,
+  refreshBrokerageHoldings,
 } from "@/lib/brokerage.functions";
+
 
 export function useBrokerage(enabled: boolean) {
   const fn = useServerFn(getBrokerageSnapshot);
@@ -47,4 +49,9 @@ export function useConfirmBrokerageConnection() {
   return useMutation({
     mutationFn: (authorizationId: string) => fn({ data: { authorizationId } }),
   });
+}
+
+export function useRefreshBrokerageHoldings() {
+  const fn = useServerFn(refreshBrokerageHoldings);
+  return useMutation({ mutationFn: () => fn() });
 }
