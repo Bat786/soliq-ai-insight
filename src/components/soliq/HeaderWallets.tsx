@@ -212,7 +212,11 @@ function WalletMenu({ className }: { className?: string | undefined }) {
             ? short(solAddress)
             : "Wallet";
 
-  const missing = INSTALL_LINKS.filter((l) => !detected.some((a) => a.name.toLowerCase() === l.name.toLowerCase()));
+  const known = [...installed, ...loadable];
+  const missing = INSTALL_LINKS.filter(
+    (l) => !known.some((a: Adapter) => a.name.toLowerCase() === l.name.toLowerCase()),
+  );
+
 
   return (
     <div className={cn("flex items-center gap-2", className)}>
