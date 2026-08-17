@@ -1,4 +1,4 @@
-import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
+import { useWallet } from "@solana/wallet-adapter-react";
 import { Link } from "@tanstack/react-router";
 import { Copy, ExternalLink, Eye, Link2Off, Star, Wallet } from "lucide-react";
 import { useState } from "react";
@@ -6,7 +6,8 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useDetectedWallets, useSolanaAdapterLink, useWallets, walletProviders } from "@/hooks/use-wallets";
+import { HeaderWallets } from "@/components/soliq/HeaderWallets";
+import { useDetectedWallets, useWallets, walletProviders } from "@/hooks/use-wallets";
 
 const short = (a: string) => `${a.slice(0, 5)}…${a.slice(-4)}`;
 const usd = (n: number) => `$${n.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
@@ -14,7 +15,7 @@ const usd = (n: number) => `$${n.toLocaleString(undefined, { maximumFractionDigi
 export function WalletTerminal() {
   const { isSignedIn, wallets, balances, balanceFor, totalUsd, connect, watch, remove, makePrimary } = useWallets();
   const detected = useDetectedWallets();
-  const solana = useSolanaAdapterLink();
+  const solanaAdapter = useWallet();
   const [watchAddress, setWatchAddress] = useState("");
 
 
@@ -55,11 +56,11 @@ export function WalletTerminal() {
           Phantom, Solflare, Backpack, Glow and every Wallet-Standard wallet are detected automatically. Open SOLIQ in
           its own browser tab — extensions refuse to inject into embedded preview frames.
         </p>
-        <div className="soliq-wallet-adapter mt-4 flex flex-wrap items-center gap-3">
-          <WalletMultiButton />
-          {solana.connected && solana.address && (
+        <div className="mt-4 flex flex-wrap items-center gap-3">
+          <HeaderWallets sync={false} />
+          {solanaAdapter.connected && solanaAdapter.publicKey && (
             <span className="num text-[11px] text-muted-foreground">
-              {solana.providerName} · {short(solana.address)}
+              {solanaAdapter.wallet?.adapter.name} · {short(solanaAdapter.publicKey.toBase58())}
             </span>
           )}
         </div>
