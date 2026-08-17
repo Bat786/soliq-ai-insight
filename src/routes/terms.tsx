@@ -360,9 +360,9 @@ function Terms() {
         </div>
 
         <p className="mt-12 border-t border-border pt-6 text-[11px] leading-relaxed text-muted-foreground">
-          Nothing on this page is legal advice. Sections 33 and 34 contain unresolved placeholders that require review
-          by qualified counsel before launch.
+          Nothing on this page is legal advice.
         </p>
+
       </article>
     </AppShell>
   );
