@@ -34,9 +34,11 @@ function CryptoPage() {
     <AppShell>
       <div className="space-y-5">
         <SectionTitle
+          as="h1"
           title="Crypto Desk"
           subtitle="On-chain flow intelligence — Jupiter organic scoring and DexScreener pair data across Solana and beyond"
         />
+
         <CryptoDesk />
       </div>
     </AppShell>
