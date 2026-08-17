@@ -41,11 +41,11 @@ function WalletsPage() {
           SOLIQ has no custody of your funds and never receives your private keys or seed phrase. Tracking is read-only.
           If you start an action that needs a signature — such as a swap — you review and authorize that transaction in
           your own wallet.{" "}
-          <Link to="/terms#section-17" className="text-primary">
+          <Link to="/terms" hash="section-17" className="text-primary">
             Wallet terms
           </Link>{" "}
           ·{" "}
-          <Link to="/privacy#section-5" className="text-primary">
+          <Link to="/privacy" hash="section-5" className="text-primary">
             wallet data
           </Link>
         </span>
