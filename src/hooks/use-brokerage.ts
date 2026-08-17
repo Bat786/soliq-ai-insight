@@ -50,3 +50,8 @@ export function useConfirmBrokerageConnection() {
     mutationFn: (authorizationId: string) => fn({ data: { authorizationId } }),
   });
 }
+
+export function useRefreshBrokerageHoldings() {
+  const fn = useServerFn(refreshBrokerageHoldings);
+  return useMutation({ mutationFn: () => fn() });
+}
