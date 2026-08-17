@@ -96,8 +96,10 @@ function Brokerage() {
     <AppShell>
       <div className="space-y-6">
         <SectionTitle
+          as="h1"
           title="Brokerage accounts"
           subtitle="Read-only sync via SnapTrade — balances, positions, cost basis, P&L and every past trade."
+
           action={
             <div className="flex items-center gap-2">
               {env ? <EnvelopeStatus env={env} /> : null}

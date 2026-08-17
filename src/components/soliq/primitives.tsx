@@ -32,21 +32,25 @@ export function SectionTitle({
   title,
   subtitle,
   action,
+  as: Heading = "h2",
 }: {
   title: string;
   subtitle?: string;
   action?: ReactNode;
+  /** Heading level — use "h1" for a page's primary title. */
+  as?: "h1" | "h2" | "h3";
 }) {
   return (
     <div className="mb-3 flex items-end justify-between gap-3">
       <div>
-        <h2 className="font-display text-base font-semibold">{title}</h2>
+        <Heading className="font-display text-base font-semibold">{title}</Heading>
         {subtitle && <p className="text-xs text-muted-foreground">{subtitle}</p>}
       </div>
       {action}
     </div>
   );
 }
+
 
 export function Delta({ value, className = "" }: { value: number; className?: string }) {
   const up = value >= 0;

@@ -19,12 +19,12 @@ export const Route = createFileRoute("/crypto")({
         content: "Jupiter + DexScreener powered on-chain flow, liquidity and bullish-bearish signals for every token.",
       },
       { property: "og:type", content: "website" },
-      { property: "og:url", content: "https://soliq-ai-insight.lovable.app/crypto" },
-      { property: "og:image", content: "https://soliq-ai-insight.lovable.app/og-soliq.jpg" },
+      { property: "og:url", content: "https://soliqintel.com/crypto" },
+      { property: "og:image", content: "https://soliqintel.com/og-soliq.jpg" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:image", content: "https://soliq-ai-insight.lovable.app/og-soliq.jpg" },
+      { name: "twitter:image", content: "https://soliqintel.com/og-soliq.jpg" },
     ],
-    links: [{ rel: "canonical", href: "https://soliq-ai-insight.lovable.app/crypto" }],
+    links: [{ rel: "canonical", href: "https://soliqintel.com/crypto" }],
   }),
   component: CryptoPage,
 });
@@ -34,9 +34,11 @@ function CryptoPage() {
     <AppShell>
       <div className="space-y-5">
         <SectionTitle
+          as="h1"
           title="Crypto Desk"
           subtitle="On-chain flow intelligence — Jupiter organic scoring and DexScreener pair data across Solana and beyond"
         />
+
         <CryptoDesk />
       </div>
     </AppShell>

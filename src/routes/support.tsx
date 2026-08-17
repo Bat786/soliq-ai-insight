@@ -130,8 +130,10 @@ function Support() {
     <AppShell>
       <div className="space-y-6">
         <SectionTitle
+          as="h1"
           title="Support & help centre"
           subtitle="Billing, payments, account access and connection troubleshooting — answered here or by ticket."
+
           action={
             <Button
               size="sm"
