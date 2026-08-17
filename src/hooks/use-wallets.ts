@@ -310,6 +310,8 @@ export function useSolanaAdapterLink() {
   useEffect(() => {
     if (!connected || !address) return;
     if (!isSignedIn) {
+      if (linkedRef.current === `guest:${address}`) return;
+      linkedRef.current = `guest:${address}`;
       toast.info(`${providerName} connected`, { description: "Sign in to save this wallet to your SOLIQ account." });
       return;
     }
