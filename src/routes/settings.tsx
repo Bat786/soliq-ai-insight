@@ -345,6 +345,27 @@ function Settings() {
             ) : null}
           </section>
 
+          <section className="panel p-5">
+            <SectionTitle title="Legal & data" subtitle="Policies" />
+            <div className="grid gap-1.5 text-xs">
+              <Link to="/terms" className="text-primary hover:underline">
+                Terms of Service
+              </Link>
+              <Link to="/privacy" className="text-primary hover:underline">
+                Privacy Policy
+              </Link>
+              <Link to="/terms" hash="section-9" className="text-primary hover:underline">
+                Cancellation & renewal
+              </Link>
+              <Link to="/terms" hash="section-10" className="text-primary hover:underline">
+                Refund policy
+              </Link>
+              <Link to="/terms" hash="section-26" className="text-primary hover:underline">
+                Security & data protection
+              </Link>
+            </div>
+          </section>
+
         </div>
       </div>
     </AppShell>

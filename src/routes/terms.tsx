@@ -157,10 +157,12 @@ const SECTIONS: Section[] = [
     n: 17,
     title: "Wallet Connections",
     body: [
-      "Connecting a self-custodial wallet grants SOLIQ read access to public addresses and, where you explicitly approve it, permission to request signatures for actions you initiate. SOLIQ never holds your private keys, seed phrase, or funds, and cannot move assets on your behalf without your in-wallet approval.",
-      "You are solely responsible for safeguarding your keys and for reviewing every transaction and approval before signing.",
+      "Connecting a self-custodial wallet grants SOLIQ read access to your public addresses and the publicly available on-chain activity associated with them. SOLIQ does not have custody of your funds and does not obtain your private keys or seed phrase, and cannot move assets on your behalf.",
+      "If you choose an action that requires a wallet signature \u2014 for example a swap you initiate through a connected protocol \u2014 the transaction is presented for your explicit review and authorization inside your own wallet. Nothing is signed or submitted without that in-wallet approval.",
+      "You are solely responsible for safeguarding your keys and for reviewing every transaction, approval, and spend allowance before signing.",
     ],
   },
+
   {
     n: 18,
     title: "Brokerage, Bank, and Trading Integrations",
@@ -323,6 +325,10 @@ function Terms() {
           </p>
           <p className="mt-4 text-xs text-muted-foreground">
             See also our{" "}
+            <Link to="/privacy" className="text-primary">
+              Privacy Policy
+            </Link>
+            , the{" "}
             <Link to="/support" className="text-primary">
               Support hub
             </Link>{" "}
@@ -332,6 +338,7 @@ function Terms() {
             </Link>
             .
           </p>
+
         </header>
 
         <nav aria-label="Sections" className="mt-6 grid gap-1 text-xs sm:grid-cols-2">
@@ -358,9 +365,9 @@ function Terms() {
         </div>
 
         <p className="mt-12 border-t border-border pt-6 text-[11px] leading-relaxed text-muted-foreground">
-          Nothing on this page is legal advice. Sections 33 and 34 contain unresolved placeholders that require review
-          by qualified counsel before launch.
+          Nothing on this page is legal advice.
         </p>
+
       </article>
     </AppShell>
   );

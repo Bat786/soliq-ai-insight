@@ -21,6 +21,7 @@ import { Route as FuturesRouteImport } from './routes/futures'
 import { Route as ListsRouteImport } from './routes/lists'
 import { Route as PortfolioRouteImport } from './routes/portfolio'
 import { Route as PricingRouteImport } from './routes/pricing'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ScannerRouteImport } from './routes/scanner'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as StatusRouteImport } from './routes/status'
@@ -93,6 +94,11 @@ const PortfolioRoute = PortfolioRouteImport.update({
 const PricingRoute = PricingRouteImport.update({
   id: '/pricing',
   path: '/pricing',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ScannerRoute = ScannerRouteImport.update({
@@ -175,6 +181,7 @@ export interface FileRoutesByFullPath {
   '/lists': typeof ListsRoute
   '/portfolio': typeof PortfolioRoute
   '/pricing': typeof PricingRoute
+  '/privacy': typeof PrivacyRoute
   '/scanner': typeof ScannerRoute
   '/settings': typeof SettingsRoute
   '/status': typeof StatusRoute
@@ -202,6 +209,7 @@ export interface FileRoutesByTo {
   '/lists': typeof ListsRoute
   '/portfolio': typeof PortfolioRoute
   '/pricing': typeof PricingRoute
+  '/privacy': typeof PrivacyRoute
   '/scanner': typeof ScannerRoute
   '/settings': typeof SettingsRoute
   '/status': typeof StatusRoute
@@ -230,6 +238,7 @@ export interface FileRoutesById {
   '/lists': typeof ListsRoute
   '/portfolio': typeof PortfolioRoute
   '/pricing': typeof PricingRoute
+  '/privacy': typeof PrivacyRoute
   '/scanner': typeof ScannerRoute
   '/settings': typeof SettingsRoute
   '/status': typeof StatusRoute
@@ -259,6 +268,7 @@ export interface FileRouteTypes {
     | '/lists'
     | '/portfolio'
     | '/pricing'
+    | '/privacy'
     | '/scanner'
     | '/settings'
     | '/status'
@@ -286,6 +296,7 @@ export interface FileRouteTypes {
     | '/lists'
     | '/portfolio'
     | '/pricing'
+    | '/privacy'
     | '/scanner'
     | '/settings'
     | '/status'
@@ -313,6 +324,7 @@ export interface FileRouteTypes {
     | '/lists'
     | '/portfolio'
     | '/pricing'
+    | '/privacy'
     | '/scanner'
     | '/settings'
     | '/status'
@@ -341,6 +353,7 @@ export interface RootRouteChildren {
   ListsRoute: typeof ListsRoute
   PortfolioRoute: typeof PortfolioRoute
   PricingRoute: typeof PricingRoute
+  PrivacyRoute: typeof PrivacyRoute
   ScannerRoute: typeof ScannerRoute
   SettingsRoute: typeof SettingsRoute
   StatusRoute: typeof StatusRoute
@@ -440,6 +453,13 @@ declare module '@tanstack/react-router' {
       path: '/pricing'
       fullPath: '/pricing'
       preLoaderRoute: typeof PricingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/scanner': {
@@ -549,6 +569,7 @@ const rootRouteChildren: RootRouteChildren = {
   ListsRoute: ListsRoute,
   PortfolioRoute: PortfolioRoute,
   PricingRoute: PricingRoute,
+  PrivacyRoute: PrivacyRoute,
   ScannerRoute: ScannerRoute,
   SettingsRoute: SettingsRoute,
   StatusRoute: StatusRoute,

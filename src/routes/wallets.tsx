@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { ShieldCheck, Wallet } from "lucide-react";
 
 import { AppShell } from "@/components/soliq/AppShell";
@@ -35,10 +35,22 @@ function WalletsPage() {
       <p className="text-sm text-muted-foreground">
         Connect Solana and EVM wallets read-only to fold on-chain holdings into your SOLIQ portfolio view.
       </p>
-      <p className="mt-2 flex items-center gap-1.5 text-[11px] text-muted-foreground">
-        <ShieldCheck className="size-3.5 text-bull" /> No transaction signing, no seed phrases, no spend permissions —
-        ever.
+      <p className="mt-2 flex items-start gap-1.5 text-[11px] leading-relaxed text-muted-foreground">
+        <ShieldCheck className="mt-0.5 size-3.5 shrink-0 text-bull" />
+        <span>
+          SOLIQ has no custody of your funds and never receives your private keys or seed phrase. Tracking is read-only.
+          If you start an action that needs a signature — such as a swap — you review and authorize that transaction in
+          your own wallet.{" "}
+          <Link to="/terms" hash="section-17" className="text-primary">
+            Wallet terms
+          </Link>{" "}
+          ·{" "}
+          <Link to="/privacy" hash="section-5" className="text-primary">
+            wallet data
+          </Link>
+        </span>
       </p>
+
 
       <div className="mt-5 max-w-3xl">
         <WalletTerminal />

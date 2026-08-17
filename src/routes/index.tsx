@@ -142,7 +142,7 @@ const sections = [
   {
     icon: Zap,
     title: "Wallet Intelligence",
-    body: "Connect Phantom, Solflare, Backpack or MetaMask read-only. Holdings, transaction ledger, fee analytics and P&L — no keys, no signing.",
+    body: "Connect Phantom, Solflare, Backpack or MetaMask for read-only tracking. Holdings, transaction ledger, fee analytics and P&L. SOLIQ never holds your keys, and any action needing a signature is authorized in your own wallet.",
   },
   {
     icon: Building2,
@@ -384,8 +384,8 @@ function Landing() {
         <section className="border-t border-border/70 px-4 py-14">
           <div className="mx-auto max-w-3xl text-center">
             <span className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-surface-2/60 px-3 py-1.5 text-[11px] text-muted-foreground">
-              <ShieldCheck className="size-3.5 text-bull" /> Read-only connections · no seed phrases · no custody of
-              funds
+              <ShieldCheck className="size-3.5 text-bull" /> Read-only tracking · no seed phrases or private keys · no
+              custody of funds
             </span>
             <h2 className="mt-5 text-2xl font-bold lg:text-3xl">Make SOLIQ your financial command center.</h2>
             <p className="mt-2 text-sm text-muted-foreground">
@@ -422,6 +422,15 @@ function Landing() {
             <Link to="/terms" className="transition-colors hover:text-foreground">
               Terms of Service
             </Link>
+            <Link to="/privacy" className="transition-colors hover:text-foreground">
+              Privacy Policy
+            </Link>
+            <Link to="/terms" hash="section-10" className="transition-colors hover:text-foreground">
+              Refunds & cancellation
+            </Link>
+            <Link to="/terms" hash="section-26" className="transition-colors hover:text-foreground">
+              Security & data
+            </Link>
             <Link to="/support" className="transition-colors hover:text-foreground">
               Support
             </Link>
@@ -434,7 +443,7 @@ function Landing() {
           </nav>
           <div className="flex flex-wrap items-center justify-between gap-3">
             <p>SOLIQ · powered by AETHRON — Solana Blockchain Intelligence Engine</p>
-            <p>Market data is informational only and is not investment advice.</p>
+            <p>Market data, scores and signals are informational model outputs only — not investment advice.</p>
           </div>
 
         </div>
