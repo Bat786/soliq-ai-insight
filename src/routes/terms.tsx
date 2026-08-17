@@ -325,6 +325,10 @@ function Terms() {
           </p>
           <p className="mt-4 text-xs text-muted-foreground">
             See also our{" "}
+            <Link to="/privacy" className="text-primary">
+              Privacy Policy
+            </Link>
+            , the{" "}
             <Link to="/support" className="text-primary">
               Support hub
             </Link>{" "}
@@ -334,6 +338,7 @@ function Terms() {
             </Link>
             .
           </p>
+
         </header>
 
         <nav aria-label="Sections" className="mt-6 grid gap-1 text-xs sm:grid-cols-2">
