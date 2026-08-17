@@ -338,16 +338,21 @@ export function useSolanaAdapterLink() {
  * redirects back with an encrypted payload; we decrypt it, expose the address
  * and persist it on the SOLIQ account exactly like the extension flow.
  */
+let mobileSessionCache: { address: string; providerName: string } | null = null;
+let mobileSessionHandled = false;
+
 export function useMobileWalletSession() {
   const { isSignedIn } = useSession();
   const queryClient = useQueryClient();
   const runLink = useServerFn(linkWallet);
-  const [session, setSession] = useState<{ address: string; providerName: string } | null>(null);
-  const handledRef = useRef(false);
+  const [session, setSession] = useState<{ address: string; providerName: string } | null>(mobileSessionCache);
 
   useEffect(() => {
-    if (handledRef.current) return;
-    handledRef.current = true;
+    if (mobileSessionHandled) {
+      setSession(mobileSessionCache);
+      return;
+    }
+    mobileSessionHandled = true;
 
     let result: ReturnType<typeof readConnectReturn> = null;
     try {
@@ -363,7 +368,8 @@ export function useMobileWalletSession() {
     }
 
     const providerName = result.wallet === "phantom" ? "Phantom" : "Solflare";
-    setSession({ address: result.address, providerName });
+    mobileSessionCache = { address: result.address, providerName };
+    setSession(mobileSessionCache);
 
     if (!isSignedIn) {
       toast.info(`${providerName} connected`, { description: "Sign in to save this wallet to your SOLIQ account." });
