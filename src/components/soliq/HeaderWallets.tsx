@@ -176,7 +176,7 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
  * default modal. On a plain mobile browser it swaps in wallet-app deep links,
  * which are the only paths that work there.
  */
-function WalletMenu({ className }: { className?: string }) {
+function WalletMenu({ className }: { className?: string | undefined }) {
   const solana = useWallet();
   const evm = useEvmWallet();
   const { mobile, solanaGap, evmGap } = useMobileGaps();
@@ -376,7 +376,7 @@ function WalletMenu({ className }: { className?: string }) {
  * Single entry point for wallet connections. Strictly client-rendered: the
  * adapters touch window/crypto on init.
  */
-export function HeaderWallets({ className }: { className?: string }) {
+export function HeaderWallets({ className }: { className?: string | undefined }) {
   return (
     <ClientOnly fallback={<div className="h-8 w-32" aria-hidden />}>
       <WalletMenu className={className} />
