@@ -7,6 +7,7 @@
  */
 
 import { massiveStatus, massiveGet } from "@/lib/massive.server";
+import { snaptradeApiStatus } from "@/lib/snaptrade.server";
 
 export type ProviderState = "live" | "degraded" | "unentitled" | "missing-key";
 
@@ -49,7 +50,7 @@ async function probeMassive() {
 }
 
 export async function collectDataStatus(): Promise<DataStatus> {
-  const probe = await probeMassive();
+  const [probe, snaptrade] = await Promise.all([probeMassive(), snaptradeApiStatus()]);
   const base = massiveStatus();
 
   const massiveState: ProviderState = !base.configured
