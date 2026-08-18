@@ -35,12 +35,18 @@ function Auth() {
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [awaitingConfirm, setAwaitingConfirm] = useState(false);
+  const [ready, setReady] = useState(false);
   const { isSignedIn } = useSession();
   const navigate = useNavigate();
+
+  // Until React has hydrated, a submit click would trigger a native form GET
+  // (reloading /auth? and silently dropping the attempt), so gate interaction.
+  useEffect(() => setReady(true), []);
 
   useEffect(() => {
     if (isSignedIn) navigate({ to: "/terminal", replace: true });
   }, [isSignedIn, navigate]);
+
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
