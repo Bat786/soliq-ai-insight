@@ -50,7 +50,9 @@ function Auth() {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!ready || busy) return;
     setBusy(true);
+
     try {
       if (mode === "signup") {
         const { data, error } = await supabase.auth.signUp({
