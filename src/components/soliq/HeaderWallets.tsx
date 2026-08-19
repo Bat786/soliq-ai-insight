@@ -224,7 +224,7 @@ function WalletMenu({ className, sync }: { className?: string | undefined; sync:
 
 
   return (
-    <div className={cn("flex items-center gap-2", className)}>
+    <div className={cn("flex min-w-0 shrink-0 items-center gap-2", className)}>
       {sync && <SolanaPortfolioSync />}
       {sol !== null && (
         <span className="num hidden text-xs text-muted-foreground md:inline" title="Connected wallet SOL balance">
@@ -233,12 +233,26 @@ function WalletMenu({ className, sync }: { className?: string | undefined; sync:
       )}
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
-          <Button size="sm" variant={connectedCount ? "subtle" : "hero"} className="num gap-1.5" disabled={busy}>
-            {connectedCount ? <span className="size-1.5 rounded-full bg-bull" /> : <Wallet2 className="size-4" />}
-            <span className="max-w-[9rem] truncate">{busy ? "Connecting…" : label}</span>
-            <ChevronDown className="size-3.5 opacity-60" />
+          <Button
+            size="sm"
+            variant={connectedCount ? "subtle" : "hero"}
+            disabled={busy}
+            aria-label="Connect wallet"
+            className="num h-8 shrink-0 gap-1.5 px-2 text-xs sm:px-3"
+          >
+            {connectedCount ? (
+              <span className="size-1.5 rounded-full bg-bull" />
+            ) : (
+              <Wallet2 className="size-4 shrink-0" />
+            )}
+            <span className="hidden max-w-[8rem] truncate sm:inline">{busy ? "Connecting…" : label}</span>
+            {connectedCount > 0 && (
+              <span className="max-w-[4.5rem] truncate sm:hidden">{busy ? "…" : label}</span>
+            )}
+            <ChevronDown className="hidden size-3.5 opacity-60 sm:inline" />
           </Button>
         </DialogTrigger>
+
 
         <DialogContent className="max-w-md border-border bg-surface p-0">
           <DialogHeader className="border-b border-border/70 px-5 pb-4 pt-5">
@@ -423,7 +437,7 @@ export function HeaderWallets({
   sync?: boolean;
 }) {
   return (
-    <ClientOnly fallback={<div className="h-8 w-32" aria-hidden />}>
+    <ClientOnly fallback={<div className="h-8 w-8 shrink-0 sm:w-32" aria-hidden />}>
       <WalletMenu className={className} sync={sync} />
     </ClientOnly>
   );

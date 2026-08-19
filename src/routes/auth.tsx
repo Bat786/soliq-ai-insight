@@ -35,13 +35,8 @@ function Auth() {
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [awaitingConfirm, setAwaitingConfirm] = useState(false);
-  const [ready, setReady] = useState(false);
   const { isSignedIn } = useSession();
   const navigate = useNavigate();
-
-  // Until React has hydrated, a submit click would trigger a native form GET
-  // (reloading /auth? and silently dropping the attempt), so gate interaction.
-  useEffect(() => setReady(true), []);
 
   useEffect(() => {
     if (isSignedIn) navigate({ to: "/terminal", replace: true });
@@ -50,7 +45,8 @@ function Auth() {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!ready || busy) return;
+    if (busy) return;
+
     setBusy(true);
 
     try {
@@ -196,16 +192,11 @@ function Auth() {
                   className="bg-surface-2/40"
                 />
               </div>
-              <Button type="submit" variant="hero" className="w-full" disabled={busy || !ready}>
+              <Button type="submit" variant="hero" className="w-full" disabled={busy}>
                 <Mail className="size-4" />{" "}
-                {!ready
-                  ? "Preparing secure sign-in…"
-                  : busy
-                    ? "Please wait…"
-                    : mode === "signup"
-                      ? "Create free account"
-                      : "Sign in"}
+                {busy ? "Please wait…" : mode === "signup" ? "Create free account" : "Sign in"}
               </Button>
+
             </form>
           )}
 
@@ -214,12 +205,13 @@ function Auth() {
           </div>
 
           <div className="grid grid-cols-2 gap-2">
-            <Button variant="subtle" disabled={busy || !ready} onClick={() => oauth("google")}>
+            <Button variant="subtle" disabled={busy} onClick={() => oauth("google")}>
               <Chrome className="size-4" /> Google
             </Button>
-            <Button variant="subtle" disabled={busy || !ready} onClick={() => oauth("apple")}>
+            <Button variant="subtle" disabled={busy} onClick={() => oauth("apple")}>
               <Apple className="size-4" /> Apple
             </Button>
+
           </div>
 
 
