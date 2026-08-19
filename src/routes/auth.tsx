@@ -196,16 +196,11 @@ function Auth() {
                   className="bg-surface-2/40"
                 />
               </div>
-              <Button type="submit" variant="hero" className="w-full" disabled={busy || !ready}>
+              <Button type="submit" variant="hero" className="w-full" disabled={busy}>
                 <Mail className="size-4" />{" "}
-                {!ready
-                  ? "Preparing secure sign-in…"
-                  : busy
-                    ? "Please wait…"
-                    : mode === "signup"
-                      ? "Create free account"
-                      : "Sign in"}
+                {busy ? "Please wait…" : mode === "signup" ? "Create free account" : "Sign in"}
               </Button>
+
             </form>
           )}
 
@@ -214,12 +209,13 @@ function Auth() {
           </div>
 
           <div className="grid grid-cols-2 gap-2">
-            <Button variant="subtle" disabled={busy || !ready} onClick={() => oauth("google")}>
+            <Button variant="subtle" disabled={busy} onClick={() => oauth("google")}>
               <Chrome className="size-4" /> Google
             </Button>
-            <Button variant="subtle" disabled={busy || !ready} onClick={() => oauth("apple")}>
+            <Button variant="subtle" disabled={busy} onClick={() => oauth("apple")}>
               <Apple className="size-4" /> Apple
             </Button>
+
           </div>
 
 
