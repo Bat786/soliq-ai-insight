@@ -437,7 +437,7 @@ export function HeaderWallets({
   sync?: boolean;
 }) {
   return (
-    <ClientOnly fallback={<div className="h-8 w-32" aria-hidden />}>
+    <ClientOnly fallback={<div className="h-8 w-8 shrink-0 sm:w-32" aria-hidden />}>
       <WalletMenu className={className} sync={sync} />
     </ClientOnly>
   );
