@@ -15,12 +15,6 @@ const rpcWebsocketsBrowser = fileURLToPath(
   new URL("./node_modules/rpc-websockets/dist/index.browser.mjs", import.meta.url),
 );
 
-// A bare `buffer` import can be treated as a Node builtin and stubbed out in the
-// browser/worker builds, which leaves `Buffer` undefined and crashes Solana's
-// web3.js at module scope ("undefined is not an object (evaluating 'r.from')").
-// Pin it to the pure-JS npm package so it is always really bundled.
-const bufferShim = fileURLToPath(new URL("./node_modules/buffer/index.js", import.meta.url));
-
 export default defineConfig({
   tanstackStart: {
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
@@ -31,8 +25,6 @@ export default defineConfig({
     resolve: {
       alias: [
         { find: /^rpc-websockets$/, replacement: rpcWebsocketsBrowser },
-        { find: /^buffer$/, replacement: bufferShim },
-        { find: /^node:buffer$/, replacement: bufferShim },
       ],
     },
     // Solana libs reach for Node's `Buffer` at module scope. Let Vite pre-bundle
