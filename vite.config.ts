@@ -50,8 +50,6 @@ export default defineConfig({
     resolve: {
       alias: [
         { find: /^rpc-websockets$/, replacement: rpcWebsocketsBrowser },
-        { find: /^events$/, replacement: eventsShim },
-        { find: /^node:events$/, replacement: eventsShim },
       ],
     },
     // Solana libs reach for Node's `Buffer` at module scope. Let Vite pre-bundle
