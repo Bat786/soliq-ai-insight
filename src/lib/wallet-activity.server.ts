@@ -7,7 +7,7 @@
  * and unrealized P&L. Read-only: nothing here signs, spends or approves.
  */
 
-export type Cluster = "mainnet-beta" | "devnet";
+export type Cluster = "devnet";
 
 export type WalletTx = {
   hash: string;
@@ -48,10 +48,6 @@ export type WalletActivity = {
   updatedAt: number;
 };
 
-const PUBLIC_SOLANA: Record<Cluster, string> = {
-  "mainnet-beta": "https://api.mainnet-beta.solana.com",
-  devnet: "https://api.devnet.solana.com",
-};
 const PUBLIC_EVM = "https://ethereum-rpc.publicnode.com";
 const KLINES = "https://api.binance.com/api/v3/klines";
 const TICKER = "https://api.binance.com/api/v3/ticker/price";
@@ -75,13 +71,15 @@ async function cached<T>(key: string, ttl: number, load: () => Promise<T>): Prom
 function alchemy(chain: "solana" | "evm", cluster: Cluster): string | null {
   const key = process.env["ALCHEMY_API_KEY"];
   if (!key) return null;
-  const host =
-    chain === "solana" ? (cluster === "devnet" ? "solana-devnet" : "solana-mainnet") : "eth-mainnet";
+  const host = chain === "solana" ? `solana-${cluster}` : "eth-mainnet";
   return `https://${host}.g.alchemy.com/v2/${key}`;
 }
 
-const solanaRpc = (cluster: Cluster) => alchemy("solana", cluster) ?? PUBLIC_SOLANA[cluster];
-const evmRpc = () => alchemy("evm", "mainnet-beta") ?? PUBLIC_EVM;
+const solanaRpc = (cluster: Cluster) => {
+  const url = alchemy("solana", cluster);
+  if (!url) throw new Error("Alchemy Solana RPC is not configured");
+  return url;
+};
 
 async function rpcBatch(url: string, calls: { method: string; params: unknown[] }[]): Promise<unknown[]> {
   if (calls.length === 0) return [];
@@ -183,7 +181,7 @@ async function solanaActivity(address: string, cluster: Cluster, limit: number) 
       usdAtTime: closes.get(day) ?? null,
       feeNative: isFeePayer ? fee : 0,
       status: sig.err || tx?.meta?.err ? "failed" : "success",
-      explorer: `https://solscan.io/tx/${sig.signature}${cluster === "devnet" ? "?cluster=devnet" : ""}`,
+       explorer: `https://solscan.io/tx/${sig.signature}?cluster=devnet`,
     });
   }
   return { txs, note: null };
@@ -194,7 +192,7 @@ async function solanaActivity(address: string, cluster: Cluster, limit: number) 
 type Transfer = { hash?: string; value?: number | null; metadata?: { blockTimestamp?: string }; from?: string; to?: string };
 
 async function evmActivity(address: string, limit: number) {
-  const url = alchemy("evm", "mainnet-beta");
+  const url = alchemy("evm", "devnet");
   if (!url) {
     return {
       txs: [] as WalletTx[],
@@ -293,7 +291,7 @@ function book(txs: WalletTx[], symbol: string, currentPrice: number): WalletPnl 
 export async function loadWalletActivity(
   address: string,
   chain: "solana" | "evm",
-  cluster: Cluster = "mainnet-beta",
+  cluster: Cluster = "devnet",
   limit = 30,
 ): Promise<WalletActivity> {
   const symbol = chain === "solana" ? "SOL" : "ETH";

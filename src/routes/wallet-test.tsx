@@ -6,7 +6,6 @@ import { ClientOnly, createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Activity } from "lucide-react";
 
-import { SolanaWalletProvider } from "@/components/soliq/SolanaWalletProvider";
 import { SOLANA_RPC_PATH, getSolanaBalance, solanaNetwork } from "@/lib/solanaWallet";
 
 export const Route = createFileRoute("/wallet-test")({
@@ -37,7 +36,10 @@ function Panel() {
 
   const balance = useQuery({
     queryKey: ["wallet-test-balance", address, solanaNetwork],
-    queryFn: () => getSolanaBalance(address!, connection),
+    queryFn: () => {
+      if (!address) throw new Error("Connect a wallet first");
+      return getSolanaBalance(address, connection);
+    },
     enabled: !!address,
     refetchInterval: 15_000,
   });
@@ -97,9 +99,7 @@ function Panel() {
 function WalletTestPage() {
   return (
     <ClientOnly fallback={<div className="min-h-screen" aria-hidden />}>
-      <SolanaWalletProvider>
-        <Panel />
-      </SolanaWalletProvider>
+      <Panel />
     </ClientOnly>
   );
 }
