@@ -43,11 +43,14 @@ function Auth() {
   }, [isSignedIn, navigate]);
 
 
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const submit = async (e?: React.FormEvent | React.MouseEvent) => {
+    // Guard against the browser's native form GET: if React has not hydrated
+    // yet the form would navigate to /auth? and silently discard the attempt.
+    e?.preventDefault();
     if (busy) return;
 
     setBusy(true);
+
 
     try {
       if (mode === "signup") {
