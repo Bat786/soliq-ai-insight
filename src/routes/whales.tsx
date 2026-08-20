@@ -62,15 +62,16 @@ function WhalesPage() {
       </AppShell>
     );
   }
-  if (isError || !data) {
+  if (isError || !data || !data.available) {
     return (
       <AppShell>
         <p className="py-24 text-center text-sm text-bear">
-          {(error as Error)?.message ?? "Whale feed unavailable"}
+          {data?.error ?? (error as Error)?.message ?? "Whale feed unavailable"}
         </p>
       </AppShell>
     );
   }
+
 
   const s = data.signal;
 
