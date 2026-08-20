@@ -1,6 +1,7 @@
 import { ClientOnly } from "@tanstack/react-router";
 import { WalletReadyState, type Adapter } from "@solana/wallet-adapter-base";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
+import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import { CheckCircle2, ChevronDown, Download, ExternalLink, Link2Off, QrCode, ShieldCheck, Wallet2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
@@ -289,15 +290,9 @@ function WalletMenu({ className, sync }: { className?: string | undefined; sync:
                 </div>
               ) : (
                 <div className="space-y-2">
-                  {installed.map((a: Adapter) => (
-                    <Row
-                      key={a.name}
-                      onClick={() => pick(a.name)}
-                      icon={a.icon ? <img src={a.icon} alt="" /> : <Wallet2 />}
-                      label={a.name}
-                      hint={pending === a.name ? "Waiting for approval…" : "Detected in this browser"}
-                    />
-                  ))}
+                  {!mobile && installed.length > 0 && (
+                    <WalletMultiButton className="!h-10 !w-full !justify-center !rounded-md !bg-primary !font-sans !text-sm !text-primary-foreground hover:!bg-primary/90" />
+                  )}
 
                   {/* Loadable adapters (Solflare web wallet, Phantom on iOS)
                       navigate the tab to the wallet's own site on connect().

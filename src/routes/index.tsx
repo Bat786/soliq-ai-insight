@@ -17,7 +17,7 @@ import {
   Zap,
 } from "lucide-react";
 
-import { Logo } from "@/components/soliq/AppShell";
+import { Logo } from "@/components/soliq/BrandLogo";
 import { Sparkline } from "@/components/soliq/primitives";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";

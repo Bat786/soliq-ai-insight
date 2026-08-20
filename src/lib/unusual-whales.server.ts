@@ -94,6 +94,7 @@ async function uw<T>(path: string, query: Record<string, string | number> = {}):
 
   const res = await fetch(cacheKey, {
     headers: { Authorization: `Bearer ${key}`, Accept: "application/json" },
+    signal: AbortSignal.timeout(6_000),
   });
   if (!res.ok) {
     if (hit) return hit.value as T;

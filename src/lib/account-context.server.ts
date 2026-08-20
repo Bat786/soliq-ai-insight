@@ -31,8 +31,8 @@ export async function buildAccountContext(
         .limit(5),
     ),
     safe(supabase.from("linked_wallets").select("chain, address, label").limit(10)),
-    safe(supabase.from("broker_connections").select("brokerage_name, disabled, disabled_reason, updated_at").limit(10)),
-    safe(supabase.from("bank_accounts").select("institution_name, name, subtype").limit(10)),
+    safe(supabase.from("broker_connections").select("institution, status, disabled_reason, last_synced_at").limit(10)),
+    safe(supabase.from("bank_accounts").select("institution_name, account_name, account_subtype").limit(10)),
   ]);
 
   const lines: string[] = [];
@@ -61,7 +61,7 @@ export async function buildAccountContext(
   lines.push(
     b.length
       ? `brokerage connections: ${b
-          .map((x) => `${x.brokerage_name ?? "brokerage"}${x.disabled ? ` (BROKEN: ${x.disabled_reason ?? "needs reconnect"})` : " (healthy)"}`)
+          .map((x) => `${x.institution ?? "brokerage"}${x.status !== "active" ? ` (BROKEN: ${x.disabled_reason ?? "needs reconnect"})` : " (healthy)"}`)
           .join(", ")}`
       : "brokerage connections: none (SnapTrade portal not completed)",
   );

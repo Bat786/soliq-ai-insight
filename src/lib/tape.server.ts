@@ -238,38 +238,36 @@ type ChartResponse = {
  * Upstream is aggressive about bursts, so every chart request goes through one
  * serialized queue with a minimum gap plus exponential backoff on 429s.
  */
-const MIN_GAP = 1500;
-let chain: Promise<unknown> = Promise.resolve();
-let lastAt = 0;
+let yahooCooldownUntil = 0;
+const yahooInflight = new Map<string, Promise<ChartResponse | null>>();
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-function queued<T>(task: () => Promise<T>): Promise<T> {
-  const run = chain.then(async () => {
-    const wait = MIN_GAP - (Date.now() - lastAt);
-    if (wait > 0) await sleep(wait);
-    lastAt = Date.now();
-    return task();
-  });
-  chain = run.catch(() => undefined);
-  return run;
-}
-
 async function fetchChart(url: string): Promise<ChartResponse | null> {
-  const backoff = [0, 4000];
-  for (const wait of backoff) {
-    if (wait) await sleep(wait);
+  if (Date.now() < yahooCooldownUntil) return null;
+  const existing = yahooInflight.get(url);
+  if (existing) return existing;
+  const request = (async () => {
     try {
-      const res = await queued(() => fetch(url, { headers: { Accept: "application/json", "User-Agent": UA } }));
+      const res = await fetch(url, {
+        headers: { Accept: "application/json", "User-Agent": UA },
+        signal: AbortSignal.timeout(4_000),
+      });
       if (res.ok) return (await res.json()) as ChartResponse;
       console.warn(`[tape] ${url} -> ${res.status}`);
-      if (res.status !== 429 && res.status !== 503) return null;
+      if (res.status === 429 || res.status === 503) yahooCooldownUntil = Date.now() + 30_000;
+      return null;
     } catch (e) {
       console.warn(`[tape] ${url} threw ${(e as Error).message}`);
       return null;
     }
+  })();
+  yahooInflight.set(url, request);
+  try {
+    return await request;
+  } finally {
+    yahooInflight.delete(url);
   }
-  return null;
 }
 
 /** 5-minute bars over the trailing week for any upstream symbol. */

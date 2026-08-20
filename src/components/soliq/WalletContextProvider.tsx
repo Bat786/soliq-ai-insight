@@ -80,6 +80,10 @@ export function WalletContextProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
+  // Real adapter instances are passed to the official WalletProvider. Backpack
+  // and other current extensions additionally register through Wallet Standard.
+  // The picker only offers these legacy adapters on desktop when Installed, so
+  // their Loadable website fallbacks can never redirect an extension user.
   const wallets = useMemo(
     () => [
       ...(mobileAdapter ? [mobileAdapter as never] : []),

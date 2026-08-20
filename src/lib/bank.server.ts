@@ -35,13 +35,14 @@ export type BankConnectionRow = {
 
 async function connections(userId: string): Promise<BankConnectionRow[]> {
   const admin = await db();
-  const { data } = await admin
+  const { data, error } = await admin
     .from("bank_connections")
     .select("id, item_id, institution_id, institution_name, access_token, status")
     .eq("user_id", userId)
     .eq("provider", PROVIDER)
     .order("created_at", { ascending: true });
 
+  if (error) throw new Error(`bank:database:${error.message}`);
   return (data ?? []).map((r) => ({
     id: r.id,
     itemId: r.item_id,
@@ -72,7 +73,7 @@ export async function linkBankAccount(
   const inst = balances.institutionId ? await institution(balances.institutionId) : { id: null, name: null };
 
   const admin = await db();
-  const { data: row } = await admin
+  const { data: row, error } = await admin
     .from("bank_connections")
     .upsert(
       {
@@ -90,7 +91,8 @@ export async function linkBankAccount(
     .select("id")
     .maybeSingle();
 
-  if (row?.id) await mirror(userId, row.id, inst.name, balances.accounts);
+  if (error || !row?.id) throw new Error(`bank:database:${error?.message ?? "connection was not saved"}`);
+  await mirror(userId, row.id, inst.name, balances.accounts);
   return { institution: inst.name, accounts: balances.accounts.length };
 }
 
@@ -181,7 +183,7 @@ async function mirror(
   if (!accounts.length) return;
   try {
     const admin = await db();
-    await admin.from("bank_accounts").upsert(
+    const { error } = await admin.from("bank_accounts").upsert(
       accounts.map((a) => ({
         user_id: userId,
         connection_id: connectionId,
@@ -199,6 +201,7 @@ async function mirror(
       })),
       { onConflict: "user_id,provider_account_id" },
     );
+    if (error) throw error;
   } catch {
     // Mirroring is advisory — never block the live desk.
   }
