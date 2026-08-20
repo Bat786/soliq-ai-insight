@@ -33,18 +33,37 @@ export const Route = createFileRoute("/crypto")({
   component: CryptoPage,
 });
 
+const DESKS = [
+  { id: "memecoins" as const, label: "Memecoins", subtitle: "DEX flow intelligence — Jupiter organic scoring and DexScreener pair data" },
+  { id: "stablecoins" as const, label: "Stablecoins", subtitle: "Peg intelligence — Massive market data with Alchemy on-chain supply and balances" },
+];
+
 function CryptoPage() {
+  const [desk, setDesk] = useState<"memecoins" | "stablecoins">("memecoins");
+  const active = DESKS.find((d) => d.id === desk) ?? DESKS[0]!;
+
   return (
     <AppShell>
       <div className="space-y-5">
-        <SectionTitle
-          as="h1"
-          title="Crypto Desk"
-          subtitle="On-chain flow intelligence — Jupiter organic scoring and DexScreener pair data across Solana and beyond"
-        />
+        <SectionTitle as="h1" title="Crypto Desk" subtitle={active.subtitle} />
 
-        <CryptoDesk />
+        <div className="panel flex w-fit items-center gap-1 p-1">
+          {DESKS.map((d) => (
+            <Button
+              key={d.id}
+              size="sm"
+              variant={desk === d.id ? "subtle" : "ghost"}
+              onClick={() => setDesk(d.id)}
+              className="h-7 px-3 text-[11px]"
+            >
+              {d.label}
+            </Button>
+          ))}
+        </div>
+
+        {desk === "memecoins" ? <CryptoDesk /> : <StablecoinDesk />}
       </div>
     </AppShell>
   );
+
 }
