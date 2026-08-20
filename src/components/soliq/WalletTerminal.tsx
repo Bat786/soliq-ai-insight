@@ -54,8 +54,8 @@ export function WalletTerminal() {
       <div className="panel p-5">
         <p className="text-sm font-semibold">Connect a Solana wallet</p>
         <p className="mt-1 text-xs text-muted-foreground">
-          Phantom, Solflare, Backpack, Glow and every Wallet-Standard wallet are detected automatically. Open SOLIQ in
-          its own browser tab — extensions refuse to inject into embedded preview frames.
+          Phantom, Solflare, Backpack and Magic Eden Wallet register through the Wallet Standard and are detected
+          automatically. Open SOLIQ in its own browser tab — extensions do not inject into embedded preview frames.
         </p>
         <div className="mt-4 flex flex-wrap items-center gap-3">
           <HeaderWallets sync={false} />
