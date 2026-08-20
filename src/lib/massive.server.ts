@@ -35,9 +35,12 @@ const rpm = (): number => {
   const n = Number(raw);
   return Number.isFinite(n) && n > 0 ? Math.floor(n) : DEFAULT_RPM;
 };
+// Spacing between calls. Capped at 1.2s so a small per-minute budget never
+// makes a desk wait tens of seconds — the token budget already protects the
+// allowance, the gap only smooths bursts.
 const MIN_GAP = () => {
   const limit = rpm();
-  return Number.isFinite(limit) ? Math.max(60, Math.ceil(60_000 / limit) + 20) : 0;
+  return Number.isFinite(limit) ? Math.min(1_200, Math.max(60, Math.ceil(60_000 / limit) + 20)) : 0;
 };
 
 const budget = { window: 0, used: 0 };
