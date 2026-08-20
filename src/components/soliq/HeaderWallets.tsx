@@ -217,10 +217,11 @@ function WalletMenu({ className, sync }: { className?: string | undefined; sync:
             ? short(solAddress)
             : "Wallet";
 
-  const known = [...installed, ...loadable];
+  const known = mobile ? [...installed, ...loadable] : installed;
   const missing = INSTALL_LINKS.filter(
     (l) => !known.some((a: Adapter) => a.name.toLowerCase() === l.name.toLowerCase()),
   );
+
 
 
   return (
