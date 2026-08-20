@@ -1,3 +1,4 @@
+import "@/lib/node-globals";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { Link } from "@tanstack/react-router";
 import { Copy, ExternalLink, Eye, Link2Off, Star, Wallet } from "lucide-react";

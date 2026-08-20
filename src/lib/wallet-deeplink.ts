@@ -21,6 +21,8 @@
  * Docs: docs.phantom.app/phantom-deeplinks-ios-and-android,
  * docs.solflare.com (deeplinks), docs.backpack.app (browse links only).
  */
+import "@/lib/node-globals";
+
 
 import bs58 from "bs58";
 import nacl from "tweetnacl";
