@@ -60,7 +60,7 @@ export function WalletContextProvider({ children }: { children: ReactNode }) {
   return (
     <ClusterContext.Provider value={ctx}>
       <ConnectionProvider endpoint={endpoint}>
-        <WalletProvider wallets={[]} autoConnect onError={(error) => console.error(error)}>
+        <WalletProvider wallets={wallets} autoConnect onError={(error) => console.error(error)}>
           <WalletModalProvider>{children}</WalletModalProvider>
         </WalletProvider>
       </ConnectionProvider>
