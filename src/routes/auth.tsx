@@ -195,10 +195,11 @@ function Auth() {
                   className="bg-surface-2/40"
                 />
               </div>
-              <Button type="submit" variant="hero" className="w-full" disabled={busy}>
+              <Button type="button" onClick={submit} variant="hero" className="w-full" disabled={busy}>
                 <Mail className="size-4" />{" "}
                 {busy ? "Please wait…" : mode === "signup" ? "Create free account" : "Sign in"}
               </Button>
+
 
             </form>
           )}
