@@ -397,8 +397,10 @@ export async function loadTickerDetail(symbolRaw: string, interval: Timeframe): 
   const symbol = symbolRaw.trim().toUpperCase().replace(/[^A-Z.:-]/g, "");
   if (!symbol) throw new Error("Enter a ticker symbol");
 
-  const info = await uw<Record<string, unknown>>(`/api/stock/${symbol}/info`).catch(() => null);
-  if (!info || !info["symbol"]) throw new Error(`No market data found for “${symbol}”`);
+  // Reference metadata is best-effort: the info endpoint may be unavailable
+  // (e.g. rejected credentials). Price/bar data drives the detail view.
+  const info =
+    (await uw<Record<string, unknown>>(`/api/stock/${symbol}/info`).catch(() => null)) ?? {};
 
   const [rawState, options, bars] = await Promise.all([
     loadState(symbol),
@@ -406,6 +408,10 @@ export async function loadTickerDetail(symbolRaw: string, interval: Timeframe): 
     loadBars(symbol),
   ]);
   const state = fromBars(rawState, bars["5m"]);
+
+  const hasPrice = Number.isFinite(state.close) && state.close > 0;
+  const hasBars = Object.values(bars).some((b) => Array.isArray(b) && b.length > 0);
+  if (!hasPrice && !hasBars) throw new Error(`No market data found for “${symbol}”`);
 
   return {
     symbol,
