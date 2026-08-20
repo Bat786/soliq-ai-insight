@@ -2,6 +2,8 @@ import "@/lib/node-globals";
 
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
+
+import { EmbeddedPreviewNotice } from "@/components/soliq/EmbeddedPreviewNotice";
 import { ClientOnly, createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Activity } from "lucide-react";
@@ -56,6 +58,7 @@ function Panel() {
 
       <div className="soliq-wallet-adapter rounded-xl border border-border/60 bg-card/60 p-5 backdrop-blur">
         <WalletMultiButton />
+        <EmbeddedPreviewNotice className="mt-3" />
 
         <dl className="num mt-5 space-y-2 text-xs">
           <div className="flex justify-between gap-3">
