@@ -103,7 +103,7 @@ export function WhaleSignalCard({ compact = false }: { compact?: boolean }) {
 /** One-line whale strip for dense headers. */
 export function WhaleStrip() {
   const { data } = useWhaleFeed();
-  if (!data) return null;
+  if (!data || !data.available) return null;
   const s = data.signal;
   return (
     <Link
