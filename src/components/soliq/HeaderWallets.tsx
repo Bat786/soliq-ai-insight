@@ -1,3 +1,4 @@
+import "@/lib/node-globals";
 import { ClientOnly } from "@tanstack/react-router";
 import { WalletReadyState, type Adapter } from "@solana/wallet-adapter-base";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
