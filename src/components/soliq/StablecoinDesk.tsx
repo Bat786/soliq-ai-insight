@@ -1,6 +1,7 @@
 import { useWallet } from "@solana/wallet-adapter-react";
 import { Coins, Landmark, Loader2, ShieldCheck } from "lucide-react";
 
+import { PegHistoryPanel } from "@/components/soliq/PegHistoryPanel";
 import { Delta, SectionTitle, Sparkline } from "@/components/soliq/primitives";
 import { useStablecoinBalances, useStablecoinDesk } from "@/hooks/use-stablecoins";
 import type { StablecoinRow } from "@/lib/stablecoins.server";
@@ -140,6 +141,8 @@ export function StablecoinDesk() {
           </div>
         </>
       )}
+
+      <PegHistoryPanel />
 
       <div className="space-y-2">
         <SectionTitle

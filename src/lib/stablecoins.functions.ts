@@ -14,3 +14,10 @@ export const getStablecoinBalances = createServerFn({ method: "GET" })
     const { loadStablecoinBalances } = await import("@/lib/stablecoins.server");
     return loadStablecoinBalances(data.owner);
   });
+
+export const getStablecoinHistory = createServerFn({ method: "GET" })
+  .inputValidator((input: { days?: number }) => ({ days: Math.round(Number(input?.days ?? 90)) || 90 }))
+  .handler(async ({ data }) => {
+    const { loadPegHistory } = await import("@/lib/stablecoin-history.server");
+    return loadPegHistory(data.days);
+  });
