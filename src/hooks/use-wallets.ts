@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { useSession } from "@/hooks/use-soliq-account";
 import { linkWallet, listWallets, setPrimaryWallet, unlinkWallet, walletBalances } from "@/lib/wallets.functions";
 
-export type WalletProviderId = "phantom" | "solflare" | "backpack" | "metamask" | "walletconnect";
+export type WalletProviderId = "metamask" | "walletconnect";
 
 export type WalletProviderMeta = {
   id: WalletProviderId;
@@ -41,76 +41,43 @@ export const walletProviders: WalletProviderMeta[] = [
 ];
 
 
-type SolanaProvider = {
-  isPhantom?: boolean;
-  connect: (opts?: { onlyIfTrusted?: boolean }) => Promise<{ publicKey: { toString: () => string } }>;
-  publicKey?: { toString: () => string } | null;
-};
-
 type EvmProvider = {
   isMetaMask?: boolean;
   request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
 };
 
 type WalletWindow = Window & {
-  phantom?: { solana?: SolanaProvider };
-  solflare?: SolanaProvider;
-  backpack?: SolanaProvider;
-  xnft?: { solana?: SolanaProvider };
-  solana?: SolanaProvider & { isSolflare?: boolean; isBackpack?: boolean };
   ethereum?: EvmProvider & { providers?: EvmProvider[] };
 };
 
 /** Resolve the injected provider for a wallet, tolerating every known injection shape. */
-function injected(id: WalletProviderId): SolanaProvider | EvmProvider | undefined {
+function injected(id: WalletProviderId): EvmProvider | undefined {
   if (typeof window === "undefined") return undefined;
-  const w = window as WalletWindow;
-  if (id === "phantom") return w.phantom?.solana ?? (w.solana?.isPhantom ? w.solana : undefined);
-  if (id === "solflare") return w.solflare ?? (w.solana?.isSolflare ? w.solana : undefined);
-  if (id === "backpack") return w.backpack ?? w.xnft?.solana ?? (w.solana?.isBackpack ? w.solana : undefined);
-  if (id === "metamask") {
-    const eth = w.ethereum;
-    if (!eth) return undefined;
-    const multi = eth.providers?.find((p) => p.isMetaMask);
-    return multi ?? eth;
-  }
-  return w.ethereum;
+  const eth = (window as WalletWindow).ethereum;
+  if (!eth) return undefined;
+  if (id === "metamask") return eth.providers?.find((p) => p.isMetaMask) ?? eth;
+  return eth;
 }
 
 /** Which supported wallet extensions are actually installed in this browser. */
 export function useDetectedWallets() {
   const [available, setAvailable] = useState<Record<WalletProviderId, boolean>>({
-    phantom: false,
-    solflare: false,
-    backpack: false,
     metamask: false,
     walletconnect: true,
   });
 
   useEffect(() => {
-    const scan = () =>
-      setAvailable({
-        phantom: !!injected("phantom"),
-        solflare: !!injected("solflare"),
-        backpack: !!injected("backpack"),
-        metamask: !!injected("metamask"),
-        walletconnect: true,
-      });
+    const scan = () => setAvailable({ metamask: !!injected("metamask"), walletconnect: true });
     scan();
-    // Extensions inject asynchronously — keep polling briefly, and listen for the
-    // standard announcement events both EVM (EIP-6963) and Solana wallets fire.
-    const timers = [150, 400, 900, 1800, 3000].map((ms) => window.setTimeout(scan, ms));
+    // Extensions inject asynchronously — poll briefly and listen for EIP-6963.
+    const timers = [150, 400, 900, 1800].map((ms) => window.setTimeout(scan, ms));
     window.addEventListener("eip6963:announceProvider", scan as EventListener);
     window.addEventListener("ethereum#initialized", scan);
-    window.addEventListener("load", scan);
-    document.addEventListener("visibilitychange", scan);
     window.dispatchEvent(new Event("eip6963:requestProvider"));
     return () => {
       timers.forEach((t) => window.clearTimeout(t));
       window.removeEventListener("eip6963:announceProvider", scan as EventListener);
       window.removeEventListener("ethereum#initialized", scan);
-      window.removeEventListener("load", scan);
-      document.removeEventListener("visibilitychange", scan);
     };
   }, []);
 
@@ -143,17 +110,11 @@ async function connectProvider(id: WalletProviderId): Promise<string> {
   if (id === "walletconnect") return connectWalletConnect();
   const provider = injected(id);
   if (!provider) throw new Error("wallet-missing");
-  if (id === "metamask") {
-    const accounts = (await (provider as EvmProvider).request({ method: "eth_requestAccounts" })) as string[];
-    const address = accounts?.[0];
-    if (!address) throw new Error("No account returned");
-    return address;
-  }
-  const res = await (provider as SolanaProvider).connect();
-  return res.publicKey.toString();
+  const accounts = (await provider.request({ method: "eth_requestAccounts" })) as string[];
+  const address = accounts?.[0];
+  if (!address) throw new Error("No account returned");
+  return address;
 }
-
-
 
 export function useWallets() {
   const { isSignedIn } = useSession();
@@ -193,7 +154,6 @@ export function useWallets() {
         toast.error("Sign in first", { description: "Wallets are linked to your SOLIQ account." });
         return;
       }
-      if (code === "wallet-deeplink") return;
       if (code === "wallet-missing") {
         toast.error("Wallet extension not detected", {
           description: "Unlock the extension (or open SOLIQ in the wallet's browser on mobile) and try again.",
