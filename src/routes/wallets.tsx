@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ShieldCheck, Wallet } from "lucide-react";
 
 import { AppShell } from "@/components/soliq/AppShell";
+import { EmbeddedPreviewNotice } from "@/components/soliq/EmbeddedPreviewNotice";
 import { SwapTerminal } from "@/components/soliq/SwapTerminal";
 import { WalletTerminal } from "@/components/soliq/WalletTerminal";
 
