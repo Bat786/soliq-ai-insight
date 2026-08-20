@@ -46,8 +46,9 @@ const MIN_GAP = () => {
 const budget = { window: 0, used: 0 };
 let chain: Promise<unknown> = Promise.resolve();
 let lastAt = 0;
-/** Set when the API pushes back (429): no requests until this timestamp. */
-let cooldownUntil = 0;
+/** A throttled endpoint family must not black out unrelated provider scopes. */
+const cooldowns = new Map<string, number>();
+const inflight = new Map<string, Promise<unknown>>();
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -91,7 +92,7 @@ export function massiveStatus() {
   return {
     configured: Boolean(apiKey()),
     rpmLimit: Number.isFinite(rpm()) ? rpm() : null,
-    cooldownMs: Math.max(0, cooldownUntil - Date.now()),
+    cooldownMs: Math.max(0, ...[...cooldowns.values()].map((until) => until - Date.now())),
     cacheEntries: cache.size,
     lastSuccessAt: lastOkAt ? new Date(lastOkAt).toISOString() : null,
     lastError: lastErrorNote,
@@ -123,7 +124,7 @@ export async function massiveGet<T>(path: string, opts: { ttl?: number; scope?: 
 
   const key = apiKey();
   if (!key) return stale();
-  if (Date.now() < cooldownUntil) {
+  if (Date.now() < (cooldowns.get(scope) ?? 0)) {
     served.throttled += 1;
     return stale();
   }
@@ -135,24 +136,30 @@ export async function massiveGet<T>(path: string, opts: { ttl?: number; scope?: 
   const sep = path.includes("?") ? "&" : "?";
   const url = `${BASE}${path}${sep}apiKey=${key}`;
 
-  // Exponential backoff: transient 429/5xx answers get up to three attempts
-  // with jittered waits before we fall back to whatever we already cached.
-  for (let attempt = 0; attempt < 3; attempt++) {
-    try {
-      const res = await queued(() => fetch(url, { headers: { Accept: "application/json" } }));
+  const existing = inflight.get(path);
+  if (existing) return existing as Promise<T | null>;
 
-      if (res.status === 429 || res.status >= 500) {
+  const request = (async (): Promise<T | null> => {
+  // One bounded retry for server failures. Rate limits immediately return stale
+  // data and cool down only this scope instead of holding every desk in a queue.
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const res = await queued(() => fetch(url, { headers: { Accept: "application/json" }, signal: AbortSignal.timeout(6_000) }));
+
+      if (res.status === 429) {
         const retryAfter = Number(res.headers.get("retry-after") ?? "");
         const wait = Number.isFinite(retryAfter) && retryAfter > 0
           ? retryAfter * 1000
-          : 400 * 2 ** attempt + Math.floor(Math.random() * 250);
+          : 15_000;
         lastErrorNote = `HTTP ${res.status} on ${scope}`;
-        if (attempt === 2) {
-          if (res.status === 429) cooldownUntil = Date.now() + Math.min(30_000, wait * 2);
-          served.errors += 1;
-          return stale();
-        }
-        await sleep(Math.min(8_000, wait));
+        cooldowns.set(scope, Date.now() + Math.min(30_000, wait));
+        served.throttled += 1;
+        return stale();
+      }
+      if (res.status >= 500) {
+        lastErrorNote = `HTTP ${res.status} on ${scope}`;
+        if (attempt === 1) return stale();
+        await sleep(300);
         continue;
       }
 
@@ -161,7 +168,7 @@ export async function massiveGet<T>(path: string, opts: { ttl?: number; scope?: 
         const note = `${json.message ?? json.error ?? `HTTP ${res.status}`}`;
         lastErrorNote = `${scope}: ${note}`;
         if (/maximum requests per minute/i.test(note)) {
-          cooldownUntil = Date.now() + 15_000;
+          cooldowns.set(scope, Date.now() + 15_000);
           served.throttled += 1;
           return stale();
         }
@@ -183,7 +190,7 @@ export async function massiveGet<T>(path: string, opts: { ttl?: number; scope?: 
       return json as T;
     } catch (e) {
       lastErrorNote = `${scope}: ${(e as Error).message}`;
-      if (attempt === 2) {
+      if (attempt === 1) {
         console.warn(`[massive] ${path} failed: ${(e as Error).message}`);
         served.errors += 1;
         return stale();
@@ -192,6 +199,13 @@ export async function massiveGet<T>(path: string, opts: { ttl?: number; scope?: 
     }
   }
   return stale();
+  })();
+  inflight.set(path, request);
+  try {
+    return await request;
+  } finally {
+    inflight.delete(path);
+  }
 }
 
 /* -------------------------------- aggregates ------------------------------- */
@@ -332,7 +346,7 @@ async function groupedDay(assetClass: AssetClass, dayOffset: number): Promise<Ma
 export async function massiveBoardSeries(
   assetClass: AssetClass,
   symbols: string[],
-  days = 10,
+  days = 3,
 ): Promise<Map<string, Bar[]>> {
   const series = new Map<string, Bar[]>();
   const wanted = new Map(symbols.map((s) => [massiveTicker(assetClass, s), s]));
@@ -340,8 +354,10 @@ export async function massiveBoardSeries(
   // later polls as the request budget allows (closed days cache for hours).
   // Start at the last closed session: the in-progress day is not covered by the
   // daily summary endpoint on this plan.
-  for (let offset = 1; offset <= days; offset++) {
-    const day = await groupedDay(assetClass, offset).catch(() => new Map<string, Bar>());
+  const dayRows = await Promise.all(
+    Array.from({ length: days }, (_, index) => groupedDay(assetClass, index + 1).catch(() => new Map<string, Bar>())),
+  );
+  for (const day of dayRows) {
     if (day.size === 0) continue;
     for (const [ticker, symbol] of wanted) {
       const bar = day.get(ticker);

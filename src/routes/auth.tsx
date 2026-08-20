@@ -3,7 +3,7 @@ import { Apple, Check, Chrome, Mail, ShieldCheck, Sparkles } from "lucide-react"
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
-import { Logo } from "@/components/soliq/AppShell";
+import { Logo } from "@/components/soliq/BrandLogo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";

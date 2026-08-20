@@ -21,7 +21,6 @@ import {
   Waves,
   Building2,
   Wallet,
-  Zap,
   LifeBuoy,
   Scale,
 } from "lucide-react";
@@ -33,6 +32,7 @@ import { NotificationBell } from "@/components/soliq/NotificationBell";
 import { HeaderWallets } from "@/components/soliq/HeaderWallets";
 import { EvmWalletProvider } from "@/components/soliq/EvmWalletProvider";
 import { WalletContextProvider } from "@/components/soliq/WalletContextProvider";
+import { Logo } from "@/components/soliq/BrandLogo";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -67,27 +67,6 @@ const nav = [
   { to: "/settings", label: "Settings", icon: Settings },
   { to: "/support", label: "Support", icon: LifeBuoy },
 ] as const;
-
-export function Logo({ compact = false }: { compact?: boolean }) {
-  return (
-    <Link to="/" className="flex items-center gap-2.5">
-      <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-primary/15 text-primary glow-ring">
-        <Zap className="size-4.5" />
-      </span>
-      {!compact && (
-        <span className="flex flex-col leading-none">
-          <span className="font-display text-lg font-bold tracking-tight">
-            SOL<span className="text-gradient">IQ</span>
-          </span>
-          <span className="mt-0.5 text-[9px] font-medium tracking-[0.22em] text-muted-foreground">
-            POWERED BY AETHRON
-          </span>
-        </span>
-      )}
-    </Link>
-  );
-}
-
 
 export function MemberBadge({ tier, className = "" }: { tier: Tier; className?: string }) {
   if (!isPaid(tier)) return null;
