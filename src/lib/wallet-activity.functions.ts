@@ -4,7 +4,7 @@ import { z } from "zod";
 const schema = z.object({
   address: z.string().min(24).max(64),
   chain: z.enum(["solana", "evm"]),
-  cluster: z.enum(["mainnet-beta", "devnet"]).default("mainnet-beta"),
+  cluster: z.literal("devnet").default("devnet"),
 });
 
 export type WalletActivityInput = z.input<typeof schema>;

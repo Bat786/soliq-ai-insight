@@ -8,7 +8,7 @@ import { solanaRpcEndpoint } from "@/lib/solanaWallet";
 
 import "@solana/wallet-adapter-react-ui/styles.css";
 
-export type Cluster = "mainnet-beta" | "devnet";
+export type Cluster = "devnet";
 
 const CLUSTER_KEY = "soliq.cluster";
 
@@ -42,9 +42,8 @@ export function WalletContextProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const setCluster = useCallback((next: Cluster) => {
-    const devnetOnly = next === "devnet" ? next : "devnet";
-    setClusterState(devnetOnly);
-    window.localStorage.setItem(CLUSTER_KEY, devnetOnly);
+    setClusterState(next);
+    window.localStorage.setItem(CLUSTER_KEY, next);
   }, []);
 
   // All RPC traffic goes through our same-origin Alchemy proxy, so the API key
