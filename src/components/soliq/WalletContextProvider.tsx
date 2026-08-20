@@ -5,6 +5,8 @@ import { WalletModalProvider } from "@solana/wallet-adapter-react-ui";
 import { clusterApiUrl } from "@solana/web3.js";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 
+import { solanaRpcEndpoint } from "@/lib/solanaWallet";
+
 import "@solana/wallet-adapter-react-ui/styles.css";
 
 export type Cluster = "mainnet-beta" | "devnet";
@@ -45,12 +47,9 @@ export function WalletContextProvider({ children }: { children: ReactNode }) {
     window.localStorage.setItem(CLUSTER_KEY, next);
   }, []);
 
-  // Swap the RPC by setting VITE_SOLANA_RPC_URL (e.g. a Helius/Alchemy mainnet
-  // endpoint); otherwise fall back to the public cluster URL.
-  const endpoint = useMemo(() => {
-    const custom = import.meta.env["VITE_SOLANA_RPC_URL"] as string | undefined;
-    return cluster === "mainnet-beta" && custom ? custom : clusterApiUrl(cluster);
-  }, [cluster]);
+  // All RPC traffic goes through our same-origin Alchemy proxy, so the API key
+  // never reaches the browser. Network is set by VITE_SOLANA_NETWORK.
+  const endpoint = useMemo(() => solanaRpcEndpoint(), []);
 
   const ctx = useMemo(() => ({ cluster, setCluster, endpoint }), [cluster, setCluster, endpoint]);
 

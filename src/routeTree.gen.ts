@@ -29,10 +29,12 @@ import { Route as StocksRouteImport } from './routes/stocks'
 import { Route as SupportRouteImport } from './routes/support'
 import { Route as TerminalRouteImport } from './routes/terminal'
 import { Route as TermsRouteImport } from './routes/terms'
+import { Route as WalletTestRouteImport } from './routes/wallet-test'
 import { Route as WalletsRouteImport } from './routes/wallets'
 import { Route as WhalesRouteImport } from './routes/whales'
 import { Route as AssetIdRouteImport } from './routes/asset.$id'
 import { Route as CheckoutReturnRouteImport } from './routes/checkout.return'
+import { Route as ApiPublicSolanaRpcRouteImport } from './routes/api/public/solana-rpc'
 import { Route as SymbolMarketSymbolRouteImport } from './routes/symbol.$market.$symbol'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 
@@ -136,6 +138,11 @@ const TermsRoute = TermsRouteImport.update({
   path: '/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
+const WalletTestRoute = WalletTestRouteImport.update({
+  id: '/wallet-test',
+  path: '/wallet-test',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const WalletsRoute = WalletsRouteImport.update({
   id: '/wallets',
   path: '/wallets',
@@ -154,6 +161,11 @@ const AssetIdRoute = AssetIdRouteImport.update({
 const CheckoutReturnRoute = CheckoutReturnRouteImport.update({
   id: '/checkout/return',
   path: '/checkout/return',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicSolanaRpcRoute = ApiPublicSolanaRpcRouteImport.update({
+  id: '/api/public/solana-rpc',
+  path: '/api/public/solana-rpc',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SymbolMarketSymbolRoute = SymbolMarketSymbolRouteImport.update({
@@ -189,10 +201,12 @@ export interface FileRoutesByFullPath {
   '/support': typeof SupportRoute
   '/terminal': typeof TerminalRoute
   '/terms': typeof TermsRoute
+  '/wallet-test': typeof WalletTestRoute
   '/wallets': typeof WalletsRoute
   '/whales': typeof WhalesRoute
   '/asset/$id': typeof AssetIdRoute
   '/checkout/return': typeof CheckoutReturnRoute
+  '/api/public/solana-rpc': typeof ApiPublicSolanaRpcRoute
   '/symbol/$market/$symbol': typeof SymbolMarketSymbolRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
@@ -217,10 +231,12 @@ export interface FileRoutesByTo {
   '/support': typeof SupportRoute
   '/terminal': typeof TerminalRoute
   '/terms': typeof TermsRoute
+  '/wallet-test': typeof WalletTestRoute
   '/wallets': typeof WalletsRoute
   '/whales': typeof WhalesRoute
   '/asset/$id': typeof AssetIdRoute
   '/checkout/return': typeof CheckoutReturnRoute
+  '/api/public/solana-rpc': typeof ApiPublicSolanaRpcRoute
   '/symbol/$market/$symbol': typeof SymbolMarketSymbolRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
@@ -246,10 +262,12 @@ export interface FileRoutesById {
   '/support': typeof SupportRoute
   '/terminal': typeof TerminalRoute
   '/terms': typeof TermsRoute
+  '/wallet-test': typeof WalletTestRoute
   '/wallets': typeof WalletsRoute
   '/whales': typeof WhalesRoute
   '/asset/$id': typeof AssetIdRoute
   '/checkout/return': typeof CheckoutReturnRoute
+  '/api/public/solana-rpc': typeof ApiPublicSolanaRpcRoute
   '/symbol/$market/$symbol': typeof SymbolMarketSymbolRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
@@ -276,10 +294,12 @@ export interface FileRouteTypes {
     | '/support'
     | '/terminal'
     | '/terms'
+    | '/wallet-test'
     | '/wallets'
     | '/whales'
     | '/asset/$id'
     | '/checkout/return'
+    | '/api/public/solana-rpc'
     | '/symbol/$market/$symbol'
     | '/api/public/payments/webhook'
   fileRoutesByTo: FileRoutesByTo
@@ -304,10 +324,12 @@ export interface FileRouteTypes {
     | '/support'
     | '/terminal'
     | '/terms'
+    | '/wallet-test'
     | '/wallets'
     | '/whales'
     | '/asset/$id'
     | '/checkout/return'
+    | '/api/public/solana-rpc'
     | '/symbol/$market/$symbol'
     | '/api/public/payments/webhook'
   id:
@@ -332,10 +354,12 @@ export interface FileRouteTypes {
     | '/support'
     | '/terminal'
     | '/terms'
+    | '/wallet-test'
     | '/wallets'
     | '/whales'
     | '/asset/$id'
     | '/checkout/return'
+    | '/api/public/solana-rpc'
     | '/symbol/$market/$symbol'
     | '/api/public/payments/webhook'
   fileRoutesById: FileRoutesById
@@ -361,10 +385,12 @@ export interface RootRouteChildren {
   SupportRoute: typeof SupportRoute
   TerminalRoute: typeof TerminalRoute
   TermsRoute: typeof TermsRoute
+  WalletTestRoute: typeof WalletTestRoute
   WalletsRoute: typeof WalletsRoute
   WhalesRoute: typeof WhalesRoute
   AssetIdRoute: typeof AssetIdRoute
   CheckoutReturnRoute: typeof CheckoutReturnRoute
+  ApiPublicSolanaRpcRoute: typeof ApiPublicSolanaRpcRoute
   SymbolMarketSymbolRoute: typeof SymbolMarketSymbolRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
 }
@@ -511,6 +537,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TermsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/wallet-test': {
+      id: '/wallet-test'
+      path: '/wallet-test'
+      fullPath: '/wallet-test'
+      preLoaderRoute: typeof WalletTestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/wallets': {
       id: '/wallets'
       path: '/wallets'
@@ -537,6 +570,13 @@ declare module '@tanstack/react-router' {
       path: '/checkout/return'
       fullPath: '/checkout/return'
       preLoaderRoute: typeof CheckoutReturnRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/solana-rpc': {
+      id: '/api/public/solana-rpc'
+      path: '/api/public/solana-rpc'
+      fullPath: '/api/public/solana-rpc'
+      preLoaderRoute: typeof ApiPublicSolanaRpcRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/symbol/$market/$symbol': {
@@ -577,10 +617,12 @@ const rootRouteChildren: RootRouteChildren = {
   SupportRoute: SupportRoute,
   TerminalRoute: TerminalRoute,
   TermsRoute: TermsRoute,
+  WalletTestRoute: WalletTestRoute,
   WalletsRoute: WalletsRoute,
   WhalesRoute: WhalesRoute,
   AssetIdRoute: AssetIdRoute,
   CheckoutReturnRoute: CheckoutReturnRoute,
+  ApiPublicSolanaRpcRoute: ApiPublicSolanaRpcRoute,
   SymbolMarketSymbolRoute: SymbolMarketSymbolRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
 }
