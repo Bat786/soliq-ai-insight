@@ -15,6 +15,27 @@ const rpcWebsocketsBrowser = fileURLToPath(
   new URL("./node_modules/rpc-websockets/dist/index.browser.mjs", import.meta.url),
 );
 
+// In the *browser* build a bare `buffer` import is treated as a Node builtin and
+// left out of the bundle, so `Buffer` ends up undefined and @solana/web3.js dies
+// at module scope ("undefined is not an object (evaluating 'r.from')") which
+// blanks any page that mounts the wallet adapter. Point the client build at the
+// pure-JS npm package. Only the client — the SSR/worker environments have a real
+// Buffer and must keep the builtin (aliasing there breaks the dev SSR runner).
+const bufferShim = fileURLToPath(new URL("./node_modules/buffer/index.js", import.meta.url));
+
+/** Resolves `buffer` to the pure-JS package in the browser build only. */
+const clientBufferShim = {
+  name: "soliq-client-buffer-shim",
+  enforce: "pre" as const,
+  // Dev relies on Vite's dep optimizer (which handles the CJS interop); only the
+  // production build needs the explicit redirect.
+  apply: "build" as const,
+  applyToEnvironment: (env: { name: string }) => env.name === "client",
+  resolveId(id: string) {
+    return id === "buffer" || id === "node:buffer" ? bufferShim : null;
+  },
+};
+
 export default defineConfig({
   tanstackStart: {
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
@@ -22,14 +43,17 @@ export default defineConfig({
     server: { entry: "server" },
   },
   vite: {
+    plugins: [clientBufferShim],
     resolve: {
       alias: [{ find: /^rpc-websockets$/, replacement: rpcWebsocketsBrowser }],
     },
     // Solana libs reach for Node's `Buffer` at module scope. Let Vite pre-bundle
-    // the pure-JS `buffer` package so its CJS exports get proper ESM interop —
-    // hand-rolled aliasing to the raw CJS file breaks the default/named exports.
+    // the pure-JS `buffer` package so its CJS exports get proper ESM interop.
     optimizeDeps: { include: ["buffer"] },
   },
 });
+
+
+
 
 

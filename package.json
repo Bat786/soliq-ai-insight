@@ -54,6 +54,7 @@
     "@tanstack/router-plugin": "^1.168.23",
     "@walletconnect/ethereum-provider": "^2.23.10",
     "bs58": "^6.0.0",
+    "buffer": "^6.0.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
