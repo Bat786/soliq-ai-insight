@@ -9,7 +9,7 @@
  * this module is imported only from server functions.
  */
 
-import { massiveConfigured, massiveDailyBars, massivePrevBar } from "@/lib/massive.server";
+import { massiveConfigured, massiveDailyBars } from "@/lib/massive.server";
 import { alchemyRpcUrl, solanaNetwork } from "@/lib/solanaWallet.server";
 
 export type StablecoinRow = {
@@ -104,11 +104,13 @@ async function mintSupply(mint: string): Promise<number | null> {
 
 async function loadRow(coin: Coin, network: string, notes: string[]): Promise<StablecoinRow> {
   const mint = coin.mints[network] ?? null;
-  const [prev, daily, supply] = await Promise.all([
-    massivePrevBar("crypto", coin.pair).catch(() => null),
+  // One Massive call per coin (daily bars carry price, range and volume) — the
+  // per-minute request budget is small and shared with every other desk.
+  const [daily, supply] = await Promise.all([
     massiveDailyBars("crypto", coin.pair, 45).catch(() => null),
     mint ? mintSupply(mint).catch(() => null) : Promise.resolve(null),
   ]);
+  const prev = daily?.at(-1) ?? null;
 
   const bars = daily ?? [];
   const last = bars.at(-1) ?? prev;
@@ -146,7 +148,8 @@ export async function loadStablecoinDesk(): Promise<StablecoinDesk> {
   const notes: string[] = [];
   if (!massiveConfigured()) notes.push("MASSIVE_API_KEY missing — market data unavailable");
 
-  const rows = await Promise.all(COINS.map((c) => loadRow(c, network, notes)));
+  const rows: StablecoinRow[] = [];
+  for (const coin of COINS) rows.push(await loadRow(coin, network, notes));
   const priced = rows.filter((r) => r.price > 0);
 
   return {
