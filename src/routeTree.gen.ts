@@ -33,6 +33,7 @@ import { Route as WalletsRouteImport } from './routes/wallets'
 import { Route as WhalesRouteImport } from './routes/whales'
 import { Route as AssetIdRouteImport } from './routes/asset.$id'
 import { Route as CheckoutReturnRouteImport } from './routes/checkout.return'
+import { Route as ApiPublicSolanaRpcRouteImport } from './routes/api/public/solana-rpc'
 import { Route as SymbolMarketSymbolRouteImport } from './routes/symbol.$market.$symbol'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 
@@ -156,6 +157,11 @@ const CheckoutReturnRoute = CheckoutReturnRouteImport.update({
   path: '/checkout/return',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicSolanaRpcRoute = ApiPublicSolanaRpcRouteImport.update({
+  id: '/api/public/solana-rpc',
+  path: '/api/public/solana-rpc',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SymbolMarketSymbolRoute = SymbolMarketSymbolRouteImport.update({
   id: '/symbol/$market/$symbol',
   path: '/symbol/$market/$symbol',
@@ -193,6 +199,7 @@ export interface FileRoutesByFullPath {
   '/whales': typeof WhalesRoute
   '/asset/$id': typeof AssetIdRoute
   '/checkout/return': typeof CheckoutReturnRoute
+  '/api/public/solana-rpc': typeof ApiPublicSolanaRpcRoute
   '/symbol/$market/$symbol': typeof SymbolMarketSymbolRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
@@ -221,6 +228,7 @@ export interface FileRoutesByTo {
   '/whales': typeof WhalesRoute
   '/asset/$id': typeof AssetIdRoute
   '/checkout/return': typeof CheckoutReturnRoute
+  '/api/public/solana-rpc': typeof ApiPublicSolanaRpcRoute
   '/symbol/$market/$symbol': typeof SymbolMarketSymbolRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
@@ -250,6 +258,7 @@ export interface FileRoutesById {
   '/whales': typeof WhalesRoute
   '/asset/$id': typeof AssetIdRoute
   '/checkout/return': typeof CheckoutReturnRoute
+  '/api/public/solana-rpc': typeof ApiPublicSolanaRpcRoute
   '/symbol/$market/$symbol': typeof SymbolMarketSymbolRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
@@ -280,6 +289,7 @@ export interface FileRouteTypes {
     | '/whales'
     | '/asset/$id'
     | '/checkout/return'
+    | '/api/public/solana-rpc'
     | '/symbol/$market/$symbol'
     | '/api/public/payments/webhook'
   fileRoutesByTo: FileRoutesByTo
@@ -308,6 +318,7 @@ export interface FileRouteTypes {
     | '/whales'
     | '/asset/$id'
     | '/checkout/return'
+    | '/api/public/solana-rpc'
     | '/symbol/$market/$symbol'
     | '/api/public/payments/webhook'
   id:
@@ -336,6 +347,7 @@ export interface FileRouteTypes {
     | '/whales'
     | '/asset/$id'
     | '/checkout/return'
+    | '/api/public/solana-rpc'
     | '/symbol/$market/$symbol'
     | '/api/public/payments/webhook'
   fileRoutesById: FileRoutesById
@@ -365,6 +377,7 @@ export interface RootRouteChildren {
   WhalesRoute: typeof WhalesRoute
   AssetIdRoute: typeof AssetIdRoute
   CheckoutReturnRoute: typeof CheckoutReturnRoute
+  ApiPublicSolanaRpcRoute: typeof ApiPublicSolanaRpcRoute
   SymbolMarketSymbolRoute: typeof SymbolMarketSymbolRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
 }
@@ -539,6 +552,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CheckoutReturnRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/solana-rpc': {
+      id: '/api/public/solana-rpc'
+      path: '/api/public/solana-rpc'
+      fullPath: '/api/public/solana-rpc'
+      preLoaderRoute: typeof ApiPublicSolanaRpcRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/symbol/$market/$symbol': {
       id: '/symbol/$market/$symbol'
       path: '/symbol/$market/$symbol'
@@ -581,6 +601,7 @@ const rootRouteChildren: RootRouteChildren = {
   WhalesRoute: WhalesRoute,
   AssetIdRoute: AssetIdRoute,
   CheckoutReturnRoute: CheckoutReturnRoute,
+  ApiPublicSolanaRpcRoute: ApiPublicSolanaRpcRoute,
   SymbolMarketSymbolRoute: SymbolMarketSymbolRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
 }
