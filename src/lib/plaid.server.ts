@@ -22,12 +22,15 @@ function creds(): Creds {
   const clientId = process.env["PLAID_CLIENT_ID"];
   const secret = process.env["PLAID_SECRET"];
   if (!clientId || !secret) throw new Error("plaid:not-configured");
-  const env = (process.env["PLAID_ENV"] ?? "sandbox").toLowerCase();
-  return { clientId, secret, host: HOSTS[env] ?? HOSTS["sandbox"]! };
+  const env = (process.env["PLAID_ENV"] ?? "").toLowerCase();
+  const host = HOSTS[env];
+  if (!host) throw new Error("plaid:invalid-environment");
+  return { clientId, secret, host };
 }
 
 export function plaidConfigured(): boolean {
-  return Boolean(process.env["PLAID_CLIENT_ID"] && process.env["PLAID_SECRET"]);
+  const env = (process.env["PLAID_ENV"] ?? "").toLowerCase();
+  return Boolean(process.env["PLAID_CLIENT_ID"] && process.env["PLAID_SECRET"] && HOSTS[env]);
 }
 
 export function plaidEnv(): string {
@@ -40,6 +43,7 @@ async function call<T>(endpoint: string, body: Record<string, unknown>): Promise
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ client_id: clientId, secret, ...body }),
+    signal: AbortSignal.timeout(15_000),
   });
   const text = await res.text();
   if (!res.ok) {

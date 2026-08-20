@@ -31,6 +31,8 @@ import { AppearanceMenu } from "@/components/soliq/AppearanceMenu";
 import { DemoBanner } from "@/components/soliq/DemoBanner";
 import { NotificationBell } from "@/components/soliq/NotificationBell";
 import { HeaderWallets } from "@/components/soliq/HeaderWallets";
+import { EvmWalletProvider } from "@/components/soliq/EvmWalletProvider";
+import { WalletContextProvider } from "@/components/soliq/WalletContextProvider";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -279,6 +281,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   return (
+    <WalletContextProvider>
+      <EvmWalletProvider>
     <div className="min-h-screen bg-background">
       <div className="hidden lg:fixed lg:inset-y-0 lg:left-0 lg:flex lg:w-60 lg:flex-col border-r border-border bg-sidebar/80 backdrop-blur-xl">
         <div className="px-5 py-5">
@@ -367,5 +371,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       </nav>
 
     </div>
+      </EvmWalletProvider>
+    </WalletContextProvider>
   );
 }

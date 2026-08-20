@@ -10,9 +10,6 @@ import {
 import { useEffect, type ReactNode } from "react";
 
 import { SplashGate } from "@/components/soliq/Splash";
-import { WalletContextProvider } from "@/components/soliq/WalletContextProvider";
-import { EvmWalletProvider } from "@/components/soliq/EvmWalletProvider";
-
 import { ThemeProvider } from "@/components/soliq/ThemeProvider";
 import { Toaster } from "@/components/ui/sonner";
 
@@ -150,17 +147,13 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <WalletContextProvider>
-        <EvmWalletProvider>
-          <ThemeProvider>
-            <SplashGate>
-              {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-              <Outlet />
-            </SplashGate>
-            <Toaster />
-          </ThemeProvider>
-        </EvmWalletProvider>
-      </WalletContextProvider>
+      <ThemeProvider>
+        <SplashGate>
+          {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+          <Outlet />
+        </SplashGate>
+        <Toaster />
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }

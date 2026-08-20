@@ -47,7 +47,7 @@ async function snapUser(userId: string): Promise<SnapUser> {
   }
 
   const registered = await registerSnapUser(`soliq-${userId}`);
-  await admin.from("broker_provider_secrets").upsert(
+  const { error } = await admin.from("broker_provider_secrets").upsert(
     {
       user_id: userId,
       provider: PROVIDER,
@@ -56,10 +56,7 @@ async function snapUser(userId: string): Promise<SnapUser> {
     },
     { onConflict: "user_id,provider" },
   );
-  await admin.from("broker_connections").upsert(
-    { user_id: userId, provider: PROVIDER, provider_user_id: registered.userId, status: "pending" },
-    { onConflict: "id", ignoreDuplicates: true },
-  );
+  if (error) throw new Error(`brokerage:database:${error.message}`);
   return registered;
 }
 
@@ -122,8 +119,10 @@ async function syncConnectionRows(userId: string, connections: BrokerConnection[
         disabled_reason: c.disabled ? "Connection disabled by the brokerage — reconnect required." : null,
         last_synced_at: new Date().toISOString(),
       };
-      if (existing?.id) await admin.from("broker_connections").update(row).eq("id", existing.id);
-      else await admin.from("broker_connections").insert(row);
+      const result = existing?.id
+        ? await admin.from("broker_connections").update(row).eq("id", existing.id)
+        : await admin.from("broker_connections").insert(row);
+      if (result.error) throw result.error;
     }
   } catch {
     // advisory only
@@ -281,7 +280,7 @@ async function persist(
       if (!accountId) continue;
 
       if (a.positions.length) {
-        await admin.from("broker_positions").insert(
+        const { error } = await admin.from("broker_positions").upsert(
           a.positions.map((p) => ({
             user_id: userId,
             account_id: accountId,
@@ -292,12 +291,14 @@ async function persist(
             unrealized_pnl: p.unrealizedPnl,
             currency: p.currency,
           })),
+          { onConflict: "account_id,symbol" },
         );
+        if (error) throw error;
       }
 
       const mine = activities.filter((t) => t.accountId === a.id).slice(0, 200);
       if (mine.length) {
-        await admin.from("broker_transactions").insert(
+        const { error } = await admin.from("broker_transactions").upsert(
           mine.map((t) => ({
             user_id: userId,
             account_id: accountId,
@@ -312,7 +313,9 @@ async function persist(
             currency: t.currency,
             executed_at: t.executedAt ? new Date(t.executedAt).toISOString() : null,
           })),
+          { onConflict: "account_id,provider_transaction_id", ignoreDuplicates: true },
         );
+        if (error) throw error;
       }
     }
   } catch {

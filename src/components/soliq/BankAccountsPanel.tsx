@@ -11,6 +11,7 @@ import { createBankLinkToken, exchangeBankPublicToken, getBankSnapshot, unlinkBa
 import { fmtUsd } from "@/lib/format";
 
 const PLAID_SCRIPT = "https://cdn.plaid.com/link/v2/stable/link-initialize.js";
+let plaidScriptPromise: Promise<PlaidGlobal> | null = null;
 
 type PlaidHandler = { open: () => void; destroy: () => void };
 type PlaidGlobal = {
@@ -25,7 +26,9 @@ type PlaidGlobal = {
 function loadPlaid(): Promise<PlaidGlobal> {
   const existing = (window as unknown as { Plaid?: PlaidGlobal }).Plaid;
   if (existing) return Promise.resolve(existing);
-  return new Promise((resolve, reject) => {
+  if (plaidScriptPromise) return plaidScriptPromise;
+  plaidScriptPromise = new Promise((resolve, reject) => {
+    const loadedTag = document.querySelector<HTMLScriptElement>(`script[src="${PLAID_SCRIPT}"]`);
     const tag = document.createElement("script");
     tag.src = PLAID_SCRIPT;
     tag.async = true;
@@ -33,9 +36,18 @@ function loadPlaid(): Promise<PlaidGlobal> {
       const plaid = (window as unknown as { Plaid?: PlaidGlobal }).Plaid;
       plaid ? resolve(plaid) : reject(new Error("plaid-link-unavailable"));
     };
-    tag.onerror = () => reject(new Error("plaid-script-failed"));
-    document.head.appendChild(tag);
+    tag.onerror = () => {
+      plaidScriptPromise = null;
+      reject(new Error("plaid-script-failed"));
+    };
+    if (loadedTag) {
+      loadedTag.addEventListener("load", tag.onload as EventListener, { once: true });
+      loadedTag.addEventListener("error", tag.onerror as EventListener, { once: true });
+    } else {
+      document.head.appendChild(tag);
+    }
   });
+  return plaidScriptPromise;
 }
 
 /**
