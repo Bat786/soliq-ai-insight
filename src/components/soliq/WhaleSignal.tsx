@@ -48,11 +48,11 @@ export function WhaleSignalCard({ compact = false }: { compact?: boolean }) {
       </div>
     );
   }
-  if (isError || !data) {
+  if (isError || !data || !data.available) {
     return (
       <div className="panel p-4">
         <p className="text-[10px] tracking-wide text-muted-foreground uppercase">Whale flow</p>
-        <p className="mt-2 text-xs text-bear">Whale feed unavailable right now.</p>
+        <p className="mt-2 text-xs text-bear">{data?.error ?? "Whale feed unavailable right now."}</p>
       </div>
     );
   }

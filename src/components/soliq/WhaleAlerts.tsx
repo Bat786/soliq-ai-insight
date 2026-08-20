@@ -46,7 +46,8 @@ const defaultRules: Rule[] = [
 
 /** User-defined whale alerts evaluated live against the Unusual Whales tape. */
 export function WhaleAlerts() {
-  const { data } = useWhaleFeed();
+  const { data: feed } = useWhaleFeed();
+  const data = feed?.available ? feed : undefined;
   const [rules, setRules] = useState<Rule[]>([]);
   const [hits, setHits] = useState<Hit[]>([]);
   const [ticker, setTicker] = useState("");
