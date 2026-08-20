@@ -27,6 +27,9 @@ const bufferShim = fileURLToPath(new URL("./node_modules/buffer/index.js", impor
 const clientBufferShim = {
   name: "soliq-client-buffer-shim",
   enforce: "pre" as const,
+  // Dev relies on Vite's dep optimizer (which handles the CJS interop); only the
+  // production build needs the explicit redirect.
+  apply: "build" as const,
   applyToEnvironment: (env: { name: string }) => env.name === "client",
   resolveId(id: string) {
     return id === "buffer" || id === "node:buffer" ? bufferShim : null;
