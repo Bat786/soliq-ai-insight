@@ -304,8 +304,18 @@ async function loadBars(symbol: string) {
       () => [] as Record<string, unknown>[],
     ),
   ]);
-  const m1 = parseBars(fine);
-  const m5 = parseBars(coarse);
+  let m1 = parseBars(fine);
+  let m5 = parseBars(coarse);
+  // If the options tape is unavailable, fall back to the keyless market tape.
+  if (m1.length <= 3 && m5.length <= 3) {
+    const { loadBars: loadTapeBars } = await import("./tape.server");
+    const [t1, t5] = await Promise.all([
+      loadTapeBars(symbol, { interval: "1m", range: "1d" }).catch(() => [] as Bar[]),
+      loadTapeBars(symbol, { interval: "5m", range: "5d" }).catch(() => [] as Bar[]),
+    ]);
+    m1 = t1;
+    m5 = t5.length > 3 ? t5 : t1;
+  }
   return {
     "1m": m1.length > 3 ? m1 : m5,
     "5m": m5.length > 3 ? m5 : m1,
