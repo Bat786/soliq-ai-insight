@@ -21,18 +21,26 @@ export type AssetClass = "stocks" | "crypto" | "fx" | "indices";
 
 /* ------------------------------ rate metering ----------------------------- */
 
-// Requests per minute we allow ourselves. Default is unlimited (the upgraded
-// plan has no documented per-minute wall); set MASSIVE_RPM to a number to cap
-// throughput again, or to "unlimited"/"0" to be explicit about no cap.
+// Requests per minute we allow ourselves. The current key answers with
+// "exceeded the maximum requests per minute" after ~5 calls in a rolling
+// minute, so default to that budget: an unmetered stampede burns the whole
+// allowance in one board refresh and then every desk falls back to stale data.
+// Set MASSIVE_RPM to a number when the plan is upgraded, or to
+// "unlimited"/"0"/"none" to remove the cap entirely.
+const DEFAULT_RPM = 5;
 const rpm = (): number => {
   const raw = (process.env["MASSIVE_RPM"] ?? "").trim().toLowerCase();
-  if (!raw || raw === "unlimited" || raw === "0" || raw === "none") return Infinity;
+  if (raw === "unlimited" || raw === "0" || raw === "none") return Infinity;
+  if (!raw) return DEFAULT_RPM;
   const n = Number(raw);
-  return Number.isFinite(n) && n > 0 ? Math.floor(n) : Infinity;
+  return Number.isFinite(n) && n > 0 ? Math.floor(n) : DEFAULT_RPM;
 };
+// Spacing between calls. Capped at 1.2s so a small per-minute budget never
+// makes a desk wait tens of seconds — the token budget already protects the
+// allowance, the gap only smooths bursts.
 const MIN_GAP = () => {
   const limit = rpm();
-  return Number.isFinite(limit) ? Math.max(60, Math.ceil(60_000 / limit) + 20) : 0;
+  return Number.isFinite(limit) ? Math.min(1_200, Math.max(60, Math.ceil(60_000 / limit) + 20)) : 0;
 };
 
 const budget = { window: 0, used: 0 };
