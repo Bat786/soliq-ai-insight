@@ -298,18 +298,23 @@ function WalletMenu({ className, sync }: { className?: string | undefined; sync:
                     />
                   ))}
 
-                  {loadable.map((a: Adapter) => (
-                    <Row
-                      key={a.name}
-                      tone="muted"
-                      onClick={() => pick(a.name)}
-                      icon={a.icon ? <img src={a.icon} alt="" /> : <ExternalLink />}
-                      label={a.name}
-                      hint={
-                        pending === a.name ? "Opening wallet…" : "No extension found · continues on the wallet's site"
-                      }
-                    />
-                  ))}
+                  {/* Loadable adapters (Solflare web wallet, Phantom on iOS)
+                      navigate the tab to the wallet's own site on connect().
+                      On desktop that reads as "SOLIQ redirected me instead of
+                      opening my extension", so they are only offered on mobile
+                      where it is the only working path. */}
+                  {mobile &&
+                    loadable.map((a: Adapter) => (
+                      <Row
+                        key={a.name}
+                        tone="muted"
+                        onClick={() => pick(a.name)}
+                        icon={a.icon ? <img src={a.icon} alt="" /> : <ExternalLink />}
+                        label={a.name}
+                        hint={pending === a.name ? "Opening wallet…" : "Continues in the wallet app"}
+                      />
+                    ))}
+
 
                   {mobile && solanaGap && (
                     <>
