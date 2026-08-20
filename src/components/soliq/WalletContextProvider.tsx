@@ -27,12 +27,13 @@ export const useCluster = () => useContext(ClusterContext);
 /**
  * Official @solana/wallet-adapter setup:
  *
- *   ConnectionProvider -> WalletProvider (wallets=[]) -> WalletModalProvider
+ *   ConnectionProvider -> WalletProvider (wallets) -> WalletModalProvider
  *
- * The wallets array is intentionally EMPTY. Phantom, Solflare, Backpack and
- * Magic Eden Wallet all self-register through the Wallet Standard, so the
- * adapter detects installed extensions on its own. Hand-constructed adapter
- * instances would duplicate or shadow those registrations.
+ * Phantom + Solflare adapters are passed explicitly so MOBILE works: with no
+ * injected extension (mobile Safari/Chrome) these adapters deep-link into the
+ * wallet app instead of the modal showing an empty "you'll need a wallet"
+ * state. On desktop, wallet-adapter dedupes them against the same wallets
+ * self-registered through the Wallet Standard, so there is no duplication.
  */
 export function WalletContextProvider({ children }: { children: ReactNode }) {
   const [cluster, setClusterState] = useState<Cluster>("devnet");
