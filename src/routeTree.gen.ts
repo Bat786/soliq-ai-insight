@@ -29,6 +29,7 @@ import { Route as StocksRouteImport } from './routes/stocks'
 import { Route as SupportRouteImport } from './routes/support'
 import { Route as TerminalRouteImport } from './routes/terminal'
 import { Route as TermsRouteImport } from './routes/terms'
+import { Route as WalletTestRouteImport } from './routes/wallet-test'
 import { Route as WalletsRouteImport } from './routes/wallets'
 import { Route as WhalesRouteImport } from './routes/whales'
 import { Route as AssetIdRouteImport } from './routes/asset.$id'
@@ -137,6 +138,11 @@ const TermsRoute = TermsRouteImport.update({
   path: '/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
+const WalletTestRoute = WalletTestRouteImport.update({
+  id: '/wallet-test',
+  path: '/wallet-test',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const WalletsRoute = WalletsRouteImport.update({
   id: '/wallets',
   path: '/wallets',
@@ -195,6 +201,7 @@ export interface FileRoutesByFullPath {
   '/support': typeof SupportRoute
   '/terminal': typeof TerminalRoute
   '/terms': typeof TermsRoute
+  '/wallet-test': typeof WalletTestRoute
   '/wallets': typeof WalletsRoute
   '/whales': typeof WhalesRoute
   '/asset/$id': typeof AssetIdRoute
@@ -224,6 +231,7 @@ export interface FileRoutesByTo {
   '/support': typeof SupportRoute
   '/terminal': typeof TerminalRoute
   '/terms': typeof TermsRoute
+  '/wallet-test': typeof WalletTestRoute
   '/wallets': typeof WalletsRoute
   '/whales': typeof WhalesRoute
   '/asset/$id': typeof AssetIdRoute
@@ -254,6 +262,7 @@ export interface FileRoutesById {
   '/support': typeof SupportRoute
   '/terminal': typeof TerminalRoute
   '/terms': typeof TermsRoute
+  '/wallet-test': typeof WalletTestRoute
   '/wallets': typeof WalletsRoute
   '/whales': typeof WhalesRoute
   '/asset/$id': typeof AssetIdRoute
@@ -285,6 +294,7 @@ export interface FileRouteTypes {
     | '/support'
     | '/terminal'
     | '/terms'
+    | '/wallet-test'
     | '/wallets'
     | '/whales'
     | '/asset/$id'
@@ -314,6 +324,7 @@ export interface FileRouteTypes {
     | '/support'
     | '/terminal'
     | '/terms'
+    | '/wallet-test'
     | '/wallets'
     | '/whales'
     | '/asset/$id'
@@ -343,6 +354,7 @@ export interface FileRouteTypes {
     | '/support'
     | '/terminal'
     | '/terms'
+    | '/wallet-test'
     | '/wallets'
     | '/whales'
     | '/asset/$id'
@@ -373,6 +385,7 @@ export interface RootRouteChildren {
   SupportRoute: typeof SupportRoute
   TerminalRoute: typeof TerminalRoute
   TermsRoute: typeof TermsRoute
+  WalletTestRoute: typeof WalletTestRoute
   WalletsRoute: typeof WalletsRoute
   WhalesRoute: typeof WhalesRoute
   AssetIdRoute: typeof AssetIdRoute
@@ -524,6 +537,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TermsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/wallet-test': {
+      id: '/wallet-test'
+      path: '/wallet-test'
+      fullPath: '/wallet-test'
+      preLoaderRoute: typeof WalletTestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/wallets': {
       id: '/wallets'
       path: '/wallets'
@@ -597,6 +617,7 @@ const rootRouteChildren: RootRouteChildren = {
   SupportRoute: SupportRoute,
   TerminalRoute: TerminalRoute,
   TermsRoute: TermsRoute,
+  WalletTestRoute: WalletTestRoute,
   WalletsRoute: WalletsRoute,
   WhalesRoute: WhalesRoute,
   AssetIdRoute: AssetIdRoute,
