@@ -53,6 +53,8 @@ export function WalletContextProvider({ children }: { children: ReactNode }) {
   // never reaches the browser. Network is set by VITE_SOLANA_NETWORK.
   const endpoint = useMemo(() => solanaRpcEndpoint(), []);
 
+  const wallets = useMemo(() => [new PhantomWalletAdapter(), new SolflareWalletAdapter()], []);
+
   const ctx = useMemo(() => ({ cluster, setCluster, endpoint }), [cluster, setCluster, endpoint]);
 
   return (
