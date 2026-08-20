@@ -7,7 +7,6 @@ import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { useSession } from "@/hooks/use-soliq-account";
-import { readConnectReturn } from "@/lib/wallet-deeplink";
 import { linkWallet, listWallets, setPrimaryWallet, unlinkWallet, walletBalances } from "@/lib/wallets.functions";
 
 export type WalletProviderId = "phantom" | "solflare" | "backpack" | "metamask" | "walletconnect";
@@ -140,30 +139,10 @@ async function connectWalletConnect(): Promise<string> {
   return address;
 }
 
-/** Mobile deep links that open this site inside the wallet's in-app browser. */
-const deepLinks: Partial<Record<WalletProviderId, (url: string) => string>> = {
-  phantom: (url) => `https://phantom.app/ul/browse/${encodeURIComponent(url)}?ref=${encodeURIComponent(url)}`,
-  solflare: (url) => `https://solflare.com/ul/v1/browse/${encodeURIComponent(url)}?ref=${encodeURIComponent(url)}`,
-  backpack: (url) => `https://backpack.app/ul/v1/browse/${encodeURIComponent(url)}`,
-  metamask: (url) => `https://metamask.app.link/dapp/${url.replace(/^https?:\/\//, "")}`,
-};
-
-function openInWalletApp(id: WalletProviderId) {
-  if (typeof window === "undefined") return false;
-  const mobile = /android|iphone|ipad|ipod/i.test(navigator.userAgent);
-  const build = deepLinks[id];
-  if (!mobile || !build) return false;
-  window.location.href = build(window.location.href);
-  return true;
-}
-
 async function connectProvider(id: WalletProviderId): Promise<string> {
   if (id === "walletconnect") return connectWalletConnect();
   const provider = injected(id);
-  if (!provider) {
-    if (openInWalletApp(id)) throw new Error("wallet-deeplink");
-    throw new Error("wallet-missing");
-  }
+  if (!provider) throw new Error("wallet-missing");
   if (id === "metamask") {
     const accounts = (await (provider as EvmProvider).request({ method: "eth_requestAccounts" })) as string[];
     const address = accounts?.[0];
@@ -331,62 +310,4 @@ export function useSolanaAdapterLink() {
   }, [address, connected, isSignedIn, providerName, queryClient, runLink]);
 
   return { address, connected, providerName, disconnect };
-}
-
-/**
- * Completes a mobile universal-link connect (Phantom / Solflare). The wallet app
- * redirects back with an encrypted payload; we decrypt it, expose the address
- * and persist it on the SOLIQ account exactly like the extension flow.
- */
-let mobileSessionCache: { address: string; providerName: string } | null = null;
-let mobileSessionHandled = false;
-
-export function useMobileWalletSession() {
-  const { isSignedIn } = useSession();
-  const queryClient = useQueryClient();
-  const runLink = useServerFn(linkWallet);
-  const [session, setSession] = useState<{ address: string; providerName: string } | null>(mobileSessionCache);
-
-  useEffect(() => {
-    if (mobileSessionHandled) {
-      setSession(mobileSessionCache);
-      return;
-    }
-    mobileSessionHandled = true;
-
-    let result: ReturnType<typeof readConnectReturn> = null;
-    try {
-      result = readConnectReturn();
-    } catch {
-      return;
-    }
-    if (!result) return;
-
-    if ("error" in result) {
-      toast.error("Wallet connection failed", { description: result.error.slice(0, 140) });
-      return;
-    }
-
-    const providerName = result.wallet === "phantom" ? "Phantom" : "Solflare";
-    mobileSessionCache = { address: result.address, providerName };
-    setSession(mobileSessionCache);
-
-    if (!isSignedIn) {
-      toast.info(`${providerName} connected`, { description: "Sign in to save this wallet to your SOLIQ account." });
-      return;
-    }
-    void runLink({
-      data: { chain: "solana", provider: providerName, address: result.address, label: providerName },
-    })
-      .then(() => {
-        void queryClient.invalidateQueries({ queryKey: ["wallets"] });
-        void queryClient.invalidateQueries({ queryKey: ["wallet-balances"] });
-        toast.success(`${providerName} linked`, {
-          description: `${result.address.slice(0, 6)}…${result.address.slice(-4)}`,
-        });
-      })
-      .catch(() => toast.error("Could not link that wallet"));
-  }, [isSignedIn, queryClient, runLink]);
-
-  return session;
 }
