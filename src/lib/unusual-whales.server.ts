@@ -63,6 +63,8 @@ export type WhaleFeed = {
   sectors: SectorEtf[];
   netImpact: { bullish: NetImpact[]; bearish: NetImpact[] };
   updatedAt: number;
+  available: boolean;
+  error: string | null;
 };
 
 const num = (v: unknown): number => {
@@ -169,12 +171,24 @@ function fmtBig(n: number): string {
 }
 
 export async function loadWhaleFeed(): Promise<WhaleFeed> {
+  /** Provider/auth failures must degrade to an "unavailable" feed, never throw
+   *  (a thrown server function blanks the page for every whale consumer). */
+  let failure: string | null = null;
+  const soft = async (p: Promise<Record<string, unknown>[]>) => {
+    try {
+      return await p;
+    } catch (e) {
+      failure ??= e instanceof Error ? e.message : String(e);
+      return [] as Record<string, unknown>[];
+    }
+  };
+
   const [tideRaw, darkRaw, alertRaw, sectorRaw, impactRaw] = await Promise.all([
-    uw<Record<string, unknown>[]>("/api/market/market-tide"),
-    uw<Record<string, unknown>[]>("/api/darkpool/recent", { limit: 200 }),
-    uw<Record<string, unknown>[]>("/api/option-trades/flow-alerts", { limit: 60 }),
-    uw<Record<string, unknown>[]>("/api/market/sector-etfs").catch(() => []),
-    uw<Record<string, unknown>[]>("/api/market/top-net-impact").catch(() => []),
+    soft(uw<Record<string, unknown>[]>("/api/market/market-tide")),
+    soft(uw<Record<string, unknown>[]>("/api/darkpool/recent", { limit: 200 })),
+    soft(uw<Record<string, unknown>[]>("/api/option-trades/flow-alerts", { limit: 60 })),
+    soft(uw<Record<string, unknown>[]>("/api/market/sector-etfs")),
+    soft(uw<Record<string, unknown>[]>("/api/market/top-net-impact")),
   ]);
 
   const tide = tideSeries(tideRaw);
@@ -251,5 +265,11 @@ export async function loadWhaleFeed(): Promise<WhaleFeed> {
       bearish: [...netImpact.filter((r) => r.netPremium < 0)].sort((a, b) => a.netPremium - b.netPremium).slice(0, 10),
     },
     updatedAt: Date.now(),
+    available: tide.length > 0,
+    error:
+      tide.length > 0 ? null
+      : /401|authentication/i.test(failure ?? "") ?
+        "Unusual Whales rejected the API key (401). Add a valid key to restore institutional flow."
+      : (failure ?? "Whale feed unavailable right now."),
   };
 }
