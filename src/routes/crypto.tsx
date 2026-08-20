@@ -1,8 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
 
 import { AppShell } from "@/components/soliq/AppShell";
 import { CryptoDesk } from "@/components/soliq/CryptoDesk";
+import { StablecoinDesk } from "@/components/soliq/StablecoinDesk";
 import { SectionTitle } from "@/components/soliq/primitives";
+import { Button } from "@/components/ui/button";
+
 
 export const Route = createFileRoute("/crypto")({
   head: () => ({
