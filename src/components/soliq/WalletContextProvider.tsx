@@ -5,6 +5,8 @@ import { WalletModalProvider } from "@solana/wallet-adapter-react-ui";
 import { clusterApiUrl } from "@solana/web3.js";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 
+import { solanaRpcEndpoint } from "@/lib/solanaWallet";
+
 import "@solana/wallet-adapter-react-ui/styles.css";
 
 export type Cluster = "mainnet-beta" | "devnet";
