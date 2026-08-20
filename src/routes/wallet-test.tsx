@@ -6,7 +6,6 @@ import { ClientOnly, createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Activity } from "lucide-react";
 
-import { SolanaWalletProvider } from "@/components/soliq/SolanaWalletProvider";
 import { SOLANA_RPC_PATH, getSolanaBalance, solanaNetwork } from "@/lib/solanaWallet";
 
 export const Route = createFileRoute("/wallet-test")({
@@ -100,9 +99,7 @@ function Panel() {
 function WalletTestPage() {
   return (
     <ClientOnly fallback={<div className="min-h-screen" aria-hidden />}>
-      <SolanaWalletProvider>
-        <Panel />
-      </SolanaWalletProvider>
+      <Panel />
     </ClientOnly>
   );
 }
