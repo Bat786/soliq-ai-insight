@@ -1,12 +1,10 @@
 /**
  * Server-only wallet reader.
  *
- * Native balances come from Alchemy when a key is configured (falling back to
- * public JSON-RPC), token holdings come from Alchemy's enhanced APIs, and USD
+ * Native balances and token holdings come from Alchemy, and USD
  * valuation uses Binance spot tickers. Nothing here ever signs or spends.
  */
 
-const PUBLIC_SOLANA_RPC = "https://api.mainnet-beta.solana.com";
 const PUBLIC_EVM_RPC = "https://ethereum-rpc.publicnode.com";
 const TICKER = "https://api.binance.com/api/v3/ticker/price";
 
@@ -46,12 +44,15 @@ async function cached<T>(key: string, load: () => Promise<T>): Promise<T> {
 function alchemyUrl(chain: "solana" | "evm"): string | null {
   const key = process.env["ALCHEMY_API_KEY"];
   if (!key) return null;
-  const host = chain === "solana" ? "solana-mainnet" : "eth-mainnet";
+  const host = chain === "solana" ? "solana-devnet" : "eth-mainnet";
   return `https://${host}.g.alchemy.com/v2/${key}`;
 }
 
 function rpcUrl(chain: "solana" | "evm"): string {
-  return alchemyUrl(chain) ?? (chain === "solana" ? PUBLIC_SOLANA_RPC : PUBLIC_EVM_RPC);
+  const alchemy = alchemyUrl(chain);
+  if (alchemy) return alchemy;
+  if (chain === "solana") throw new Error("Alchemy Solana RPC is not configured");
+  return PUBLIC_EVM_RPC;
 }
 
 async function price(symbol: string): Promise<number> {

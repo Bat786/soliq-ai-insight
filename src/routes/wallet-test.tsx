@@ -37,7 +37,10 @@ function Panel() {
 
   const balance = useQuery({
     queryKey: ["wallet-test-balance", address, solanaNetwork],
-    queryFn: () => getSolanaBalance(address!, connection),
+    queryFn: () => {
+      if (!address) throw new Error("Connect a wallet first");
+      return getSolanaBalance(address, connection);
+    },
     enabled: !!address,
     refetchInterval: 15_000,
   });

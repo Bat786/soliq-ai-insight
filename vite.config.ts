@@ -22,6 +22,7 @@ const rpcWebsocketsBrowser = fileURLToPath(
 // pure-JS npm package. Only the client — the SSR/worker environments have a real
 // Buffer and must keep the builtin (aliasing there breaks the dev SSR runner).
 const bufferShim = fileURLToPath(new URL("./node_modules/buffer/index.js", import.meta.url));
+const eventsShim = fileURLToPath(new URL("./node_modules/events/events.js", import.meta.url));
 
 /** Resolves `buffer` to the pure-JS package in the browser build only. */
 const clientBufferShim = {
@@ -32,7 +33,9 @@ const clientBufferShim = {
   apply: "build" as const,
   applyToEnvironment: (env: { name: string }) => env.name === "client",
   resolveId(id: string) {
-    return id === "buffer" || id === "node:buffer" ? bufferShim : null;
+    if (id === "buffer" || id === "node:buffer") return bufferShim;
+    if (id === "events" || id === "node:events") return eventsShim;
+    return null;
   },
 };
 
@@ -45,11 +48,15 @@ export default defineConfig({
   vite: {
     plugins: [clientBufferShim],
     resolve: {
-      alias: [{ find: /^rpc-websockets$/, replacement: rpcWebsocketsBrowser }],
+      alias: [
+        { find: /^rpc-websockets$/, replacement: rpcWebsocketsBrowser },
+        { find: /^events$/, replacement: eventsShim },
+        { find: /^node:events$/, replacement: eventsShim },
+      ],
     },
     // Solana libs reach for Node's `Buffer` at module scope. Let Vite pre-bundle
     // the pure-JS `buffer` package so its CJS exports get proper ESM interop.
-    optimizeDeps: { include: ["buffer"] },
+    optimizeDeps: { include: ["buffer", "events"] },
   },
 });
 
