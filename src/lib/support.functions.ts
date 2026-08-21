@@ -34,6 +34,25 @@ export const submitSupportTicket = createServerFn({ method: "POST" })
       .select("id, subject, category, status, created_at")
       .single();
     if (error) throw new Error(error.message);
+
+    if (email) {
+      try {
+        const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
+        await sendTemplateEmail("support-ticket-received", email, {
+          templateData: {
+            ticketId: row.id.slice(0, 8),
+            subject: data.subject,
+            category: data.category,
+            message: data.message,
+          },
+          idempotencyKey: `support-ticket-received-${row.id}`,
+        });
+      } catch (e) {
+        // Never fail the ticket because the acknowledgement email could not go out.
+        console.error("support ticket email failed", e);
+      }
+    }
+
     return row;
   });
 

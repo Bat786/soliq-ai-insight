@@ -1,5 +1,7 @@
 import type { ComponentType } from 'react'
 
+import { template as supportTicketReceived } from './support-ticket-received'
+
 export interface TemplateEntry {
   component: ComponentType<any>
   subject: string | ((data: Record<string, any>) => string)
