@@ -14,7 +14,7 @@ const projectRoot = fileURLToPath(new URL(".", import.meta.url));
 
 // Server routes (email, webhooks) read non-VITE_ secrets from process.env.
 // Client env injection is handled by @lovable.dev/vite-tanstack-config.
-Object.assign(process.env, loadEnv(process.env.NODE_ENV ?? "development", process.cwd(), ""));
+Object.assign(process.env, loadEnv(process.env["NODE_ENV"] ?? "development", process.cwd(), ""));
 
 // `rpc-websockets` (pulled in by @solana/web3.js via the wallet adapter) only declares
 // "browser" and "node" export conditions, so the worker build can't resolve it. Point it
