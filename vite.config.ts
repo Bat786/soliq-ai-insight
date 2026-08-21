@@ -4,9 +4,17 @@
 //     nitro (build-only using cloudflare as a default target), VITE_* env injection, @ path alias,
 //     React/TanStack dedupe, error logger plugins, and sandbox detection (port/host/strictPort).
 // You can pass additional config via defineConfig({ vite: { ... }, etc... }) if needed.
+import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
+import { loadEnv } from "vite";
+
+const projectRoot = fileURLToPath(new URL(".", import.meta.url));
+
+// Server routes (email, webhooks) read non-VITE_ secrets from process.env.
+// Client env injection is handled by @lovable.dev/vite-tanstack-config.
+Object.assign(process.env, loadEnv(process.env["NODE_ENV"] ?? "development", process.cwd(), ""));
 
 // `rpc-websockets` (pulled in by @solana/web3.js via the wallet adapter) only declares
 // "browser" and "node" export conditions, so the worker build can't resolve it. Point it
@@ -51,6 +59,10 @@ export default defineConfig({
       alias: [
         { find: /^rpc-websockets$/, replacement: rpcWebsocketsBrowser },
         { find: /^eventemitter3$/, replacement: eventEmitterShim },
+        // Force the hoisted entities@4.5.0 copy; nested v7 drops ./lib/decode.js and breaks SSR.
+        { find: "entities/lib/decode.js", replacement: path.resolve(projectRoot, "node_modules/entities/lib/decode.js") },
+        { find: "entities/lib/encode.js", replacement: path.resolve(projectRoot, "node_modules/entities/lib/encode.js") },
+        { find: /^entities$/, replacement: path.resolve(projectRoot, "node_modules/entities") },
       ],
     },
     // Solana libs reach for Node's `Buffer` at module scope. Let Vite pre-bundle
