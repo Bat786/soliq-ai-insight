@@ -2,6 +2,7 @@
 // Source: CoinGecko public API. On-chain/social fields marked in `modelled`
 // are derived deterministically from live price/volume/liquidity behaviour.
 
+import { isProjectableKind, projectSeries } from "@/lib/projections";
 import type {
   CapBucket,
   Indicators,
