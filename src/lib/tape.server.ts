@@ -68,7 +68,33 @@ export type MarketRow = {
 
 
 export type MarketBoard = { rows: MarketRow[]; updatedAt: number; pending: number };
-export type MarketDetail = MarketRow & { bars: Bar[]; interval: Timeframe };
+export type MarketDetail = MarketRow & {
+  bars: Bar[];
+  interval: Timeframe;
+  /** PRISM projection set; null when the series is too thin. */
+  projection: ProjectionSet | null;
+};
+
+/**
+ * PRISM projection for a desk instrument, built from the bars already loaded
+ * for the chart (no extra provider calls). Desk instruments are stocks, FX,
+ * futures, metals and major crypto — never memecoins — so all are projectable.
+ */
+function withProjection(row: MarketRow, bars: Bar[], interval: Timeframe): MarketDetail {
+  const projection =
+    bars.length > 12
+      ? projectSeries({
+          closes: bars.map((b) => b.close),
+          timestamps: bars.map((b) => b.t),
+          score: row.indicators.score,
+          trendStrength: row.indicators.adx14,
+          drivers: row.signals.filter((s) => Math.abs(s.tilt) > 0.12).map((s) => `${s.tf} ${s.label}`),
+          projectable: true,
+          current: row.last,
+        })
+      : null;
+  return { ...row, bars: bars.slice(-400), interval, projection };
+}
 
 /* -------------------------------- catalogs -------------------------------- */
 
