@@ -741,10 +741,10 @@ export async function loadTapeDetail(key: string, interval: Timeframe): Promise<
   }
   if (base.length < 5) {
     // No feed answered — surface a syncing row so the terminal stays usable.
-    return { ...toRow(inst, [], "none"), bars: [], interval };
+    return { ...toRow(inst, [], "none"), bars: [], interval, projection: null };
   }
   const tf = barsByTf(base);
-  return { ...toRow(inst, base, source), bars: tf[interval].slice(-400), interval };
+  return withProjection(toRow(inst, base, source), tf[interval], interval);
 }
 
 
