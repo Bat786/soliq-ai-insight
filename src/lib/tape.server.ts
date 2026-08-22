@@ -16,6 +16,7 @@ import {
   massiveSearch,
   type AssetClass,
 } from "@/lib/massive.server";
+import { tdSymbol } from "@/lib/twelvedata.server";
 
 export type { Indicators, Bar, Timeframe, TfSignal };
 
