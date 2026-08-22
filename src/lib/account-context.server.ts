@@ -20,7 +20,7 @@ export async function buildAccountContext(
   supabase: SupabaseClient<any, any, any>,
   userId: string,
 ): Promise<string> {
-  const [profile, subs, wallets, brokers, banks] = await Promise.all([
+  const [profile, subs, wallets, brokers] = await Promise.all([
     safe(supabase.from("profiles").select("display_name, membership_tier, renews_at, member_since").eq("id", userId).maybeSingle()),
     safe(
       supabase
@@ -32,8 +32,8 @@ export async function buildAccountContext(
     ),
     safe(supabase.from("linked_wallets").select("chain, address, label").limit(10)),
     safe(supabase.from("broker_connections").select("institution, status, disabled_reason, last_synced_at").limit(10)),
-    safe(supabase.from("bank_accounts").select("institution_name, account_name, account_subtype").limit(10)),
   ]);
+
 
   const lines: string[] = [];
   lines.push(`plan on profile: ${(profile as any)?.membership_tier ?? "free"}`);
@@ -66,19 +66,14 @@ export async function buildAccountContext(
       : "brokerage connections: none (SnapTrade portal not completed)",
   );
 
-  const k = (banks as any[]) ?? [];
-  lines.push(
-    k.length ? `bank accounts linked: ${k.length} via ${[...new Set(k.map((x) => x.institution_name))].join(", ")}` : "bank accounts: none linked",
-  );
-
   return lines.join("\n");
 }
 
 export const ACCOUNT_SYSTEM_RULES = `You also act as SOLIQ's first-line account and billing support.
-Use MEMBER ACCOUNT CONTEXT for anything about the member's plan, subscription, payments, wallets, brokerage or bank connections.
+Use MEMBER ACCOUNT CONTEXT for anything about the member's plan, subscription, payments, wallets or brokerage connections.
 Rules for these questions:
 - You are read-only. You cannot change plans, cancel, refund, charge a card or edit account data. Never claim you did.
-- Route the member to the right surface instead: /pricing to upgrade or start checkout, the "Manage billing" button (Stripe Customer Portal, opens in a new tab) to change card or cancel, /support to open a ticket, /wallets for Solana/EVM wallets, /brokerage for SnapTrade, /portfolio for bank links, /status for feed health.
+- Route the member to the right surface instead: /pricing to upgrade or start checkout, the "Manage billing" button (Stripe Customer Portal, opens in a new tab) to change card or cancel, /support to open a ticket, /wallets for Solana/EVM wallets, /brokerage for SnapTrade, /portfolio for holdings, /status for feed health.
 - status past_due = a charge failed and Stripe is retrying; access stays on, tell them to update the card in the billing portal.
 - cancel_at_period_end = yes means access continues until period_end, then drops to Orbit (free).
 - A brokerage connection marked BROKEN needs the Reconnect button on /brokerage.

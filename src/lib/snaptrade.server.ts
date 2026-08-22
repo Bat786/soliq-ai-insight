@@ -407,3 +407,47 @@ export async function listActivities(user: SnapUser, accountIds: string[], days 
 
   return perAccount.flat().sort((a, b) => (b.executedAt ?? 0) - (a.executedAt ?? 0));
 }
+
+/* --------------------------------- trading -------------------------------- */
+
+export type EquityOrder = {
+  accountId: string;
+  symbol: string;
+  action: "BUY" | "SELL";
+  quantity: number;
+};
+
+export type EquityOrderResult = { ok: boolean; orderId: string | null; status: string | null; error: string | null };
+
+/**
+ * Market order through SnapTrade's production trading API. Only reachable for
+ * Elite members and only for brokerages that permit trading — SnapTrade itself
+ * rejects the order when the connection is read-only, which we surface verbatim.
+ */
+export async function placeEquityOrder(user: SnapUser, order: EquityOrder): Promise<EquityOrderResult> {
+  try {
+    const { data } = await sdk().trading.placeForceOrder({
+      userId: user.userId,
+      userSecret: user.userSecret,
+      account_id: order.accountId,
+      action: order.action,
+      symbol: order.symbol,
+      order_type: "Market",
+      time_in_force: "Day",
+      units: order.quantity,
+    } as never);
+    const raw = data as unknown as Record<string, unknown>;
+    return {
+      ok: true,
+      orderId: (raw["brokerage_order_id"] as string | undefined) ?? null,
+      status: (raw["status"] as string | undefined) ?? "SUBMITTED",
+      error: null,
+    };
+  } catch (error) {
+    const detail =
+      (error as { response?: { data?: { detail?: string; message?: string } } })?.response?.data?.detail ??
+      (error as { response?: { data?: { message?: string } } })?.response?.data?.message ??
+      (error instanceof Error ? error.message : "Order rejected");
+    return { ok: false, orderId: null, status: null, error: String(detail).slice(0, 240) };
+  }
+}
