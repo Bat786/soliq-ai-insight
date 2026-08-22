@@ -153,33 +153,60 @@ async function universeRows(covered: Set<string>, notes: string[]): Promise<Stab
   if (!universe) return [];
   for (const note of universe.notes) notes.push(note);
 
-  return universe.assets
-    .filter((a) => a.category === "stablecoin" && !covered.has(a.symbol) && a.price > 0)
-    .map((a) => {
-      // Euro-referenced tokens peg to 1 EUR; everything else to 1 USD.
-      const peg = 1;
-      const deviation = bps(a.price, peg);
-      const series = a.series.slice(-30);
-      const worst = series.length ? Math.max(...series.map((p) => Math.abs(bps(p, peg)))) : Math.abs(deviation);
-      return {
-        symbol: a.symbol,
-        name: a.name,
-        pair: a.ticker.replace(/^X:/, ""),
-        peg,
-        price: a.price,
-        pegBps: deviation,
-        change24h: a.change24h,
-        volume24h: a.volume24h,
-        high24h: a.high24h,
-        low24h: a.low24h,
-        worstBps: worst,
-        series,
-        onchainSupply: null,
-        onchainCap: null,
-        mint: null,
-        status: classify(a.price, deviation),
-      } satisfies StablecoinRow;
-    });
+  const candidates = universe.assets.filter(
+    (a) => a.category === "stablecoin" && !covered.has(a.symbol) && a.price > 0,
+  );
+  if (candidates.length === 0) return [];
+
+  // Euro-referenced tokens track 1 EUR, so their peg is the live EUR/USD rate.
+  const needsEur = candidates.some((a) => /^EUR/.test(a.symbol));
+  const eurUsd = await (async () => {
+    if (!needsEur) return null;
+    const { twelveDataQuotes } = await import("@/lib/twelvedata.server");
+    const quotes = await twelveDataQuotes(["EUR/USD"]).catch(() => null);
+    const rate = quotes?.get("EUR/USD")?.price ?? null;
+    return rate && rate > 0 ? rate : null;
+  })();
+
+  const rows: StablecoinRow[] = [];
+  const skipped: string[] = [];
+  for (const a of candidates) {
+    const euro = /^EUR/.test(a.symbol);
+    if (euro && !eurUsd) {
+      skipped.push(a.symbol);
+      continue;
+    }
+    const peg = euro ? (eurUsd as number) : 1;
+    const deviation = bps(a.price, peg);
+    // A quote this far from peg is a mismatched or illiquid listing rather than
+    // a real depeg, and would dominate the desk with noise.
+    if (Math.abs(deviation) > 2_500) {
+      skipped.push(a.symbol);
+      continue;
+    }
+    const series = a.series.slice(-30);
+    const worst = series.length ? Math.max(...series.map((p) => Math.abs(bps(p, peg)))) : Math.abs(deviation);
+    rows.push({
+      symbol: a.symbol,
+      name: a.name,
+      pair: a.ticker.replace(/^X:/, ""),
+      peg,
+      price: a.price,
+      pegBps: deviation,
+      change24h: a.change24h,
+      volume24h: a.volume24h,
+      high24h: a.high24h,
+      low24h: a.low24h,
+      worstBps: worst,
+      series,
+      onchainSupply: null,
+      onchainCap: null,
+      mint: null,
+      status: classify(a.price / peg, deviation),
+    } satisfies StablecoinRow);
+  }
+  if (skipped.length) notes.push(`Peg unverified for ${skipped.join(", ")} — left off the desk.`);
+  return rows;
 }
 
 /** Full stablecoin desk: Massive market data + Alchemy on-chain supply. */
