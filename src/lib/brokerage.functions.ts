@@ -66,7 +66,7 @@ export const getBrokerageSnapshot = createServerFn({ method: "GET" })
     const tier = await memberTier(context.supabase, context.userId);
     if (!meetsTier(tier, "pro")) {
       const { unavailable } = await import("@/engines/core/envelope");
-      return unavailable<never>("snaptrade", LOCKED);
+      return unavailable<never>(LOCKED, "snaptrade");
     }
     const { loadBrokerageSnapshot } = await import("@/lib/brokerage.server");
     return loadBrokerageSnapshot(context.userId);

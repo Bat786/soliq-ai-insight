@@ -6,6 +6,7 @@ import {
   createBrokerageLink,
   getBrokerageConnections,
   getBrokerageSnapshot,
+  placeBrokerageOrder,
   refreshBrokerageHoldings,
 } from "@/lib/brokerage.functions";
 
@@ -54,4 +55,17 @@ export function useConfirmBrokerageConnection() {
 export function useRefreshBrokerageHoldings() {
   const fn = useServerFn(refreshBrokerageHoldings);
   return useMutation({ mutationFn: () => fn() });
+}
+
+export type BrokerageOrderInput = {
+  accountId: string;
+  symbol: string;
+  action: "BUY" | "SELL";
+  quantity: number;
+};
+
+/** Elite-only market order. The server re-checks the tier before submitting. */
+export function usePlaceBrokerageOrder() {
+  const fn = useServerFn(placeBrokerageOrder);
+  return useMutation({ mutationFn: (input: BrokerageOrderInput) => fn({ data: input }) });
 }
