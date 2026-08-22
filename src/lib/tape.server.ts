@@ -39,25 +39,8 @@ export type Instrument = {
   proxy?: string | undefined;
 };
 
-/** Which feed produced the series a row was scored from. */
-export type MarketSource =
-  | "massive"
-  | "twelvedata"
-  | "tape"
-  | "binance"
-  | "frankfurter"
-  | "proxy"
-  | "none";
-
-export const sourceLabels: Record<MarketSource, string> = {
-  massive: "Massive",
-  twelvedata: "Twelve Data",
-  tape: "Backup tape",
-  binance: "Binance spot",
-  frankfurter: "ECB (Frankfurter)",
-  proxy: "ETF proxy",
-  none: "No feed",
-};
+export type { MarketSource } from "@/lib/tape-desks";
+import type { MarketSource } from "@/lib/tape-desks";
 
 export type MarketRow = {
   key: string;
