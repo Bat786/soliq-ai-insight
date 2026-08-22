@@ -3,6 +3,7 @@ import { Loader2, Newspaper } from "lucide-react";
 import { useState } from "react";
 
 import { AppShell } from "@/components/soliq/AppShell";
+import { ProjectionPanel } from "@/components/soliq/ProjectionPanel";
 import { DataStatus } from "@/components/soliq/DataState";
 import { SymbolChart } from "@/components/soliq/SymbolChart";
 import { Button } from "@/components/ui/button";
@@ -134,6 +135,8 @@ function SymbolPage() {
                 {data?.notes.map((n) => <li key={n}>· {n}</li>)}
               </ul>
             )}
+
+            <ProjectionPanel projection={data?.projection ?? null} title={`${data?.display ?? symbol} price projection`} />
 
             <div className="grid gap-4 lg:grid-cols-[1fr_290px]">
               <SymbolChart bars={data?.bars ?? []} timeframe={tf} />

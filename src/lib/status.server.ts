@@ -76,6 +76,16 @@ export async function collectDataStatus(): Promise<DataStatus> {
       fallback: probe.realtimeSnapshots ? null : "Latest minute/daily bar close is used as the live price.",
     },
     {
+      id: "twelvedata",
+      name: "Twelve Data (stocks, ETFs, FX, commodities, crypto)",
+      state: hasEnv("TWELVE_DATA_API_KEY") ? "live" : "missing-key",
+      detail: hasEnv("TWELVE_DATA_API_KEY")
+        ? "Secondary market feed — batched quotes and time series on a free-plan request budget."
+        : "No API key configured.",
+      fallback: "Massive first, backup tape last — Twelve Data is never the only source for a symbol.",
+    },
+    {
+
       id: "coingecko",
       name: "CoinGecko (crypto prices, market caps)",
       state: hasEnv("COINGECKO_API_KEY") ? "live" : "degraded",

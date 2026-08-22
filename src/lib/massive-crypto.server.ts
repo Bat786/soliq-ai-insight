@@ -56,19 +56,43 @@ const MEMES = new Set([
   "LADYS", "WOJAK", "BOBO", "BAN", "GIGA", "APU", "ANDY", "SIGMA", "DADDY",
 ]);
 
-const MEME_PATTERN = /(doge|inu|shib|pepe|floki|meme|wojak|cat|kitty|frog|moon|elon|chad|wif|bonk|baby|fart|poop|trump|hodl)/i;
+/**
+ * Meme words matched on WORD boundaries only. Substring matching produced false
+ * positives (Moonwell/Moonbeam on "moon", SwiftCoin on "wif", Melon on "elon"),
+ * so each candidate name is tokenized first.
+ */
+const MEME_WORDS = new Set([
+  "doge", "dogecoin", "inu", "shiba", "shib", "pepe", "floki", "meme", "memecoin", "wojak", "chad", "gigachad",
+  "frog", "wif", "dogwifhat", "bonk", "fart", "fartcoin", "hodl", "moon", "cat", "kitty", "elon", "trump",
+  "pump", "ape", "wen", "andy", "brett", "popcat", "mog", "turbo", "pnut", "peanut", "goat", "banana", "chill",
+]);
+
+const tokenize = (text: string): string[] =>
+  text
+    .toLowerCase()
+    .replace(/([a-z])([A-Z])/g, "$1 $2")
+    .split(/[^a-z0-9]+/)
+    .filter(Boolean);
+
+const looksMeme = (symbol: string, name: string): boolean => {
+  const words = tokenize(name);
+  if (words.some((w) => MEME_WORDS.has(w))) return true;
+  // Suffixed meme conventions: "…inu", "…doge", "…pepe", "…cat".
+  if (words.some((w) => /(inu|doge|pepe)$/.test(w) && w.length > 3)) return true;
+  return MEME_WORDS.has(symbol.toLowerCase());
+};
+
 const STABLE_PATTERN = /^(us[d]?[a-z0-9]{0,3}|eur[a-z0-9]{0,2})$/i;
 
 /** Category for a base symbol + instrument name. Used by every crypto surface. */
 export function classifyCryptoSymbol(symbol: string, name = ""): MassiveCryptoCategory {
   const s = symbol.toUpperCase();
-  const label = `${s} ${name}`;
   if (STABLES.has(s)) return "stablecoin";
   if (/\b(stable|pegged)\b/i.test(name)) return "stablecoin";
   // A "USD-ish" ticker with a dollar/euro instrument name is a fiat token.
   if (STABLE_PATTERN.test(s) && /(dollar|euro|usd|eur)/i.test(name) && !/index|future/i.test(name)) return "stablecoin";
   if (MEMES.has(s)) return "memecoin";
-  if (MEME_PATTERN.test(label)) return "memecoin";
+  if (looksMeme(s, name)) return "memecoin";
   return "crypto";
 }
 
@@ -137,7 +161,9 @@ export async function loadMassiveCryptoUniverse(): Promise<MassiveCryptoUniverse
     { ttl: 24 * 3600_000, scope: "reference:crypto-universe" },
   );
   const daysPromise = Promise.all(
-    [1, 2, 3, 4, 5].map((offset) => groupedDay("crypto", offset).catch(() => new Map<string, Bar>())),
+    // Three sessions is enough for a 24h change plus a short trend, and keeps
+    // this loader inside the Massive per-minute request allowance on a cold cache.
+    [1, 2, 3].map((offset) => groupedDay("crypto", offset).catch(() => new Map<string, Bar>())),
   );
   const [reference, days] = await Promise.all([referencePromise, daysPromise]);
 

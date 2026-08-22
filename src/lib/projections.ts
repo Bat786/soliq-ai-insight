@@ -151,8 +151,13 @@ export function projectSeries(input: ProjectionInput): ProjectionSet | null {
     const reversionTerm = reversionPull * clamp(0.12 * Math.sqrt(days), 0.02, 0.55);
     const tilt = bias * sigmaBar * Math.sqrt(steps) * 0.45;
 
-    const base = last * Math.exp(driftTerm + reversionTerm + tilt);
     const band = sigmaBar * Math.sqrt(steps);
+    // Keep the central path inside one volatility band: extrapolating recent
+    // drift unchecked produces absurd long-horizon targets.
+    // Half a band keeps the drift honest while leaving the bull/bear cases
+    // meaningfully above and below the central path.
+    const exponent = clamp(driftTerm + reversionTerm + tilt, -band * 0.5, band * 0.5);
+    const base = last * Math.exp(exponent);
     const bull = base * Math.exp(band);
     const bear = base * Math.exp(-band);
     const high = base * Math.exp(band * 1.28);

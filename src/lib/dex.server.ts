@@ -71,6 +71,22 @@ export type TokenProfile = {
   links: { label: string; url: string }[];
 };
 
+/**
+ * A memecoin that Massive lists on the centralized tape. Kept as its own shape
+ * rather than faked into `TokenRow` — Massive publishes price/volume/session
+ * data but no mint, liquidity, holders or audit fields.
+ */
+export type ListedMemecoin = {
+  ticker: string;
+  symbol: string;
+  name: string;
+  price: number;
+  change24h: number;
+  volume24h: number;
+  high24h: number;
+  low24h: number;
+};
+
 export type CryptoDesk = {
   movers: TokenRow[];
   traded: TokenRow[];
@@ -80,6 +96,8 @@ export type CryptoDesk = {
   profiles: TokenProfile[];
   pools: OnchainPoolRow[];
   newPools: OnchainPoolRow[];
+  /** Massive-listed memecoins, classified by the shared crypto classifier. */
+  listed: ListedMemecoin[];
   updatedAt: number;
   notes: string[];
 };
@@ -282,7 +300,28 @@ export async function loadCryptoDesk(): Promise<CryptoDesk> {
     }),
   ]);
 
-  return { movers, traded, trending, fresh, metas, profiles, pools, newPools, updatedAt: Date.now(), notes };
+  // Massive's listed memecoins join the existing memecoin desk. The universe is
+  // already cached, so this costs no additional provider requests.
+  const listed = await (async (): Promise<ListedMemecoin[]> => {
+    const { loadMassiveCryptoUniverse } = await import("@/lib/massive-crypto.server");
+    const universe = await loadMassiveCryptoUniverse().catch(() => null);
+    if (!universe) return [];
+    for (const note of universe.notes) notes.push(note);
+    return universe.assets
+      .filter((a) => a.category === "memecoin" && a.price > 0)
+      .map((a) => ({
+        ticker: a.ticker,
+        symbol: a.symbol,
+        name: a.name,
+        price: a.price,
+        change24h: a.change24h,
+        volume24h: a.volume24h,
+        high24h: a.high24h,
+        low24h: a.low24h,
+      }));
+  })();
+
+  return { movers, traded, trending, fresh, metas, profiles, pools, newPools, listed, updatedAt: Date.now(), notes };
 }
 
 /** Jupiter token search (mint, symbol or name) normalized to desk rows. */
