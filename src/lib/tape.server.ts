@@ -87,7 +87,7 @@ function withProjection(row: MarketRow, bars: Bar[], interval: Timeframe): Marke
           closes: bars.map((b) => b.close),
           timestamps: bars.map((b) => b.t),
           score: row.indicators.score,
-          trendStrength: row.indicators.adx14,
+          trendStrength: Math.abs(row.indicators.score - 50) * 2,
           drivers: row.signals.filter((s) => Math.abs(s.tilt) > 0.12).map((s) => `${s.tf} ${s.label}`),
           projectable: true,
           current: row.last,
