@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { AlertTriangle, Building2, Loader2, PlugZap, RefreshCw } from "lucide-react";
+import { AlertTriangle, Building2, Loader2, Lock, PlugZap, RefreshCw, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -9,6 +9,7 @@ import { EnvelopeStatus } from "@/components/soliq/DataState";
 import { SectionTitle, StatCard } from "@/components/soliq/primitives";
 import { Button } from "@/components/ui/button";
 import {
+  usePlaceBrokerageOrder,
   useBrokerage,
   useBrokerageConnections,
   useBrokerageLink,
@@ -16,7 +17,9 @@ import {
   useRefreshBrokerageHoldings,
   type BrokerageLinkInput,
 } from "@/hooks/use-brokerage";
-import { useSession } from "@/hooks/use-soliq-account";
+import { useProfile, useSession } from "@/hooks/use-soliq-account";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { fmtNum, fmtUsd } from "@/lib/format";
 
 export const Route = createFileRoute("/brokerage")({
@@ -42,12 +45,19 @@ export const Route = createFileRoute("/brokerage")({
 
 function Brokerage() {
   const { isSignedIn } = useSession();
-  const query = useBrokerage(isSignedIn);
-  const connections = useBrokerageConnections(isSignedIn);
+  const { tier, isLoading: tierLoading } = useProfile();
+  // Pro is view-only; Elite adds SnapTrade trading. Both re-checked server-side.
+  const canSync = tier === "pro" || tier === "elite";
+  const canTrade = tier === "elite";
+  const query = useBrokerage(isSignedIn && canSync);
+  const connections = useBrokerageConnections(isSignedIn && canSync);
   const link = useBrokerageLink();
   const confirm = useConfirmBrokerageConnection();
   const refresh = useRefreshBrokerageHoldings();
   const [loginLink, setLoginLink] = useState<string | null>(null);
+  const order = usePlaceBrokerageOrder();
+  const [ticket, setTicket] = useState<{ accountId: string; symbol: string; action: "BUY" | "SELL" } | null>(null);
+  const [qty, setQty] = useState("1");
   const env = query.data;
   const snap = env?.data ?? null;
   const conns = connections.data?.connections ?? [];
@@ -57,7 +67,8 @@ function Brokerage() {
     link.mutate(
       {
         // No customRedirect: the embedded portal reports back via window messages.
-        connectionType: "read",
+        // Elite links with trade authorisation so BUY/SELL is available.
+        connectionType: canTrade ? "trade" : "read",
         ...input,
       },
       {
@@ -124,10 +135,10 @@ function Brokerage() {
           action={
             <div className="flex items-center gap-2">
               {env ? <EnvelopeStatus env={env} /> : null}
-              <Button size="sm" variant="outline" onClick={sync} disabled={!isSignedIn || refresh.isPending}>
+              <Button size="sm" variant="outline" onClick={sync} disabled={!isSignedIn || !canSync || refresh.isPending}>
                 <RefreshCw className={`size-3.5 ${query.isFetching || refresh.isPending ? "animate-spin" : ""}`} /> Sync
               </Button>
-              <Button size="sm" onClick={connect} disabled={!isSignedIn || link.isPending}>
+              <Button size="sm" onClick={connect} disabled={!isSignedIn || !canSync || link.isPending}>
                 {link.isPending ? <Loader2 className="size-3.5 animate-spin" /> : <Building2 className="size-3.5" />}
                 Link brokerage
               </Button>
@@ -144,7 +155,30 @@ function Brokerage() {
           onExit={() => setLoginLink(null)}
         />
 
-        {isSignedIn && broken.length ? (
+        {isSignedIn && !canSync && !tierLoading ? (
+          <div className="panel mx-auto max-w-lg p-8 text-center">
+            <span className="mx-auto grid size-11 place-items-center rounded-xl border border-primary/30 bg-primary/10 text-primary">
+              <Lock className="size-5" />
+            </span>
+            <h2 className="font-display mt-4 text-lg font-semibold">Brokerage Intelligence</h2>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Connect your brokerage through SnapTrade and bring your portfolio into SOLIQ.
+            </p>
+            <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-primary">Available with Pro &amp; Elite</p>
+            <div className="mt-5 flex justify-center gap-2">
+              <Button asChild variant="hero">
+                <Link to="/pricing">
+                  <Sparkles className="size-4" /> Upgrade
+                </Link>
+              </Button>
+              <Button asChild variant="outline">
+                <Link to="/terminal">Back to terminal</Link>
+              </Button>
+            </div>
+          </div>
+        ) : null}
+
+        {isSignedIn && canSync && broken.length ? (
           <div className="glass space-y-2 rounded-xl border border-bear/40 p-4">
             <p className="flex items-center gap-2 text-sm font-semibold text-bear">
               <AlertTriangle className="size-4" /> {broken.length} connection{broken.length === 1 ? "" : "s"} need
@@ -164,7 +198,7 @@ function Brokerage() {
           </div>
         ) : null}
 
-        {isSignedIn && conns.filter((c) => !c.disabled).length ? (
+        {isSignedIn && canSync && conns.filter((c) => !c.disabled).length ? (
           <div className="glass rounded-xl p-4">
             <p className="text-xs text-muted-foreground">
               Active connections: {conns.filter((c) => !c.disabled).map((c) => c.brokerage ?? "Brokerage").join(", ")}
@@ -181,7 +215,7 @@ function Brokerage() {
           </div>
         ) : null}
 
-        {isSignedIn && snap ? (
+        {isSignedIn && canSync && snap ? (
           <>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               <StatCard label="Market value" value={fmtUsd(snap.totals.marketValue)} />
@@ -214,6 +248,7 @@ function Brokerage() {
                           <th className="px-4 py-2 text-right font-medium">Price</th>
                           <th className="px-4 py-2 text-right font-medium">Value</th>
                           <th className="px-4 py-2 text-right font-medium">P&L</th>
+                          {canTrade ? <th className="px-4 py-2 text-right font-medium">Trade</th> : null}
                         </tr>
                       </thead>
                       <tbody>
@@ -247,6 +282,32 @@ function Brokerage() {
                                 <span className="ml-1 opacity-70">({p.unrealizedPct.toFixed(2)}%)</span>
                               ) : null}
                             </td>
+                            {canTrade ? (
+                              <td className="px-4 py-2 text-right whitespace-nowrap">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="h-7 px-2 text-[11px]"
+                                  onClick={() => {
+                                    setQty("1");
+                                    setTicket({ accountId: a.id, symbol: p.symbol, action: "BUY" });
+                                  }}
+                                >
+                                  Buy
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="ml-1 h-7 px-2 text-[11px]"
+                                  onClick={() => {
+                                    setQty(String(p.quantity ?? 1));
+                                    setTicket({ accountId: a.id, symbol: p.symbol, action: "SELL" });
+                                  }}
+                                >
+                                  Sell
+                                </Button>
+                              </td>
+                            ) : null}
                           </tr>
                         ))}
                       </tbody>
@@ -294,7 +355,7 @@ function Brokerage() {
           </>
         ) : null}
 
-        {isSignedIn && env && !snap ? (
+        {isSignedIn && canSync && env && !snap ? (
           <div className="glass rounded-xl p-8 text-center">
             <Building2 className="mx-auto size-5 text-muted-foreground" />
             <p className="mt-3 text-sm text-muted-foreground">{env.reason ?? "No brokerage data available."}</p>
@@ -304,7 +365,59 @@ function Brokerage() {
           </div>
         ) : null}
 
-        {isSignedIn && query.isLoading ? (
+        <Dialog open={Boolean(ticket)} onOpenChange={(open) => (open ? null : setTicket(null))}>
+          <DialogContent className="sm:max-w-sm">
+            <DialogHeader>
+              <DialogTitle>
+                {ticket?.action === "SELL" ? "Sell" : "Buy"} {ticket?.symbol}
+              </DialogTitle>
+            </DialogHeader>
+            <p className="text-xs text-muted-foreground">
+              Market order placed through your connected brokerage via SnapTrade. Availability depends on what your
+              brokerage permits.
+            </p>
+            <label className="mt-2 block text-xs font-medium text-muted-foreground" htmlFor="order-qty">
+              Quantity
+            </label>
+            <Input
+              id="order-qty"
+              type="number"
+              min="0"
+              step="any"
+              value={qty}
+              onChange={(e) => setQty(e.target.value)}
+            />
+            <Button
+              className="mt-2"
+              disabled={order.isPending || !ticket || !(Number(qty) > 0)}
+              onClick={() => {
+                if (!ticket) return;
+                order.mutate(
+                  { ...ticket, quantity: Number(qty) },
+                  {
+                    onSuccess: (res) => {
+                      if (!res.ok) {
+                        toast.error(res.error ?? "Order rejected by the brokerage");
+                        return;
+                      }
+                      toast.success(`${ticket.action} ${qty} ${ticket.symbol} submitted`, {
+                        ...(res.status ? { description: `Status ${res.status}` } : {}),
+                      });
+                      setTicket(null);
+                      void query.refetch();
+                    },
+                    onError: () => toast.error("Could not submit the order"),
+                  },
+                );
+              }}
+            >
+              {order.isPending ? <Loader2 className="size-3.5 animate-spin" /> : null}
+              Submit {ticket?.action === "SELL" ? "sell" : "buy"} order
+            </Button>
+          </DialogContent>
+        </Dialog>
+
+        {isSignedIn && canSync && query.isLoading ? (
           <div className="glass grid place-items-center rounded-xl p-10">
             <Loader2 className="size-5 animate-spin text-muted-foreground" />
           </div>
