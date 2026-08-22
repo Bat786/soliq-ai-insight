@@ -8,6 +8,7 @@ import { Delta, SectionTitle, Sparkline } from "@/components/soliq/primitives";
 import { Input } from "@/components/ui/input";
 import { useTapeBoard, useTapeDetail, useTapeSearch } from "@/hooks/use-tape";
 import type { Bar, Timeframe } from "@/lib/futures.server";
+import { sourceLabels } from "@/lib/tape-desks";
 import type { DeskId, Indicators, MarketRow } from "@/lib/tape.server";
 
 const overlays: Overlays = { ma20: true, ma50: true, vwap: true, rsi: true, volume: true, signals: true };
@@ -238,7 +239,11 @@ export function MarketsBoard({
         <div className="flex flex-wrap items-end justify-between gap-2">
           <SectionTitle
             title={`${detail.data?.code ?? active} · ${tf} chart`}
-            subtitle={detail.data ? `${detail.data.name} · quoted in ${detail.data.quote}` : "Live aggregate tape"}
+            subtitle={
+              detail.data
+                ? `${detail.data.name} · quoted in ${detail.data.quote} · ${sourceLabels[detail.data.source ?? "none"]}`
+                : "Live aggregate tape"
+            }
           />
           {detail.data && (
             <div className="flex items-center gap-3">
