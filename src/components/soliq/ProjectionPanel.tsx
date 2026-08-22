@@ -68,11 +68,14 @@ export function ProjectionPanel({
 
       {note ? <p className="mt-2 text-[11px] text-muted-foreground">{note}</p> : null}
 
+      <ProjectionFanChart projection={projection} selected={active.horizon} onSelect={setSelected} />
+
       <div className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-6 lg:grid-cols-12">
         {projection.horizons.map((h) => (
           <HorizonCard key={h.horizon} h={h} active={h.horizon === active.horizon} onSelect={() => setSelected(h.horizon)} />
         ))}
       </div>
+
 
       <div className="mt-3 grid gap-3 sm:grid-cols-2">
         <div className="rounded-xl bg-surface-2/50 p-3">
