@@ -8,15 +8,24 @@ import { useState } from "react";
 
 import { ProjectionFanChart } from "@/components/soliq/ProjectionFanChart";
 import type { Projection, ProjectionSet } from "@/lib/projections";
-import { fmtUsdc } from "@/lib/market-types";
 
 const fmtPct = (n: number) => `${n > 0 ? "+" : ""}${n.toFixed(2)}%`;
+
+/** Adaptive price formatting: FX crosses need 4-5 digits, indices need 2. */
+const fmtPx = (n: number) => {
+  if (!Number.isFinite(n)) return "—";
+  const abs = Math.abs(n);
+  if (abs >= 1000) return `$${n.toLocaleString("en-US", { maximumFractionDigits: 2 })}`;
+  if (abs >= 100) return `$${n.toFixed(2)}`;
+  if (abs >= 1) return `$${n.toFixed(4)}`;
+  return `$${n.toPrecision(4)}`;
+};
 
 function CaseRow({ label, tone, price, changePct }: { label: string; tone: string; price: number; changePct: number }) {
   return (
     <div className="flex items-baseline justify-between gap-2">
       <span className="text-[10px] tracking-wide text-muted-foreground uppercase">{label}</span>
-      <span className="num text-xs font-medium">{fmtUsdc(price)}</span>
+      <span className="num text-xs font-medium">{fmtPx(price)}</span>
       <span className={`num w-16 text-right text-[11px] ${tone}`}>{fmtPct(changePct)}</span>
     </div>
   );
@@ -31,7 +40,7 @@ function HorizonCard({ h, active, onSelect }: { h: Projection; active: boolean; 
       className={`rounded-xl p-2 text-left transition-colors ${active ? "bg-primary/12 ring-1 ring-primary/40" : "bg-surface-2/50 hover:bg-surface-2"}`}
     >
       <p className="text-[10px] tracking-wide text-muted-foreground uppercase">{h.label}</p>
-      <p className="num text-xs font-medium">{fmtUsdc(h.base.price)}</p>
+      <p className="num text-xs font-medium">{fmtPx(h.base.price)}</p>
       <p className={`num text-[11px] ${tone}`}>{fmtPct(h.base.changePct)}</p>
       <p className="num text-[10px] text-muted-foreground">{h.confidence}% conf</p>
     </button>
@@ -64,7 +73,7 @@ export function ProjectionPanel({
             {projection.model} · {projection.sampleDays}d data sample · {projection.volatilityPct}% annualised risk
           </p>
         </div>
-        <p className="num text-[11px] text-muted-foreground">spot {fmtUsdc(projection.current)}</p>
+        <p className="num text-[11px] text-muted-foreground">spot {fmtPx(projection.current)}</p>
       </div>
 
       {note ? <p className="mt-2 text-[11px] text-muted-foreground">{note}</p> : null}
@@ -87,7 +96,7 @@ export function ProjectionPanel({
             <CaseRow label="Bear case" tone="text-bear" price={active.bear.price} changePct={active.bear.changePct} />
           </div>
           <p className="num mt-2 text-[10px] text-muted-foreground">
-            expected range {fmtUsdc(active.low)}–{fmtUsdc(active.high)} · {active.confidence}% confidence
+            expected range {fmtPx(active.low)}–{fmtPx(active.high)} · {active.confidence}% confidence
           </p>
         </div>
 

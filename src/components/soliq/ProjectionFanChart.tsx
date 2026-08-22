@@ -19,7 +19,6 @@ import {
 } from "recharts";
 
 import type { ProjectionSet } from "@/lib/projections";
-import { fmtUsdc } from "@/lib/market-types";
 
 type Point = {
   horizon: string;
@@ -35,15 +34,25 @@ type Point = {
 
 const fmtPct = (n: number) => `${n > 0 ? "+" : ""}${n.toFixed(2)}%`;
 
+/** Adaptive price formatting: FX crosses need 4-5 digits, indices need 2. */
+const fmtPx = (n: number) => {
+  if (!Number.isFinite(n)) return "—";
+  const abs = Math.abs(n);
+  if (abs >= 1000) return `$${n.toLocaleString("en-US", { maximumFractionDigits: 2 })}`;
+  if (abs >= 100) return `$${n.toFixed(2)}`;
+  if (abs >= 1) return `$${n.toFixed(4)}`;
+  return `$${n.toPrecision(4)}`;
+};
+
 function TipCard({ p }: { p: Point }) {
   return (
     <div className="rounded-lg border border-border/60 bg-popover/95 p-2 shadow-lg backdrop-blur">
       <p className="text-[10px] tracking-wide text-muted-foreground uppercase">{p.label}</p>
-      <p className="num mt-1 text-[11px] text-bull">bull {fmtUsdc(p.bull)}</p>
-      <p className="num text-[11px]">base {fmtUsdc(p.base)}</p>
-      <p className="num text-[11px] text-bear">bear {fmtUsdc(p.bear)}</p>
+      <p className="num mt-1 text-[11px] text-bull">bull {fmtPx(p.bull)}</p>
+      <p className="num text-[11px]">base {fmtPx(p.base)}</p>
+      <p className="num text-[11px] text-bear">bear {fmtPx(p.bear)}</p>
       <p className="num mt-1 text-[10px] text-muted-foreground">
-        range {fmtUsdc(p.low)}–{fmtUsdc(p.band[1])} · {p.confidence}% conf
+        range {fmtPx(p.low)}–{fmtPx(p.band[1])} · {p.confidence}% conf
       </p>
     </div>
   );
@@ -115,7 +124,7 @@ export function ProjectionFanChart({
               width={58}
               tick={{ fontSize: 9, fill: "var(--muted-foreground)" }}
               stroke="var(--border)"
-              tickFormatter={(v: number) => fmtUsdc(v)}
+              tickFormatter={(v: number) => fmtPx(v)}
             />
             <Tooltip
               cursor={{ stroke: "var(--primary)", strokeOpacity: 0.4 }}
