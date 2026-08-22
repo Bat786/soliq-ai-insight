@@ -16,6 +16,7 @@ import {
   massiveSearch,
   type AssetClass,
 } from "@/lib/massive.server";
+import { tdSymbol } from "@/lib/twelvedata.server";
 
 export type { Indicators, Bar, Timeframe, TfSignal };
 
@@ -38,6 +39,9 @@ export type Instrument = {
   proxy?: string | undefined;
 };
 
+export type { MarketSource } from "@/lib/tape-desks";
+import type { MarketSource } from "@/lib/tape-desks";
+
 export type MarketRow = {
   key: string;
   code: string;
@@ -57,8 +61,11 @@ export type MarketRow = {
   signals: TfSignal[];
   indicators: Indicators;
   status: "live" | "syncing";
+  /** Provider that served the bars behind these indicators/signals. */
+  source: MarketSource;
   updatedAt: number;
 };
+
 
 export type MarketBoard = { rows: MarketRow[]; updatedAt: number; pending: number };
 export type MarketDetail = MarketRow & { bars: Bar[]; interval: Timeframe };
@@ -342,8 +349,62 @@ async function massiveTapeBars(inst: Instrument, tf: Timeframe): Promise<Bar[]> 
   return [];
 }
 
+/* ---------------------- Twelve Data (secondary provider) --------------------- */
 
-function toRow(inst: Instrument, base: Bar[]): MarketRow {
+/**
+ * Spot equivalents Twelve Data quotes for CME contracts. Index contracts stay
+ * out: they keep resolving through the existing ETF-proxy path.
+ */
+const TD_FUTURES: Record<string, string> = {
+  GC: "XAU/USD",
+  SI: "XAG/USD",
+  PL: "XPT/USD",
+  CL: "WTI/USD",
+  NG: "NG/USD",
+  HG: "COPPER/USD",
+};
+
+/** Twelve Data symbol for a desk instrument, or `null` when unmapped. */
+function tdSymbolFor(inst: Instrument): string | null {
+  if (inst.desk === "stocks") return inst.key;
+  if (inst.desk === "fx") return inst.key.length === 6 ? tdSymbol("fx", inst.key) : null;
+  if (inst.desk === "crypto") return tdSymbol("crypto", inst.key);
+  if (inst.desk === "futures") return TD_FUTURES[inst.key] ?? null;
+  return null; // benchmarks/indices use the proxy path
+}
+
+/** Desk priority when the per-poll Twelve Data budget has to be rationed. */
+const TD_DESK_RANK: Record<DeskId, number> = { futures: 0, fx: 1, stocks: 2, crypto: 3, indices: 9 };
+
+/**
+ * Symbols the plan does not cover are remembered for 15 minutes so an
+ * unentitled slice costs one request per window instead of one per poll.
+ */
+const tdMiss = new Map<string, number>();
+const TD_MISS_TTL = 15 * 60_000;
+
+/** Bars for one instrument from Twelve Data at a desk timeframe. */
+async function twelveDataTapeBars(inst: Instrument, tf: Timeframe): Promise<Bar[]> {
+  const symbol = tdSymbolFor(inst);
+  if (!symbol) return [];
+  const key = `td:${symbol}:${tf}`;
+  const hit = cache.get(key);
+  if (hit && Date.now() - hit.at < TTL) return hit.value;
+  const missedAt = tdMiss.get(key);
+  if (missedAt && Date.now() - missedAt < TD_MISS_TTL) return hit?.value ?? [];
+  const { tdInterval, twelveDataBars } = await import("@/lib/twelvedata.server");
+  const bars = await twelveDataBars(symbol, tdInterval(tf), 400).catch(() => null);
+  if (!bars || bars.length < 2) {
+    tdMiss.set(key, Date.now());
+    return hit?.value ?? [];
+  }
+  tdMiss.delete(key);
+  cache.set(key, { at: Date.now(), value: bars });
+  return bars;
+}
+
+function toRow(inst: Instrument, base: Bar[], source: MarketSource = "none"): MarketRow {
+
   const tf = barsByTf(base);
   // Daily-granularity series (whole-market summaries) need a session window and
   // a prev-close reference that differ from an intraday 5m tape.
@@ -372,7 +433,9 @@ function toRow(inst: Instrument, base: Bar[]): MarketRow {
     signals: timeframes.map((t) => tfSignal(t.id, tf[t.id])),
     indicators: indicators(session),
     status: live ? "live" : "syncing",
+    source: live ? source : "none",
     updatedAt: last?.t ?? Date.now(),
+
   };
 }
 
@@ -504,6 +567,12 @@ async function fallbackBars(inst: Instrument): Promise<Bar[]> {
 export async function loadTapeBoard(desk?: DeskId): Promise<MarketBoard> {
   const list = desk ? instrumentsByDesk(desk) : instruments;
   const series = new Map<string, Bar[]>();
+  const sources = new Map<string, MarketSource>();
+  const put = (symbol: string, bars: Bar[], source: MarketSource) => {
+    if (bars.length < 2) return;
+    series.set(symbol, bars);
+    sources.set(symbol, source);
+  };
 
   // 1) Massive whole-market daily summaries: one request covers an entire asset
   //    class, so every stock, crypto pair and FX cross prices on the first poll.
@@ -521,21 +590,37 @@ export async function loadTapeBoard(desk?: DeskId): Promise<MarketBoard> {
       ).catch(() => new Map<string, Bar[]>());
       for (const inst of group) {
         const bars = rows.get(inst.key);
-        if (bars && bars.length > 1) series.set(inst.symbol, bars);
+        if (bars && bars.length > 1) put(inst.symbol, bars, "massive");
       }
     }),
   );
 
-  // 2) Continuous keyless tape for anything Massive doesn't cover (futures,
-  //    benchmarks) or hasn't answered for yet. Both fallback steps are time
-  //    boxed so a throttled public feed can never stall the whole board.
+  // Fallback steps are time boxed so a throttled feed can never stall the board.
   const cap = <T,>(p: Promise<T>, fallback: T, ms = 4_000): Promise<T> =>
     Promise.race([p.catch(() => fallback), sleep(ms).then(() => fallback)]);
 
+  // 1b) Twelve Data for anything Massive didn't answer for: true OHLCV with
+  //     volume, so the shared indicator + multi-timeframe signal pipeline scores
+  //     these rows off real bars instead of a close-only public series.
+  //     Rationed per poll (commodities and FX first) to respect the free plan.
+  const tdCandidates = list
+    .filter((inst) => (series.get(inst.symbol)?.length ?? 0) < 2 && tdSymbolFor(inst))
+    .sort((a, b) => (TD_DESK_RANK[a.desk] ?? 9) - (TD_DESK_RANK[b.desk] ?? 9))
+    .slice(0, 6);
+  if (tdCandidates.length > 0) {
+    await Promise.all(
+      tdCandidates.map(async (inst) => {
+        const bars = await cap(twelveDataTapeBars(inst, "5m"), [] as Bar[], 6_000);
+        put(inst.symbol, bars, "twelvedata");
+      }),
+    );
+  }
+
+  // 2) Continuous keyless tape for anything still missing (futures, benchmarks).
   const missing = list.filter((inst) => (series.get(inst.symbol)?.length ?? 0) < 2);
   if (missing.length > 0) {
     const spark = await cap(loadSparkBars(missing.map((i) => i.symbol)), new Map<string, Bar[]>(), 5_000);
-    for (const [symbol, bars] of spark) if (bars.length > 1) series.set(symbol, bars);
+    for (const [symbol, bars] of spark) put(symbol, bars, "tape");
   }
 
   // 2b) ETF proxy pricing for contracts and benchmarks the plan doesn't cover
@@ -552,7 +637,7 @@ export async function loadTapeBoard(desk?: DeskId): Promise<MarketBoard> {
     ).catch(() => new Map<string, Bar[]>());
     for (const inst of needProxy) {
       const bars = proxied.get(inst.proxy!);
-      if (bars && bars.length > 1) series.set(inst.symbol, bars);
+      if (bars && bars.length > 1) put(inst.symbol, bars, "proxy");
     }
   }
 
@@ -562,13 +647,14 @@ export async function loadTapeBoard(desk?: DeskId): Promise<MarketBoard> {
       .filter((inst) => (series.get(inst.symbol)?.length ?? 0) < 2)
       .map(async (inst) => {
         const bars = await cap(fallbackBars(inst), [] as Bar[]);
-        if (bars.length > 1) series.set(inst.symbol, bars);
+        const isCrypto = inst.desk === "crypto" || inst.symbol.startsWith("BTC-") || inst.symbol.startsWith("ETH-");
+        put(inst.symbol, bars, isCrypto ? "binance" : "frankfurter");
       }),
   );
 
 
   const rows = list.map((inst) => {
-    const row = toRow(inst, series.get(inst.symbol) ?? []);
+    const row = toRow(inst, series.get(inst.symbol) ?? [], sources.get(inst.symbol) ?? "none");
     const viaProxy = Boolean(inst.proxy && row.status === "live" && !usedDirect.has(inst.symbol));
     return viaProxy ? { ...row, name: `${inst.name} · ${inst.proxy} proxy` } : row;
   });
@@ -578,6 +664,7 @@ export async function loadTapeBoard(desk?: DeskId): Promise<MarketBoard> {
     pending: rows.filter((r) => r.status === "syncing").length,
   };
 }
+
 
 
 export async function loadTapeDetail(key: string, interval: Timeframe): Promise<MarketDetail> {
@@ -590,30 +677,51 @@ export async function loadTapeDetail(key: string, interval: Timeframe): Promise<
     symbol: key.toUpperCase(),
     quote: "USD",
   };
-  // 1) Massive at the requested granularity (1m → 4h), 2) continuous tape,
-  // 3) keyless per-desk fallback. Whichever answers first wins.
+  // 1) Massive at the requested granularity (1m → 4h), 2) Twelve Data at the
+  // mapped interval, 3) continuous tape, 4) keyless per-desk fallback, 5) ETF
+  // proxy. Whichever answers first wins; the row is scored identically either way.
   const primary = await massiveTapeBars(inst, interval).catch(() => []);
   if (primary.length > 4) {
-    const row = toRow(inst, primary);
+    const row = toRow(inst, primary, "massive");
     return { ...row, bars: primary.slice(-400), interval };
   }
+
+  const td = await twelveDataTapeBars(inst, interval).catch(() => []);
+  if (td.length > 4) {
+    const row = toRow(inst, td, "twelvedata");
+    return { ...row, bars: td.slice(-400), interval };
+  }
+
+  let source: MarketSource = "tape";
   let base = await loadBars(inst.symbol, { interval: interval === "1m" ? "1m" : "5m", range: interval === "1m" ? "1d" : "5d" });
-  if (base.length < 5) base = await fallbackBars(inst);
+  if (base.length < 5) {
+    base = await fallbackBars(inst);
+    if (base.length > 4) {
+      source =
+        inst.desk === "crypto" || inst.symbol.startsWith("BTC-") || inst.symbol.startsWith("ETH-")
+          ? "binance"
+          : "frankfurter";
+    }
+  }
   // Contracts and index levels the plan doesn't cover directly fall back to
   // their live ETF proxy tape rather than erroring the whole chart.
   const proxy = inst.proxy;
   if (base.length < 5 && proxy) {
     base = await massiveTapeBars({ ...inst, symbol: proxy, proxy: undefined }, interval).catch(() => []);
     if (base.length < 5) base = await loadBars(proxy, { interval: "5m", range: "5d" }).catch(() => []);
-    if (base.length > 4) inst = { ...inst, name: `${inst.name} · ${proxy} proxy` };
+    if (base.length > 4) {
+      inst = { ...inst, name: `${inst.name} · ${proxy} proxy` };
+      source = "proxy";
+    }
   }
   if (base.length < 5) {
     // No feed answered — surface a syncing row so the terminal stays usable.
-    return { ...toRow(inst, []), bars: [], interval };
+    return { ...toRow(inst, [], "none"), bars: [], interval };
   }
   const tf = barsByTf(base);
-  return { ...toRow(inst, base), bars: tf[interval].slice(-400), interval };
+  return { ...toRow(inst, base, source), bars: tf[interval].slice(-400), interval };
 }
+
 
 
 
