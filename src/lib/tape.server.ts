@@ -38,6 +38,26 @@ export type Instrument = {
   proxy?: string | undefined;
 };
 
+/** Which feed produced the series a row was scored from. */
+export type MarketSource =
+  | "massive"
+  | "twelvedata"
+  | "tape"
+  | "binance"
+  | "frankfurter"
+  | "proxy"
+  | "none";
+
+export const sourceLabels: Record<MarketSource, string> = {
+  massive: "Massive",
+  twelvedata: "Twelve Data",
+  tape: "Backup tape",
+  binance: "Binance spot",
+  frankfurter: "ECB (Frankfurter)",
+  proxy: "ETF proxy",
+  none: "No feed",
+};
+
 export type MarketRow = {
   key: string;
   code: string;
@@ -57,8 +77,11 @@ export type MarketRow = {
   signals: TfSignal[];
   indicators: Indicators;
   status: "live" | "syncing";
+  /** Provider that served the bars behind these indicators/signals. */
+  source: MarketSource;
   updatedAt: number;
 };
+
 
 export type MarketBoard = { rows: MarketRow[]; updatedAt: number; pending: number };
 export type MarketDetail = MarketRow & { bars: Bar[]; interval: Timeframe };
