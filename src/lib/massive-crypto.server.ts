@@ -12,6 +12,7 @@
  * Nothing here is hard-coded to a fixed count: new listings appear on their own.
  */
 
+import type { Bar } from "@/lib/futures.server";
 import { groupedDay, massiveConfigured, massiveGet } from "@/lib/massive.server";
 
 export type MassiveCryptoCategory = "stablecoin" | "memecoin" | "crypto";
@@ -131,13 +132,14 @@ export async function loadMassiveCryptoUniverse(): Promise<MassiveCryptoUniverse
 
   // Identity (one cached call) + the last few closed sessions (one cached call
   // each, and they never change once the day is closed).
-  const [reference, ...days] = await Promise.all([
-    massiveGet<{ results?: RefTicker[]; count?: number }>(
-      "/v3/reference/tickers?market=crypto&active=true&limit=1000",
-      { ttl: 24 * 3600_000, scope: "reference:crypto-universe" },
-    ),
-    ...[1, 2, 3, 4, 5].map((offset) => groupedDay("crypto", offset).catch(() => new Map())),
-  ]);
+  const referencePromise = massiveGet<{ results?: RefTicker[]; count?: number }>(
+    "/v3/reference/tickers?market=crypto&active=true&limit=1000",
+    { ttl: 24 * 3600_000, scope: "reference:crypto-universe" },
+  );
+  const daysPromise = Promise.all(
+    [1, 2, 3, 4, 5].map((offset) => groupedDay("crypto", offset).catch(() => new Map<string, Bar>())),
+  );
+  const [reference, days] = await Promise.all([referencePromise, daysPromise]);
 
   const sessions = days.filter((d) => d.size > 0);
   if (sessions.length === 0) notes.push("No closed Massive crypto session answered yet — prices will fill in shortly.");
@@ -174,7 +176,7 @@ export async function loadMassiveCryptoUniverse(): Promise<MassiveCryptoUniverse
 
     // Newest session first, so `series` ends on the latest close.
     const closes: number[] = [];
-    let latest: { close: number; high: number; low: number; volume: number; t: number } | null = null;
+    let latest: Bar | null = null;
     for (let i = sessions.length - 1; i >= 0; i--) {
       const bar = sessions[i]?.get(ticker);
       if (!bar) continue;
