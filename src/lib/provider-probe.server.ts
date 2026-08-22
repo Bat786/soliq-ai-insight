@@ -135,6 +135,7 @@ export async function probeProviders(symbolRaw: string): Promise<ProviderReport>
       probes.push(
         await probeJson("Unusual Whales", label, path, `${UW_BASE}${path}`, {
           Authorization: `Bearer ${uwKey}`,
+          "UW-CLIENT-API-ID": "100001",
         }),
       );
     }
