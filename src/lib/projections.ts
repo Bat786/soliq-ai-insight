@@ -207,13 +207,13 @@ export function projectSeries(input: ProjectionInput): ProjectionSet | null {
   return {
     current: round(last),
     asOf: Date.now(),
-    model: "SOLIQ trend + mean-reversion with lognormal volatility bands",
+    model: "PRISM · trend, mean-reversion and volatility-band model",
     sampleDays,
     volatilityPct: Number((sigmaDay * Math.sqrt(365) * 100).toFixed(1)),
     drivers: (input.drivers ?? []).slice(0, 6),
     horizons,
     disclaimer:
-      "Model-based probabilistic projections from SOLIQ analytics — not guaranteed prices and not financial advice.",
+      "PRISM output is probabilistic market intelligence built from live data, signals and risk context — not guaranteed prices and not financial advice.",
   };
 }
 
