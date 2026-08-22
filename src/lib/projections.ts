@@ -10,7 +10,19 @@
  * `projectable` is false, so callers can gate by classification in one place.
  */
 
-export type ProjectionHorizon = "intraday" | "1D" | "3D" | "1W" | "2W" | "1M" | "3M" | "6M" | "1Y";
+export type ProjectionHorizon =
+  | "15m"
+  | "30m"
+  | "1h"
+  | "4h"
+  | "1D"
+  | "3D"
+  | "1W"
+  | "2W"
+  | "1M"
+  | "3M"
+  | "6M"
+  | "1Y";
 
 export type ProjectionCase = {
   /** Model price at the horizon. */
