@@ -571,6 +571,12 @@ async function fallbackBars(inst: Instrument): Promise<Bar[]> {
 export async function loadTapeBoard(desk?: DeskId): Promise<MarketBoard> {
   const list = desk ? instrumentsByDesk(desk) : instruments;
   const series = new Map<string, Bar[]>();
+  const sources = new Map<string, MarketSource>();
+  const put = (symbol: string, bars: Bar[], source: MarketSource) => {
+    if (bars.length < 2) return;
+    series.set(symbol, bars);
+    sources.set(symbol, source);
+  };
 
   // 1) Massive whole-market daily summaries: one request covers an entire asset
   //    class, so every stock, crypto pair and FX cross prices on the first poll.
@@ -588,21 +594,37 @@ export async function loadTapeBoard(desk?: DeskId): Promise<MarketBoard> {
       ).catch(() => new Map<string, Bar[]>());
       for (const inst of group) {
         const bars = rows.get(inst.key);
-        if (bars && bars.length > 1) series.set(inst.symbol, bars);
+        if (bars && bars.length > 1) put(inst.symbol, bars, "massive");
       }
     }),
   );
 
-  // 2) Continuous keyless tape for anything Massive doesn't cover (futures,
-  //    benchmarks) or hasn't answered for yet. Both fallback steps are time
-  //    boxed so a throttled public feed can never stall the whole board.
+  // Fallback steps are time boxed so a throttled feed can never stall the board.
   const cap = <T,>(p: Promise<T>, fallback: T, ms = 4_000): Promise<T> =>
     Promise.race([p.catch(() => fallback), sleep(ms).then(() => fallback)]);
 
+  // 1b) Twelve Data for anything Massive didn't answer for: true OHLCV with
+  //     volume, so the shared indicator + multi-timeframe signal pipeline scores
+  //     these rows off real bars instead of a close-only public series.
+  //     Rationed per poll (commodities and FX first) to respect the free plan.
+  const tdCandidates = list
+    .filter((inst) => (series.get(inst.symbol)?.length ?? 0) < 2 && tdSymbolFor(inst))
+    .sort((a, b) => (TD_DESK_RANK[a.desk] ?? 9) - (TD_DESK_RANK[b.desk] ?? 9))
+    .slice(0, 6);
+  if (tdCandidates.length > 0) {
+    await Promise.all(
+      tdCandidates.map(async (inst) => {
+        const bars = await cap(twelveDataTapeBars(inst, "5m"), [] as Bar[], 6_000);
+        put(inst.symbol, bars, "twelvedata");
+      }),
+    );
+  }
+
+  // 2) Continuous keyless tape for anything still missing (futures, benchmarks).
   const missing = list.filter((inst) => (series.get(inst.symbol)?.length ?? 0) < 2);
   if (missing.length > 0) {
     const spark = await cap(loadSparkBars(missing.map((i) => i.symbol)), new Map<string, Bar[]>(), 5_000);
-    for (const [symbol, bars] of spark) if (bars.length > 1) series.set(symbol, bars);
+    for (const [symbol, bars] of spark) put(symbol, bars, "tape");
   }
 
   // 2b) ETF proxy pricing for contracts and benchmarks the plan doesn't cover
@@ -619,7 +641,7 @@ export async function loadTapeBoard(desk?: DeskId): Promise<MarketBoard> {
     ).catch(() => new Map<string, Bar[]>());
     for (const inst of needProxy) {
       const bars = proxied.get(inst.proxy!);
-      if (bars && bars.length > 1) series.set(inst.symbol, bars);
+      if (bars && bars.length > 1) put(inst.symbol, bars, "proxy");
     }
   }
 
@@ -629,13 +651,14 @@ export async function loadTapeBoard(desk?: DeskId): Promise<MarketBoard> {
       .filter((inst) => (series.get(inst.symbol)?.length ?? 0) < 2)
       .map(async (inst) => {
         const bars = await cap(fallbackBars(inst), [] as Bar[]);
-        if (bars.length > 1) series.set(inst.symbol, bars);
+        const isCrypto = inst.desk === "crypto" || inst.symbol.startsWith("BTC-") || inst.symbol.startsWith("ETH-");
+        put(inst.symbol, bars, isCrypto ? "binance" : "frankfurter");
       }),
   );
 
 
   const rows = list.map((inst) => {
-    const row = toRow(inst, series.get(inst.symbol) ?? []);
+    const row = toRow(inst, series.get(inst.symbol) ?? [], sources.get(inst.symbol) ?? "none");
     const viaProxy = Boolean(inst.proxy && row.status === "live" && !usedDirect.has(inst.symbol));
     return viaProxy ? { ...row, name: `${inst.name} · ${inst.proxy} proxy` } : row;
   });
@@ -645,6 +668,7 @@ export async function loadTapeBoard(desk?: DeskId): Promise<MarketBoard> {
     pending: rows.filter((r) => r.status === "syncing").length,
   };
 }
+
 
 
 export async function loadTapeDetail(key: string, interval: Timeframe): Promise<MarketDetail> {
