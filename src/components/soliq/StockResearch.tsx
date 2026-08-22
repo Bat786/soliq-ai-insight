@@ -177,6 +177,28 @@ export function StockResearch({ initial = "AAPL" }: { initial?: string }) {
               <Stat label="Spot" value={options?.spot ? options.spot.toFixed(2) : "—"} />
               <Stat label="Put/call vol" value={options?.putCallRatio === null || options === undefined ? "—" : String(options.putCallRatio)} />
             </div>
+            {research.data?.stats && (
+              <div className="mt-2 grid gap-2 sm:grid-cols-3 lg:grid-cols-5">
+                <Stat
+                  label="P/E (trail)"
+                  value={research.data.stats.peRatio ? research.data.stats.peRatio.toFixed(1) : "—"}
+                />
+                <Stat
+                  label="P/E (fwd)"
+                  value={research.data.stats.forwardPe ? research.data.stats.forwardPe.toFixed(1) : "—"}
+                />
+                <Stat label="EPS ttm" value={research.data.stats.eps ? research.data.stats.eps.toFixed(2) : "—"} />
+                <Stat label="Beta" value={research.data.stats.beta ? research.data.stats.beta.toFixed(2) : "—"} />
+                <Stat
+                  label="52w range"
+                  value={
+                    research.data.stats.fiftyTwoWeekLow && research.data.stats.fiftyTwoWeekHigh
+                      ? `${research.data.stats.fiftyTwoWeekLow.toFixed(2)} – ${research.data.stats.fiftyTwoWeekHigh.toFixed(2)}`
+                      : "—"
+                  }
+                />
+              </div>
+            )}
             {p?.description && <p className="mt-3 text-xs leading-relaxed text-muted-foreground">{p.description}</p>}
           </div>
 
