@@ -128,7 +128,7 @@ async function uw<T>(path: string, query: Record<string, string | number> = {}):
   let res: Response | null = null;
   for (let attempt = 0; attempt < 3; attempt++) {
     res = await fetch(cacheKey, {
-      headers: { Authorization: `Bearer ${key}`, Accept: "application/json" },
+      headers: { Authorization: `Bearer ${key}`, Accept: "application/json", "UW-CLIENT-API-ID": "100001" },
     });
     if (res.ok) break;
     if (res.status !== 429 && res.status < 500) break;

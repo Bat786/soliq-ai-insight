@@ -93,7 +93,7 @@ async function uw<T>(path: string, query: Record<string, string | number> = {}):
   if (hit && Date.now() - hit.at < TTL) return hit.value as T;
 
   const res = await fetch(cacheKey, {
-    headers: { Authorization: `Bearer ${key}`, Accept: "application/json" },
+    headers: { Authorization: `Bearer ${key}`, Accept: "application/json", "UW-CLIENT-API-ID": "100001" },
     signal: AbortSignal.timeout(6_000),
   });
   if (!res.ok) {
