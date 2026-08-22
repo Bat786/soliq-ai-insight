@@ -106,6 +106,9 @@ function MarketCard({ row, active, onSelect, tf }: { row: MarketRow; active: boo
           {px(row.low)} – {px(row.high)}
         </span>
       </div>
+      <div className="mt-1 text-right text-[9px] tracking-wide text-muted-foreground/70 uppercase">
+        {sourceLabels[row.source ?? "none"]}
+      </div>
     </button>
   );
 }
