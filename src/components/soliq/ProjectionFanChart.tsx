@@ -99,51 +99,51 @@ export function ProjectionFanChart({
       <div className="h-[170px] w-full sm:h-[220px]">
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart data={points} margin={{ top: 8, right: 8, bottom: 0, left: 0 }} onClick={handleClick}>
-            <CartesianGrid stroke="hsl(var(--border))" strokeOpacity={0.25} vertical={false} />
+            <CartesianGrid stroke="var(--border)" strokeOpacity={0.25} vertical={false} />
             <XAxis
               dataKey="x"
               type="number"
               domain={["dataMin", "dataMax"]}
               ticks={ticks}
               tickFormatter={(v: number) => labelByX.get(v)?.replace(" min", "m").replace(" hours", "h").replace(" hour", "h").replace(/ (day|days)/, "D").replace(/ (week|weeks)/, "W").replace(/ (month|months)/, "M").replace(/ (year|years)/, "Y") ?? ""}
-              tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }}
-              stroke="hsl(var(--border))"
+              tick={{ fontSize: 9, fill: "var(--muted-foreground)" }}
+              stroke="var(--border)"
               interval={0}
             />
             <YAxis
               domain={["dataMin", "dataMax"]}
               width={58}
-              tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }}
-              stroke="hsl(var(--border))"
+              tick={{ fontSize: 9, fill: "var(--muted-foreground)" }}
+              stroke="var(--border)"
               tickFormatter={(v: number) => fmtUsdc(v)}
             />
             <Tooltip
-              cursor={{ stroke: "hsl(var(--primary))", strokeOpacity: 0.4 }}
+              cursor={{ stroke: "var(--primary)", strokeOpacity: 0.4 }}
               content={({ payload }) => {
                 const p = payload?.[0]?.payload as Point | undefined;
                 return p && p.horizon !== "spot" ? <TipCard p={p} /> : null;
               }}
             />
             {activeX !== undefined ? (
-              <ReferenceLine x={activeX} stroke="hsl(var(--primary))" strokeOpacity={0.5} strokeDasharray="3 3" />
+              <ReferenceLine x={activeX} stroke="var(--primary)" strokeOpacity={0.5} strokeDasharray="3 3" />
             ) : null}
             <Area
               dataKey="band"
               stroke="none"
-              fill="hsl(var(--primary))"
+              fill="var(--primary)"
               fillOpacity={0.1}
               isAnimationActive={false}
               activeDot={false}
             />
-            <Line dataKey="bull" stroke="hsl(var(--bull))" strokeWidth={1.5} dot={false} isAnimationActive={false} />
+            <Line dataKey="bull" stroke="var(--bull)" strokeWidth={1.5} dot={false} isAnimationActive={false} />
             <Line
               dataKey="base"
-              stroke="hsl(var(--primary))"
+              stroke="var(--primary)"
               strokeWidth={2}
-              dot={{ r: 2, fill: "hsl(var(--primary))" }}
+              dot={{ r: 2, fill: "var(--primary)" }}
               isAnimationActive={false}
             />
-            <Line dataKey="bear" stroke="hsl(var(--bear))" strokeWidth={1.5} dot={false} isAnimationActive={false} />
+            <Line dataKey="bear" stroke="var(--bear)" strokeWidth={1.5} dot={false} isAnimationActive={false} />
           </ComposedChart>
         </ResponsiveContainer>
       </div>
@@ -152,9 +152,9 @@ export function ProjectionFanChart({
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={points.slice(1)} margin={{ top: 4, right: 8, bottom: 0, left: 0 }} onClick={handleClick}>
             <XAxis dataKey="label" hide />
-            <YAxis domain={[0, 100]} width={58} tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} stroke="hsl(var(--border))" />
+            <YAxis domain={[0, 100]} width={58} tick={{ fontSize: 9, fill: "var(--muted-foreground)" }} stroke="var(--border)" />
             <Tooltip
-              cursor={{ fill: "hsl(var(--primary))", fillOpacity: 0.08 }}
+              cursor={{ fill: "var(--primary)", fillOpacity: 0.08 }}
               content={({ payload }) => {
                 const p = payload?.[0]?.payload as Point | undefined;
                 return p ? (
@@ -164,7 +164,7 @@ export function ProjectionFanChart({
                 ) : null;
               }}
             />
-            <Bar dataKey="confidence" fill="hsl(var(--primary))" fillOpacity={0.45} radius={[2, 2, 0, 0]} isAnimationActive={false} />
+            <Bar dataKey="confidence" fill="var(--primary)" fillOpacity={0.45} radius={[2, 2, 0, 0]} isAnimationActive={false} />
           </BarChart>
         </ResponsiveContainer>
       </div>
