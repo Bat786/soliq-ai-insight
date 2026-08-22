@@ -310,7 +310,7 @@ const groupedLocale: Record<AssetClass, string | null> = {
  * single request. This is how the desk boards stay populated without spending
  * one request per symbol.
  */
-async function groupedDay(assetClass: AssetClass, dayOffset: number): Promise<Map<string, Bar>> {
+export async function groupedDay(assetClass: AssetClass, dayOffset: number): Promise<Map<string, Bar>> {
   const locale = groupedLocale[assetClass];
   const out = new Map<string, Bar>();
   if (!locale) return out;

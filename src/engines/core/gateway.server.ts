@@ -15,6 +15,9 @@ type Budget = { perMinute: number; minGapMs: number };
 const budgets: Partial<Record<ProviderId, Budget>> = {
   massive: { perMinute: 90, minGapMs: 160 },
   polygon: { perMinute: 90, minGapMs: 160 },
+  // Twelve Data free plan: 8 requests/minute, 800/day. Stay well inside it —
+  // batched quotes plus long cache TTLs keep the desks fed on a handful of calls.
+  twelvedata: { perMinute: 7, minGapMs: 1_100 },
   "unusual-whales": { perMinute: 55, minGapMs: 220 },
   jupiter: { perMinute: 90, minGapMs: 120 },
   dexscreener: { perMinute: 240, minGapMs: 60 },

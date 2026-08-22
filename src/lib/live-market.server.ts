@@ -2,6 +2,7 @@
 // Source: CoinGecko public API. On-chain/social fields marked in `modelled`
 // are derived deterministically from live price/volume/liquidity behaviour.
 
+import { isProjectableKind, projectSeries } from "@/lib/projections";
 import type {
   CapBucket,
   Indicators,
@@ -326,6 +327,50 @@ function toAsset(m: CgMarket): LiveAsset {
   };
 }
 
+/**
+ * Massive-listed crypto that CoinGecko's top pages did not already cover, run
+ * through the SAME `toAsset` analytics pipeline (indicators, signals, scores) so
+ * every downstream surface treats it identically.
+ */
+async function massiveAssets(known: Set<string>): Promise<LiveAsset[]> {
+  const { loadMassiveCryptoUniverse } = await import("@/lib/massive-crypto.server");
+  const universe = await loadMassiveCryptoUniverse().catch(() => null);
+  const out: LiveAsset[] = [];
+  for (const a of universe?.assets ?? []) {
+    const symbol = a.symbol.toUpperCase();
+    if (known.has(symbol)) continue;
+    known.add(symbol);
+    const prev = a.prevClose || a.price;
+    const asset = toAsset({
+      id: a.id,
+      symbol,
+      name: a.name,
+      image: "",
+      current_price: a.price,
+      // Massive does not publish caps; leave them at 0 rather than inventing one.
+      market_cap: 0,
+      market_cap_rank: null,
+      fully_diluted_valuation: null,
+      total_volume: a.volume24h,
+      high_24h: a.high24h,
+      low_24h: a.low24h,
+      ath: null,
+      ath_change_percentage: null,
+      price_change_percentage_1h_in_currency: null,
+      price_change_percentage_24h_in_currency: a.change24h,
+      price_change_percentage_7d_in_currency: prev ? ((a.price - prev) / prev) * 100 : 0,
+      price_change_percentage_30d_in_currency: null,
+      sparkline_in_7d: { price: a.series },
+    });
+    out.push({
+      ...asset,
+      sector: a.category === "stablecoin" ? "stablecoin" : a.category === "memecoin" ? "memecoin" : asset.sector,
+      modelled: [...asset.modelled, "Massive tape"],
+    });
+  }
+  return out;
+}
+
 export async function loadUniverse(): Promise<LiveAsset[]> {
   return cached("universe", 60_000, async () => {
     const pages = await Promise.all(
@@ -335,9 +380,13 @@ export async function loadUniverse(): Promise<LiveAsset[]> {
         ).catch(() => [] as CgMarket[]),
       ),
     );
-    return pages.flat().filter((m) => m && m.market_cap > 0).map(toAsset);
+    const primary = pages.flat().filter((m) => m && m.market_cap > 0).map(toAsset);
+    const known = new Set(primary.map((a) => a.symbol.toUpperCase()));
+    const extra = await massiveAssets(known).catch(() => [] as LiveAsset[]);
+    return [...primary, ...extra];
   });
 }
+
 
 export async function loadGlobal() {
   return cached("global", 120_000, async () => {
@@ -413,31 +462,28 @@ export async function loadHistory(
   return history;
 }
 
-/** Simple, transparent projection: trend + mean-reversion blend with ATR bands. */
+/**
+ * Probabilistic projection for a crypto asset, built from the SAME shared
+ * engine every other market uses (`src/lib/projections.ts`). Returns `null` for
+ * memecoins — they keep price/volume/liquidity/momentum/sentiment/risk
+ * analytics, but deliberately get no future-price projection.
+ */
 export function forecast(asset: LiveAsset, history: { t: number; p: number }[]) {
-  const closes = history.map((h) => h.p);
-  const last = closes[closes.length - 1] ?? asset.price;
-  const n = Math.min(30, closes.length);
-  const recent = closes.slice(-n);
-  const slope = n > 1 ? ((recent[n - 1] ?? last) - (recent[0] ?? last)) / (n - 1) : 0;
-  const meanRev = (sma(recent, n) - last) * 0.15;
-  const vol = stdev(recent.map((v) => v / last)) * last;
-  const horizons = [
-    { label: "24h", steps: 1 },
-    { label: "7d", steps: 7 },
-    { label: "30d", steps: 30 },
-  ];
-  const bias = (asset.bullScore - 50) / 100;
-  return horizons.map((h) => {
-    const target = last + (slope * h.steps + meanRev) * (1 + bias);
-    const band = vol * Math.sqrt(h.steps) * 1.4;
-    return {
-      label: h.label,
-      target: Number(target.toPrecision(6)),
-      low: Number(Math.max(0, target - band).toPrecision(6)),
-      high: Number((target + band).toPrecision(6)),
-      changePct: Number((((target - last) / (last || 1)) * 100).toFixed(2)),
-      confidence: Number(clamp(asset.aiConfidence - h.steps * 0.6, 15, 95).toFixed(0)),
-    };
+  return projectSeries({
+    closes: history.map((h) => h.p),
+    timestamps: history.map((h) => h.t),
+    current: asset.price,
+    score: asset.aiScore,
+    trendStrength: asset.indicators.trendStrength,
+    projectable: isProjectableKind(asset.sector),
+    drivers: [
+      `RSI ${asset.indicators.rsi}`,
+      `ADX ${asset.indicators.adx}`,
+      `rel volume ${asset.relVolume}x`,
+      `buy pressure ${asset.buyPressure}%`,
+      `smart money ${asset.onchain.smartMoney}/100`,
+      `social ${asset.sentiment.social}/100`,
+    ],
   });
 }
+

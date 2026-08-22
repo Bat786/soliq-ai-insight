@@ -11,6 +11,7 @@ export type AssetKind = "stock" | "etf" | "option" | "future" | "crypto" | "meme
 export type ProviderId =
   | "massive"
   | "polygon"
+  | "twelvedata"
   | "unusual-whales"
   | "jupiter"
   | "dexscreener"
