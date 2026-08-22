@@ -66,10 +66,8 @@ export async function buildAccountContext(
       : "brokerage connections: none (SnapTrade portal not completed)",
   );
 
-  const k = (banks as any[]) ?? [];
-  lines.push(
-    k.length ? `bank accounts linked: ${k.length} via ${[...new Set(k.map((x) => x.institution_name))].join(", ")}` : "bank accounts: none linked",
-  );
+
+
 
   return lines.join("\n");
 }
