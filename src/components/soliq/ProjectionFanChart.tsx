@@ -32,8 +32,6 @@ type Point = {
   confidence: number;
 };
 
-const fmtPct = (n: number) => `${n > 0 ? "+" : ""}${n.toFixed(2)}%`;
-
 /** Adaptive price formatting: FX crosses need 4-5 digits, indices need 2. */
 const fmtPx = (n: number) => {
   if (!Number.isFinite(n)) return "—";
