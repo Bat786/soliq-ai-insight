@@ -273,6 +273,15 @@ export function MarketsBoard({
 
         {detail.data && (
           <>
+            {detail.data.projection ? (
+              <div className="mt-3">
+                <ProjectionPanel
+                  projection={detail.data.projection}
+                  title={`PRISM projection · ${detail.data.code}`}
+                  note="Projected from live bars, indicator signals and realised volatility across the intraday and swing horizons."
+                />
+              </div>
+            ) : null}
             <div className="mt-3">
               <p className="mb-2 flex items-center gap-1.5 text-[10px] tracking-wide text-muted-foreground uppercase">
                 <Gauge className="size-3 text-primary" /> Indicator stack
