@@ -16,6 +16,7 @@ import {
   massiveSearch,
   type AssetClass,
 } from "@/lib/massive.server";
+import { projectSeries, type ProjectionSet } from "@/lib/projections";
 import { tdSymbol } from "@/lib/twelvedata.server";
 
 export type { Indicators, Bar, Timeframe, TfSignal };
@@ -68,7 +69,33 @@ export type MarketRow = {
 
 
 export type MarketBoard = { rows: MarketRow[]; updatedAt: number; pending: number };
-export type MarketDetail = MarketRow & { bars: Bar[]; interval: Timeframe };
+export type MarketDetail = MarketRow & {
+  bars: Bar[];
+  interval: Timeframe;
+  /** PRISM projection set; null when the series is too thin. */
+  projection: ProjectionSet | null;
+};
+
+/**
+ * PRISM projection for a desk instrument, built from the bars already loaded
+ * for the chart (no extra provider calls). Desk instruments are stocks, FX,
+ * futures, metals and major crypto — never memecoins — so all are projectable.
+ */
+function withProjection(row: MarketRow, bars: Bar[], interval: Timeframe): MarketDetail {
+  const projection =
+    bars.length > 12
+      ? projectSeries({
+          closes: bars.map((b) => b.close),
+          timestamps: bars.map((b) => b.t),
+          score: row.indicators.score,
+          trendStrength: Math.abs(row.indicators.score - 50) * 2,
+          drivers: row.signals.filter((s) => Math.abs(s.tilt) > 0.12).map((s) => `${s.tf} ${s.label}`),
+          projectable: true,
+          current: row.last,
+        })
+      : null;
+  return { ...row, bars: bars.slice(-400), interval, projection };
+}
 
 /* -------------------------------- catalogs -------------------------------- */
 
@@ -682,15 +709,14 @@ export async function loadTapeDetail(key: string, interval: Timeframe): Promise<
   // proxy. Whichever answers first wins; the row is scored identically either way.
   const primary = await massiveTapeBars(inst, interval).catch(() => []);
   if (primary.length > 4) {
-    const row = toRow(inst, primary, "massive");
-    return { ...row, bars: primary.slice(-400), interval };
+    return withProjection(toRow(inst, primary, "massive"), primary, interval);
   }
 
   const td = await twelveDataTapeBars(inst, interval).catch(() => []);
   if (td.length > 4) {
-    const row = toRow(inst, td, "twelvedata");
-    return { ...row, bars: td.slice(-400), interval };
+    return withProjection(toRow(inst, td, "twelvedata"), td, interval);
   }
+
 
   let source: MarketSource = "tape";
   let base = await loadBars(inst.symbol, { interval: interval === "1m" ? "1m" : "5m", range: interval === "1m" ? "1d" : "5d" });
@@ -716,10 +742,10 @@ export async function loadTapeDetail(key: string, interval: Timeframe): Promise<
   }
   if (base.length < 5) {
     // No feed answered — surface a syncing row so the terminal stays usable.
-    return { ...toRow(inst, [], "none"), bars: [], interval };
+    return { ...toRow(inst, [], "none"), bars: [], interval, projection: null };
   }
   const tf = barsByTf(base);
-  return { ...toRow(inst, base, source), bars: tf[interval].slice(-400), interval };
+  return withProjection(toRow(inst, base, source), tf[interval], interval);
 }
 
 

@@ -19,13 +19,13 @@ export const Route = createFileRoute("/asset/$id")({
     const label = params.id.replace(/-/g, " ");
     return {
       meta: [
-        { title: `${label} analysis & AI forecast — SOLIQ` },
+        { title: `${label} intelligence & PRISM projection — SOLIQ` },
         {
           name: "description",
-          content: `Live ${label} price chart, RSI, MACD, moving averages, volume flow, whale activity and SOLIQ AI price projection.`,
+          content: `Live ${label} price chart, RSI, MACD, moving averages, volume flow, whale activity and SOLIQ PRISM projections.`,
         },
         { property: "og:title", content: `${label} analysis — SOLIQ` },
-        { property: "og:description", content: `Live chart, indicators and AI projection for ${label}.` },
+        { property: "og:description", content: `Live data, signals and PRISM projections for ${label}.` },
         { property: "og:type", content: "article" },
         { name: "twitter:card", content: "summary_large_image" },
       ],
@@ -142,7 +142,7 @@ function AssetPage() {
 
 
         {forecast ? (
-          <ProjectionPanel projection={forecast} title="SOLIQ price projection" note={asset.thesis} />
+          <ProjectionPanel projection={forecast} title="PRISM projection" note={asset.thesis} />
         ) : (
           <div className="panel p-4">
             <p className="text-xs font-medium">Memecoin analytics</p>

@@ -10,7 +10,19 @@
  * `projectable` is false, so callers can gate by classification in one place.
  */
 
-export type ProjectionHorizon = "intraday" | "1D" | "3D" | "1W" | "2W" | "1M" | "3M" | "6M" | "1Y";
+export type ProjectionHorizon =
+  | "15m"
+  | "30m"
+  | "1h"
+  | "4h"
+  | "1D"
+  | "3D"
+  | "1W"
+  | "2W"
+  | "1M"
+  | "3M"
+  | "6M"
+  | "1Y";
 
 export type ProjectionCase = {
   /** Model price at the horizon. */
@@ -50,7 +62,10 @@ export type ProjectionSet = {
 };
 
 const HORIZONS: { horizon: ProjectionHorizon; label: string; days: number }[] = [
-  { horizon: "intraday", label: "Intraday", days: 0.35 },
+  { horizon: "15m", label: "15 min", days: 15 / 1440 },
+  { horizon: "30m", label: "30 min", days: 30 / 1440 },
+  { horizon: "1h", label: "1 hour", days: 1 / 24 },
+  { horizon: "4h", label: "4 hours", days: 4 / 24 },
   { horizon: "1D", label: "1 day", days: 1 },
   { horizon: "3D", label: "3 days", days: 3 },
   { horizon: "1W", label: "1 week", days: 7 },
@@ -192,13 +207,13 @@ export function projectSeries(input: ProjectionInput): ProjectionSet | null {
   return {
     current: round(last),
     asOf: Date.now(),
-    model: "SOLIQ trend + mean-reversion with lognormal volatility bands",
+    model: "PRISM · trend, mean-reversion and volatility-band model",
     sampleDays,
     volatilityPct: Number((sigmaDay * Math.sqrt(365) * 100).toFixed(1)),
     drivers: (input.drivers ?? []).slice(0, 6),
     horizons,
     disclaimer:
-      "Model-based probabilistic projections from SOLIQ analytics — not guaranteed prices and not financial advice.",
+      "PRISM output is probabilistic market intelligence built from live data, signals and risk context — not guaranteed prices and not financial advice.",
   };
 }
 

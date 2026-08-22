@@ -136,7 +136,7 @@ function SymbolPage() {
               </ul>
             )}
 
-            <ProjectionPanel projection={data?.projection ?? null} title={`${data?.display ?? symbol} price projection`} />
+            <ProjectionPanel projection={data?.projection ?? null} title={`PRISM projection · ${data?.display ?? symbol}`} />
 
             <div className="grid gap-4 lg:grid-cols-[1fr_290px]">
               <SymbolChart bars={data?.bars ?? []} timeframe={tf} />

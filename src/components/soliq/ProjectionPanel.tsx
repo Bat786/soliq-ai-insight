@@ -39,7 +39,7 @@ function HorizonCard({ h, active, onSelect }: { h: Projection; active: boolean; 
 
 export function ProjectionPanel({
   projection,
-  title = "SOLIQ price projection",
+  title = "PRISM projection",
   note,
 }: {
   projection: ProjectionSet | null | undefined;
@@ -49,7 +49,10 @@ export function ProjectionPanel({
   const [selected, setSelected] = useState<string | null>(null);
   if (!projection || projection.horizons.length === 0) return null;
 
-  const active = projection.horizons.find((h) => h.horizon === selected) ?? projection.horizons[3] ?? projection.horizons[0]!;
+  const active =
+    projection.horizons.find((h) => h.horizon === selected) ??
+    projection.horizons.find((h) => h.horizon === "1h") ??
+    projection.horizons[0]!;
 
   return (
     <section className="panel p-4">
@@ -57,7 +60,7 @@ export function ProjectionPanel({
         <div>
           <p className="text-xs font-medium">{title}</p>
           <p className="mt-0.5 text-[11px] text-muted-foreground">
-            {projection.model} · {projection.sampleDays}d sample · {projection.volatilityPct}% annualised vol
+            {projection.model} · {projection.sampleDays}d data sample · {projection.volatilityPct}% annualised risk
           </p>
         </div>
         <p className="num text-[11px] text-muted-foreground">spot {fmtUsdc(projection.current)}</p>
@@ -65,7 +68,7 @@ export function ProjectionPanel({
 
       {note ? <p className="mt-2 text-[11px] text-muted-foreground">{note}</p> : null}
 
-      <div className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-5 lg:grid-cols-9">
+      <div className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-6 lg:grid-cols-12">
         {projection.horizons.map((h) => (
           <HorizonCard key={h.horizon} h={h} active={h.horizon === active.horizon} onSelect={() => setSelected(h.horizon)} />
         ))}
@@ -85,10 +88,10 @@ export function ProjectionPanel({
         </div>
 
         <div className="rounded-xl bg-surface-2/50 p-3">
-          <p className="text-[10px] tracking-wide text-muted-foreground uppercase">Supporting signals</p>
+          <p className="text-[10px] tracking-wide text-muted-foreground uppercase">Signals behind this read</p>
           <div className="mt-2 flex flex-wrap gap-1.5">
             {projection.drivers.length === 0 ? (
-              <span className="text-[11px] text-muted-foreground">No dominant driver — model is trend-neutral.</span>
+              <span className="text-[11px] text-muted-foreground">No dominant signal — market context is trend-neutral.</span>
             ) : (
               projection.drivers.map((d) => (
                 <span key={d} className="rounded-md bg-primary/12 px-2 py-0.5 text-[11px] text-primary">
