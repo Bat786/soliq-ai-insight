@@ -436,7 +436,9 @@ function toRow(inst: Instrument, base: Bar[], source: MarketSource = "none"): Ma
     signals: timeframes.map((t) => tfSignal(t.id, tf[t.id])),
     indicators: indicators(session),
     status: live ? "live" : "syncing",
+    source: live ? source : "none",
     updatedAt: last?.t ?? Date.now(),
+
   };
 }
 
