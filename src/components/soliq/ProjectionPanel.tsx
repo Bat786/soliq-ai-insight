@@ -68,7 +68,7 @@ export function ProjectionPanel({
 
       {note ? <p className="mt-2 text-[11px] text-muted-foreground">{note}</p> : null}
 
-      <div className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-5 lg:grid-cols-9">
+      <div className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-6 lg:grid-cols-12">
         {projection.horizons.map((h) => (
           <HorizonCard key={h.horizon} h={h} active={h.horizon === active.horizon} onSelect={() => setSelected(h.horizon)} />
         ))}
@@ -88,10 +88,10 @@ export function ProjectionPanel({
         </div>
 
         <div className="rounded-xl bg-surface-2/50 p-3">
-          <p className="text-[10px] tracking-wide text-muted-foreground uppercase">Supporting signals</p>
+          <p className="text-[10px] tracking-wide text-muted-foreground uppercase">Signals behind this read</p>
           <div className="mt-2 flex flex-wrap gap-1.5">
             {projection.drivers.length === 0 ? (
-              <span className="text-[11px] text-muted-foreground">No dominant driver — model is trend-neutral.</span>
+              <span className="text-[11px] text-muted-foreground">No dominant signal — market context is trend-neutral.</span>
             ) : (
               projection.drivers.map((d) => (
                 <span key={d} className="rounded-md bg-primary/12 px-2 py-0.5 text-[11px] text-primary">
