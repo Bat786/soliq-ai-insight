@@ -681,30 +681,51 @@ export async function loadTapeDetail(key: string, interval: Timeframe): Promise<
     symbol: key.toUpperCase(),
     quote: "USD",
   };
-  // 1) Massive at the requested granularity (1m → 4h), 2) continuous tape,
-  // 3) keyless per-desk fallback. Whichever answers first wins.
+  // 1) Massive at the requested granularity (1m → 4h), 2) Twelve Data at the
+  // mapped interval, 3) continuous tape, 4) keyless per-desk fallback, 5) ETF
+  // proxy. Whichever answers first wins; the row is scored identically either way.
   const primary = await massiveTapeBars(inst, interval).catch(() => []);
   if (primary.length > 4) {
-    const row = toRow(inst, primary);
+    const row = toRow(inst, primary, "massive");
     return { ...row, bars: primary.slice(-400), interval };
   }
+
+  const td = await twelveDataTapeBars(inst, interval).catch(() => []);
+  if (td.length > 4) {
+    const row = toRow(inst, td, "twelvedata");
+    return { ...row, bars: td.slice(-400), interval };
+  }
+
+  let source: MarketSource = "tape";
   let base = await loadBars(inst.symbol, { interval: interval === "1m" ? "1m" : "5m", range: interval === "1m" ? "1d" : "5d" });
-  if (base.length < 5) base = await fallbackBars(inst);
+  if (base.length < 5) {
+    base = await fallbackBars(inst);
+    if (base.length > 4) {
+      source =
+        inst.desk === "crypto" || inst.symbol.startsWith("BTC-") || inst.symbol.startsWith("ETH-")
+          ? "binance"
+          : "frankfurter";
+    }
+  }
   // Contracts and index levels the plan doesn't cover directly fall back to
   // their live ETF proxy tape rather than erroring the whole chart.
   const proxy = inst.proxy;
   if (base.length < 5 && proxy) {
     base = await massiveTapeBars({ ...inst, symbol: proxy, proxy: undefined }, interval).catch(() => []);
     if (base.length < 5) base = await loadBars(proxy, { interval: "5m", range: "5d" }).catch(() => []);
-    if (base.length > 4) inst = { ...inst, name: `${inst.name} · ${proxy} proxy` };
+    if (base.length > 4) {
+      inst = { ...inst, name: `${inst.name} · ${proxy} proxy` };
+      source = "proxy";
+    }
   }
   if (base.length < 5) {
     // No feed answered — surface a syncing row so the terminal stays usable.
-    return { ...toRow(inst, []), bars: [], interval };
+    return { ...toRow(inst, [], "none"), bars: [], interval };
   }
   const tf = barsByTf(base);
-  return { ...toRow(inst, base), bars: tf[interval].slice(-400), interval };
+  return { ...toRow(inst, base, source), bars: tf[interval].slice(-400), interval };
 }
+
 
 
 
