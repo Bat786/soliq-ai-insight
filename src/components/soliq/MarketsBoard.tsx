@@ -5,6 +5,7 @@ import { Gauge, Globe, Loader2, RadioTower, Search } from "lucide-react";
 import { BullBearGauge } from "@/components/soliq/BullBearGauge";
 import CandleChart, { type Overlays, type Point, type VolPoint } from "@/components/soliq/CandleChart";
 import { Delta, SectionTitle, Sparkline } from "@/components/soliq/primitives";
+import { ProjectionPanel } from "@/components/soliq/ProjectionPanel";
 import { Input } from "@/components/ui/input";
 import { useTapeBoard, useTapeDetail, useTapeSearch } from "@/hooks/use-tape";
 import type { Bar, Timeframe } from "@/lib/futures.server";
