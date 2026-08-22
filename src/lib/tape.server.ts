@@ -708,15 +708,14 @@ export async function loadTapeDetail(key: string, interval: Timeframe): Promise<
   // proxy. Whichever answers first wins; the row is scored identically either way.
   const primary = await massiveTapeBars(inst, interval).catch(() => []);
   if (primary.length > 4) {
-    const row = toRow(inst, primary, "massive");
-    return { ...row, bars: primary.slice(-400), interval };
+    return withProjection(toRow(inst, primary, "massive"), primary, interval);
   }
 
   const td = await twelveDataTapeBars(inst, interval).catch(() => []);
   if (td.length > 4) {
-    const row = toRow(inst, td, "twelvedata");
-    return { ...row, bars: td.slice(-400), interval };
+    return withProjection(toRow(inst, td, "twelvedata"), td, interval);
   }
+
 
   let source: MarketSource = "tape";
   let base = await loadBars(inst.symbol, { interval: interval === "1m" ? "1m" : "5m", range: interval === "1m" ? "1d" : "5d" });
