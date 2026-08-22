@@ -6,6 +6,7 @@
 
 import { useState } from "react";
 
+import { ProjectionFanChart } from "@/components/soliq/ProjectionFanChart";
 import type { Projection, ProjectionSet } from "@/lib/projections";
 import { fmtUsdc } from "@/lib/market-types";
 
