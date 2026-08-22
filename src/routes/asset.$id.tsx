@@ -3,6 +3,7 @@ import { Loader2 } from "lucide-react";
 import { useState } from "react";
 
 import { AppShell } from "@/components/soliq/AppShell";
+import { ProjectionPanel } from "@/components/soliq/ProjectionPanel";
 import { BullBearGauge } from "@/components/soliq/BullBearGauge";
 import { ChartTerminal } from "@/components/soliq/ChartTerminal";
 import { RiskBar, ScoreRing } from "@/components/soliq/primitives";
@@ -140,25 +141,18 @@ function AssetPage() {
         </div>
 
 
-        <div className="panel p-4">
-          <p className="text-xs font-medium">AI projection</p>
-          <p className="mt-1 text-xs text-muted-foreground">{asset.thesis}</p>
-          <div className="mt-3 grid gap-3 sm:grid-cols-3">
-            {forecast.map((f) => (
-              <div key={f.label} className="rounded-xl bg-surface-2/50 p-3">
-                <p className="text-[10px] tracking-wide text-muted-foreground uppercase">{f.label} target</p>
-                <p className="num text-sm font-medium">{fmtUsdc(f.target)}</p>
-                <p className={`num text-[11px] ${f.changePct >= 0 ? "text-bull" : "text-bear"}`}>{fmtPctc(f.changePct)}</p>
-                <p className="num mt-1 text-[10px] text-muted-foreground">
-                  range {fmtUsdc(f.low)}–{fmtUsdc(f.high)} · {f.confidence}% confidence
-                </p>
-              </div>
-            ))}
+        {forecast ? (
+          <ProjectionPanel projection={forecast} title="SOLIQ price projection" note={asset.thesis} />
+        ) : (
+          <div className="panel p-4">
+            <p className="text-xs font-medium">Memecoin analytics</p>
+            <p className="mt-1 text-xs text-muted-foreground">{asset.thesis}</p>
+            <p className="mt-2 text-[11px] text-muted-foreground">
+              SOLIQ deliberately publishes no future-price projection for memecoins — momentum, liquidity, sentiment and
+              risk analytics only.
+            </p>
           </div>
-          <p className="mt-3 text-[11px] text-muted-foreground">
-            Projections are a transparent trend + mean-reversion model with volatility bands. Not financial advice.
-          </p>
-        </div>
+        )}
 
         <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-6">
           <Stat label="Market cap" value={fmtUsdc(asset.marketCap)} />
