@@ -1,34 +1,39 @@
-# 20-Credit Build — Crypto Split, Memecoin Pages, Nav Polish
+# SOLIQ — Surgical Maintenance Pass (hard budget: under 10 credits)
 
-Tight scope, publishable at the end. Everything below reuses existing data and providers — no new services, no rebuilds.
+No rebuilds, no redesign, no new providers, no new dependencies. Only targeted fixes to what already exists. If an item can't be done safely inside the budget, it is skipped rather than expanded.
+
+## Confirmed from inspection
+
+- Build is currently OK. One TypeScript error appeared mid-session from an unfinished helper (`token-intel.server.ts` importing a non-existent `gtPoolOhlcv`); the latest build passes, so this file is checked and either corrected or removed.
+- Plaid is real and localized: `src/lib/plaid.server.ts`, `src/lib/bank.server.ts`, `src/lib/bank.functions.ts`, `src/components/soliq/BankAccountsPanel.tsx`, plus references in `src/lib/status.server.ts`, `src/routes/support.tsx`, and one mount in `src/routes/portfolio.tsx`.
+- SnapTrade already runs against the production host `api.snaptrade.com` using the official SDK with `SNAPTRADE_CLIENT_ID` / `SNAPTRADE_CONSUMER_KEY`. There is no sandbox branch in the code — so this is a credentials check, not a code migration.
+- `src/routes/brokerage.tsx` contains no tier/entitlement references, so brokerage is currently ungated. The SnapTrade connect flow already accepts a `read` vs `trade` connection scope, which is what the Pro/Elite split hangs off.
 
 ## What ships
 
-1. **Majors vs Memecoins split (the main complaint)**
-   The Crypto Desk gets a third tab, **Majors**, listing the established assets (Bitcoin, Ethereum, Solana, XRP, BNB…) from the market snapshot the app already loads. Memecoins and stablecoins keep their own tabs, so majors stop appearing in the memecoin desk. Rows open the existing asset intelligence page.
+1. **Plaid removal.** Delete the Plaid server module, bank connection server functions and the bank accounts panel; drop the mount in the portfolio route, the Plaid entries in status reporting, and the Plaid wording in support. Brokerage connection stays SnapTrade-only. Bank tables are left in the database untouched (no destructive migration).
 
-2. **Memecoin niche categories**
-   Filter chips on the memecoin desk — AI, Gaming, DeFi, Solana ecosystem, Animals, Political, Community, New launches, Other — derived from data already fetched, with live counts. No extra provider calls.
+2. **SnapTrade production confirmation.** Verify the two existing secrets are the production pair and, if you provide new values, store them through the existing secrets system (never in frontend code). Remove any leftover test/sandbox wording in the brokerage UI. No integration rewrite.
 
-3. **In-app memecoin detail page**
-   Clicking a memecoin now stays inside SOLIQ instead of jumping to Jupiter: price, change, market cap, liquidity, volume, buy/sell activity, trade counts, holders, audit flags, candles with timeframe controls, RSI/MACD/VWAP, Bollinger bands, support/resistance, volatility and breakout compression. Blocks that have no data say so rather than showing invented numbers. The Jupiter/DexScreener links remain as secondary references.
+3. **SnapTrade paywall (server-enforced).** Tier is re-read server-side inside the existing brokerage server functions:
+   - Orbit/Free: connect and sync blocked; the brokerage route shows a polished locked card — "Brokerage Intelligence — Connect your brokerage through SnapTrade and bring your portfolio into SOLIQ. Available with Pro & Elite."
+   - Pro: connect, sync, holdings, positions, value, P&L, transactions, analytics and charts — view-only. Connection requested with `read` scope; no Buy/Sell surfaces rendered.
+   - Elite: everything in Pro plus Buy/Sell actions, requested with `trade` scope, and shown only for accounts the brokerage reports as trade-capable.
 
-4. **Bottom navigation + mobile pass**
-   Modern floating bottom nav (rounded glass bar, active pill, safe-area aware) replacing the flat strip, plus fixes to the header/ticker crowding and overlap on small screens.
+4. **Entitlement check fixes.** Audit the existing tier resolution so Orbit=free, Pro=sync/analytics, Elite=sync+trading, using the current Stripe/subscription infrastructure as-is. Fixes only — no billing changes.
 
-## Out of scope for this build
+5. **Scanner fixes only.** Verify filters, sorting, gainers/losers/top movers, and that existing RSI/MACD/VWAP/volume/breakout fields render (empty states where data is genuinely absent). Fix obvious errors and UI breaks; no new architecture or data sources.
 
-Scanner families, PRISM/AETHRON work, credits, SnapTrade production, Plaid removal, portfolio and trading — those stay in the approved larger plan for a later, separately approved batch.
+6. **Branding touch-ups** limited to the strings already being edited: SOLIQ — Financial Intelligence Platform, AETHRON — Intelligence Engine, PRISM — Projection Engine.
 
-## Technical notes
+## Out of scope
 
-- Majors tab filters the existing universe snapshot by sector (excluding memecoin/stablecoin); no ingestion changes.
-- Categories live in a small client-safe classifier module over symbol/name/age already present on the rows.
-- Detail route `/token/$mint` is backed by one server function that reuses Jupiter search, DexScreener pair lookup and GeckoTerminal pool OHLCV, then the shared indicator math; memecoins deliberately get no price projection.
-- Nav/mobile changes are presentation-only, inside the existing app shell and design tokens.
+Majors/memecoin desk split, memecoin category chips, in-app token detail page, bottom-nav redesign, credits/passes, new scanner families. Those stay in the larger plan for a separate, separately approved batch.
 
 ## Verification
 
-Build check plus a live preview pass on desktop and mobile widths for the three crypto tabs, a memecoin detail page and the new bottom nav.
+One build check, one live pass over `/brokerage`, `/portfolio` and `/scanner`, and a tier check on the locked state. No repeated retries of the same operation.
 
-Estimated: ~20 credits.
+## Budget stop rule
+
+Work proceeds in the priority order above. If the remaining budget won't cover the next item safely, work stops there and I report what's left rather than continuing.
