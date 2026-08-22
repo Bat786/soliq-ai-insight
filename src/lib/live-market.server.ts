@@ -333,9 +333,9 @@ function toAsset(m: CgMarket): LiveAsset {
  */
 async function massiveAssets(known: Set<string>): Promise<LiveAsset[]> {
   const { loadMassiveCryptoUniverse } = await import("@/lib/massive-crypto.server");
-  const { assets } = await loadMassiveCryptoUniverse().catch(() => ({ assets: [] as never[] }));
+  const universe = await loadMassiveCryptoUniverse().catch(() => null);
   const out: LiveAsset[] = [];
-  for (const a of assets) {
+  for (const a of universe?.assets ?? []) {
     const symbol = a.symbol.toUpperCase();
     if (known.has(symbol)) continue;
     known.add(symbol);
