@@ -20,7 +20,7 @@ export async function buildAccountContext(
   supabase: SupabaseClient<any, any, any>,
   userId: string,
 ): Promise<string> {
-  const [profile, subs, wallets, brokers, banks] = await Promise.all([
+  const [profile, subs, wallets, brokers] = await Promise.all([
     safe(supabase.from("profiles").select("display_name, membership_tier, renews_at, member_since").eq("id", userId).maybeSingle()),
     safe(
       supabase
@@ -32,8 +32,8 @@ export async function buildAccountContext(
     ),
     safe(supabase.from("linked_wallets").select("chain, address, label").limit(10)),
     safe(supabase.from("broker_connections").select("institution, status, disabled_reason, last_synced_at").limit(10)),
-    safe(supabase.from("bank_accounts").select("institution_name, account_name, account_subtype").limit(10)),
   ]);
+
 
   const lines: string[] = [];
   lines.push(`plan on profile: ${(profile as any)?.membership_tier ?? "free"}`);
