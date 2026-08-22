@@ -3,6 +3,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { meetsTier } from "@/lib/entitlements";
 import type { Tier } from "@/lib/membership";
+import type { BrokerageSnapshot } from "@/lib/brokerage.server";
 
 /**
  * Brokerage intelligence is a paid surface:
@@ -66,7 +67,7 @@ export const getBrokerageSnapshot = createServerFn({ method: "GET" })
     const tier = await memberTier(context.supabase, context.userId);
     if (!meetsTier(tier, "pro")) {
       const { unavailable } = await import("@/engines/core/envelope");
-      return unavailable<never>(LOCKED, "snaptrade");
+      return unavailable<BrokerageSnapshot>(LOCKED);
     }
     const { loadBrokerageSnapshot } = await import("@/lib/brokerage.server");
     return loadBrokerageSnapshot(context.userId);
