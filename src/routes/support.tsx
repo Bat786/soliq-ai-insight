@@ -26,7 +26,7 @@ export const Route = createFileRoute("/support")({
       {
         name: "description",
         content:
-          "Get help with SOLIQ billing, subscriptions, payment methods, wallet, brokerage and bank connections. Open a support ticket or manage your plan self-serve.",
+          "Get help with SOLIQ billing, subscriptions, payment methods, wallet and brokerage connections. Open a support ticket or manage your plan self-serve.",
       },
       { property: "og:title", content: "SOLIQ Support — Billing & Account Help" },
       {
@@ -45,7 +45,7 @@ const CATEGORY_LABELS: Record<SupportCategory, string> = {
   billing: "Billing & subscription",
   payments: "Payments & refunds",
   account: "Account & login",
-  connections: "Wallet / brokerage / bank",
+  connections: "Wallet / brokerage",
   technical: "Technical issue",
   other: "Something else",
 };
@@ -80,8 +80,8 @@ const FAQ: { q: string; a: string }[] = [
     a: "Brokerage linking runs through SnapTrade's connection portal in read-only mode: balances, positions, cost basis and trade history sync into SOLIQ. If a connection breaks (broker password change or expired consent) the Brokerage page shows a Reconnect button.",
   },
   {
-    q: "How does bank linking work?",
-    a: "Bank and cash accounts link through Plaid. Access tokens are stored server-side only and are never exposed to the browser; SOLIQ reads balances for your net-worth view and cannot initiate payments.",
+    q: "How does brokerage linking work?",
+    a: "Brokerage accounts link through SnapTrade. Access credentials are stored server-side only and are never exposed to the browser; SOLIQ reads balances, positions and history for your portfolio view.",
   },
   {
     q: "Can SOLIQ AI change my billing?",
