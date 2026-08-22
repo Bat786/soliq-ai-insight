@@ -376,6 +376,13 @@ function tdSymbolFor(inst: Instrument): string | null {
 /** Desk priority when the per-poll Twelve Data budget has to be rationed. */
 const TD_DESK_RANK: Record<DeskId, number> = { futures: 0, fx: 1, stocks: 2, crypto: 3, indices: 9 };
 
+/**
+ * Symbols the plan does not cover are remembered for 15 minutes so an
+ * unentitled slice costs one request per window instead of one per poll.
+ */
+const tdMiss = new Map<string, number>();
+const TD_MISS_TTL = 15 * 60_000;
+
 /** Bars for one instrument from Twelve Data at a desk timeframe. */
 async function twelveDataTapeBars(inst: Instrument, tf: Timeframe): Promise<Bar[]> {
   const symbol = tdSymbolFor(inst);
@@ -383,9 +390,15 @@ async function twelveDataTapeBars(inst: Instrument, tf: Timeframe): Promise<Bar[
   const key = `td:${symbol}:${tf}`;
   const hit = cache.get(key);
   if (hit && Date.now() - hit.at < TTL) return hit.value;
+  const missedAt = tdMiss.get(key);
+  if (missedAt && Date.now() - missedAt < TD_MISS_TTL) return hit?.value ?? [];
   const { tdInterval, twelveDataBars } = await import("@/lib/twelvedata.server");
   const bars = await twelveDataBars(symbol, tdInterval(tf), 400).catch(() => null);
-  if (!bars || bars.length < 2) return hit?.value ?? [];
+  if (!bars || bars.length < 2) {
+    tdMiss.set(key, Date.now());
+    return hit?.value ?? [];
+  }
+  tdMiss.delete(key);
   cache.set(key, { at: Date.now(), value: bars });
   return bars;
 }
