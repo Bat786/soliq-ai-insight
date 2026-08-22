@@ -326,6 +326,50 @@ function toAsset(m: CgMarket): LiveAsset {
   };
 }
 
+/**
+ * Massive-listed crypto that CoinGecko's top pages did not already cover, run
+ * through the SAME `toAsset` analytics pipeline (indicators, signals, scores) so
+ * every downstream surface treats it identically.
+ */
+async function massiveAssets(known: Set<string>): Promise<LiveAsset[]> {
+  const { loadMassiveCryptoUniverse } = await import("@/lib/massive-crypto.server");
+  const { assets } = await loadMassiveCryptoUniverse().catch(() => ({ assets: [] as never[] }));
+  const out: LiveAsset[] = [];
+  for (const a of assets) {
+    const symbol = a.symbol.toUpperCase();
+    if (known.has(symbol)) continue;
+    known.add(symbol);
+    const prev = a.prevClose || a.price;
+    const asset = toAsset({
+      id: a.id,
+      symbol,
+      name: a.name,
+      image: "",
+      current_price: a.price,
+      // Massive does not publish caps; leave them at 0 rather than inventing one.
+      market_cap: 0,
+      market_cap_rank: null,
+      fully_diluted_valuation: null,
+      total_volume: a.volume24h,
+      high_24h: a.high24h,
+      low_24h: a.low24h,
+      ath: null,
+      ath_change_percentage: null,
+      price_change_percentage_1h_in_currency: null,
+      price_change_percentage_24h_in_currency: a.change24h,
+      price_change_percentage_7d_in_currency: prev ? ((a.price - prev) / prev) * 100 : 0,
+      price_change_percentage_30d_in_currency: null,
+      sparkline_in_7d: { price: a.series },
+    });
+    out.push({
+      ...asset,
+      sector: a.category === "stablecoin" ? "stablecoin" : a.category === "memecoin" ? "memecoin" : asset.sector,
+      modelled: [...asset.modelled, "Massive tape"],
+    });
+  }
+  return out;
+}
+
 export async function loadUniverse(): Promise<LiveAsset[]> {
   return cached("universe", 60_000, async () => {
     const pages = await Promise.all(
@@ -335,9 +379,13 @@ export async function loadUniverse(): Promise<LiveAsset[]> {
         ).catch(() => [] as CgMarket[]),
       ),
     );
-    return pages.flat().filter((m) => m && m.market_cap > 0).map(toAsset);
+    const primary = pages.flat().filter((m) => m && m.market_cap > 0).map(toAsset);
+    const known = new Set(primary.map((a) => a.symbol.toUpperCase()));
+    const extra = await massiveAssets(known).catch(() => [] as LiveAsset[]);
+    return [...primary, ...extra];
   });
 }
+
 
 export async function loadGlobal() {
   return cached("global", 120_000, async () => {
