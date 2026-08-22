@@ -39,7 +39,7 @@ function HorizonCard({ h, active, onSelect }: { h: Projection; active: boolean; 
 
 export function ProjectionPanel({
   projection,
-  title = "SOLIQ price projection",
+  title = "PRISM projection",
   note,
 }: {
   projection: ProjectionSet | null | undefined;
@@ -49,7 +49,10 @@ export function ProjectionPanel({
   const [selected, setSelected] = useState<string | null>(null);
   if (!projection || projection.horizons.length === 0) return null;
 
-  const active = projection.horizons.find((h) => h.horizon === selected) ?? projection.horizons[3] ?? projection.horizons[0]!;
+  const active =
+    projection.horizons.find((h) => h.horizon === selected) ??
+    projection.horizons.find((h) => h.horizon === "1h") ??
+    projection.horizons[0]!;
 
   return (
     <section className="panel p-4">
@@ -57,7 +60,7 @@ export function ProjectionPanel({
         <div>
           <p className="text-xs font-medium">{title}</p>
           <p className="mt-0.5 text-[11px] text-muted-foreground">
-            {projection.model} · {projection.sampleDays}d sample · {projection.volatilityPct}% annualised vol
+            {projection.model} · {projection.sampleDays}d data sample · {projection.volatilityPct}% annualised risk
           </p>
         </div>
         <p className="num text-[11px] text-muted-foreground">spot {fmtUsdc(projection.current)}</p>
