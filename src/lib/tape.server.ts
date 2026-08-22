@@ -365,8 +365,49 @@ async function massiveTapeBars(inst: Instrument, tf: Timeframe): Promise<Bar[]> 
   return [];
 }
 
+/* ---------------------- Twelve Data (secondary provider) --------------------- */
 
-function toRow(inst: Instrument, base: Bar[]): MarketRow {
+/**
+ * Spot equivalents Twelve Data quotes for CME contracts. Index contracts stay
+ * out: they keep resolving through the existing ETF-proxy path.
+ */
+const TD_FUTURES: Record<string, string> = {
+  GC: "XAU/USD",
+  SI: "XAG/USD",
+  PL: "XPT/USD",
+  CL: "WTI/USD",
+  NG: "NG/USD",
+  HG: "COPPER/USD",
+};
+
+/** Twelve Data symbol for a desk instrument, or `null` when unmapped. */
+function tdSymbolFor(inst: Instrument): string | null {
+  if (inst.desk === "stocks") return inst.key;
+  if (inst.desk === "fx") return inst.key.length === 6 ? tdSymbol("fx", inst.key) : null;
+  if (inst.desk === "crypto") return tdSymbol("crypto", inst.key);
+  if (inst.desk === "futures") return TD_FUTURES[inst.key] ?? null;
+  return null; // benchmarks/indices use the proxy path
+}
+
+/** Desk priority when the per-poll Twelve Data budget has to be rationed. */
+const TD_DESK_RANK: Record<DeskId, number> = { futures: 0, fx: 1, stocks: 2, crypto: 3, indices: 9 };
+
+/** Bars for one instrument from Twelve Data at a desk timeframe. */
+async function twelveDataTapeBars(inst: Instrument, tf: Timeframe): Promise<Bar[]> {
+  const symbol = tdSymbolFor(inst);
+  if (!symbol) return [];
+  const key = `td:${symbol}:${tf}`;
+  const hit = cache.get(key);
+  if (hit && Date.now() - hit.at < TTL) return hit.value;
+  const { tdInterval, twelveDataBars } = await import("@/lib/twelvedata.server");
+  const bars = await twelveDataBars(symbol, tdInterval(tf), 400).catch(() => null);
+  if (!bars || bars.length < 2) return hit?.value ?? [];
+  cache.set(key, { at: Date.now(), value: bars });
+  return bars;
+}
+
+function toRow(inst: Instrument, base: Bar[], source: MarketSource = "none"): MarketRow {
+
   const tf = barsByTf(base);
   // Daily-granularity series (whole-market summaries) need a session window and
   // a prev-close reference that differ from an intraday 5m tape.
