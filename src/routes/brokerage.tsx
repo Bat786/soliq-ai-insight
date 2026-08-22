@@ -87,7 +87,7 @@ function Brokerage() {
   // "Sync" asks SnapTrade for fresh holdings first (paid capability), then
   // re-reads the desk regardless so the daily-sync data still lands.
   const sync = () => {
-    if (!isSignedIn) return;
+    if (!isSignedIn || !canSync) return;
     refresh.mutate(undefined, {
       onSuccess: (res) => {
         if (res.requested > 0 && res.accepted === 0) {
@@ -130,7 +130,11 @@ function Brokerage() {
         <SectionTitle
           as="h1"
           title="Brokerage accounts"
-          subtitle="Read-only sync via SnapTrade — balances, positions, cost basis, P&L and every past trade."
+          subtitle={
+            canTrade
+              ? "SnapTrade sync plus Elite trading — balances, positions, cost basis, P&L, trade history and BUY/SELL."
+              : "Read-only sync via SnapTrade — balances, positions, cost basis, P&L and every past trade."
+          }
 
           action={
             <div className="flex items-center gap-2">
