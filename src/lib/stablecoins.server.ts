@@ -142,6 +142,46 @@ async function loadRow(coin: Coin, network: string, notes: string[]): Promise<St
   };
 }
 
+/**
+ * Rows for every other Massive-listed stablecoin, built from the shared crypto
+ * universe (which is already cached) so the desk grows on its own as Massive
+ * lists new fiat tokens — no extra API calls and no hard-coded list.
+ */
+async function universeRows(covered: Set<string>, notes: string[]): Promise<StablecoinRow[]> {
+  const { loadMassiveCryptoUniverse } = await import("@/lib/massive-crypto.server");
+  const universe = await loadMassiveCryptoUniverse().catch(() => null);
+  if (!universe) return [];
+  for (const note of universe.notes) notes.push(note);
+
+  return universe.assets
+    .filter((a) => a.category === "stablecoin" && !covered.has(a.symbol) && a.price > 0)
+    .map((a) => {
+      // Euro-referenced tokens peg to 1 EUR; everything else to 1 USD.
+      const peg = 1;
+      const deviation = bps(a.price, peg);
+      const series = a.series.slice(-30);
+      const worst = series.length ? Math.max(...series.map((p) => Math.abs(bps(p, peg)))) : Math.abs(deviation);
+      return {
+        symbol: a.symbol,
+        name: a.name,
+        pair: a.ticker.replace(/^X:/, ""),
+        peg,
+        price: a.price,
+        pegBps: deviation,
+        change24h: a.change24h,
+        volume24h: a.volume24h,
+        high24h: a.high24h,
+        low24h: a.low24h,
+        worstBps: worst,
+        series,
+        onchainSupply: null,
+        onchainCap: null,
+        mint: null,
+        status: classify(a.price, deviation),
+      } satisfies StablecoinRow;
+    });
+}
+
 /** Full stablecoin desk: Massive market data + Alchemy on-chain supply. */
 export async function loadStablecoinDesk(): Promise<StablecoinDesk> {
   const network = solanaNetwork();
@@ -149,12 +189,17 @@ export async function loadStablecoinDesk(): Promise<StablecoinDesk> {
   if (!massiveConfigured()) notes.push("MASSIVE_API_KEY missing — market data unavailable");
 
   const rows: StablecoinRow[] = [];
+  // Curated coins first: they carry known mints, so they also get Alchemy
+  // on-chain supply verification and the deeper peg history.
   for (const coin of COINS) rows.push(await loadRow(coin, network, notes));
+  const covered = new Set(rows.map((r) => r.symbol));
+  rows.push(...(await universeRows(covered, notes)));
+
   const priced = rows.filter((r) => r.price > 0);
 
   return {
     network,
-    rows: rows.sort((a, b) => (b.onchainCap ?? 0) - (a.onchainCap ?? 0) || Math.abs(b.pegBps) - Math.abs(a.pegBps)),
+    rows: rows.sort((a, b) => (b.onchainCap ?? 0) - (a.onchainCap ?? 0) || b.volume24h - a.volume24h),
     totals: {
       onchainCap: rows.reduce((sum, r) => sum + (r.onchainCap ?? 0), 0),
       volume24h: rows.reduce((sum, r) => sum + r.volume24h, 0),
@@ -164,6 +209,7 @@ export async function loadStablecoinDesk(): Promise<StablecoinDesk> {
     updatedAt: new Date().toISOString(),
   };
 }
+
 
 export type StableBalance = { symbol: string; mint: string; amount: number; accounts: number };
 

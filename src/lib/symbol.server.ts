@@ -10,6 +10,7 @@
 
 import { contracts, resample, type Bar } from "@/lib/futures.server";
 import { indicators, type Indicators } from "@/lib/indicators.server";
+import { projectSeries, type ProjectionSet } from "@/lib/projections";
 import { massiveCustomBars, massiveNews, type AssetClass, type MassiveNews } from "@/lib/massive.server";
 import { loadBars } from "@/lib/tape.server";
 import { tfSpec, type DeskTf, type SymbolMarket } from "@/lib/timeframes";
@@ -101,7 +102,7 @@ export type SymbolDashboard = {
   symbol: string;
   display: string;
   timeframe: DeskTf;
-  source: "massive" | "tape" | "none";
+  source: "massive" | "twelvedata" | "tape" | "none";
   bars: Bar[];
   action: PriceAction | null;
   indicators: Indicators | null;
@@ -109,6 +110,8 @@ export type SymbolDashboard = {
   levels: { label: string; value: number }[];
   news: MassiveNews[];
   fundamentals: SymbolFundamentals | null;
+  /** Probabilistic projection set; `null` when the series is too thin. */
+  projection: ProjectionSet | null;
   notes: string[];
   updatedAt: number;
 };
@@ -148,6 +151,17 @@ async function loadSeries(market: SymbolMarket, up: string, yahoo: string, tf: D
   const primary = await massiveCustomBars(assetClassFor(market), up, tf).catch(() => null);
   if (primary && primary.length > 8) return { bars: primary, source: "massive" as const };
 
+  // Twelve Data sits between Massive and the backup tape: it covers equities,
+  // ETFs, FX, commodities and crypto, and returns null whenever its plan does
+  // not, so the tape still gets its turn.
+  const { tdInterval, tdSymbol, twelveDataBars } = await import("@/lib/twelvedata.server");
+  const tdMarket = market === "crypto" ? "crypto" : market === "fx" ? "fx" : "stocks";
+  const td = await twelveDataBars(tdSymbol(tdMarket, up), tdInterval(tf), 400).catch(() => null);
+  if (td && td.length > 8) {
+    const bars = spec.ms > 86_400_000 ? resample(td, spec.ms) : td;
+    return { bars, source: "twelvedata" as const };
+  }
+
   const fallback = await loadBars(yahoo, { interval: spec.yahoo.interval, range: spec.yahoo.range }).catch(() => []);
   if (fallback.length > 4) {
     const baseMs = spec.yahoo.interval.endsWith("m")
@@ -160,6 +174,7 @@ async function loadSeries(market: SymbolMarket, up: string, yahoo: string, tf: D
   }
   return { bars: [] as Bar[], source: "none" as const };
 }
+
 
 function priceAction(bars: Bar[], spec: { ms: number }): PriceAction {
   const last = bars.at(-1) as Bar;
@@ -284,11 +299,47 @@ export async function loadSymbolDashboard(
   ]);
 
   if (source === "none") notes.push("No bar feed answered for this symbol at the selected timeframe yet.");
+  if (source === "twelvedata") notes.push("Bars served by Twelve Data (Massive not entitled for this slice).");
   if (source === "tape") notes.push("Bars served from the backup tape (primary feed not entitled for this slice).");
   if (!fundamentals && (market === "stocks" || market === "futures"))
     notes.push("Filed fundamentals are not available for this symbol on the current data plan.");
 
   const enough = bars.length > 8;
+  const ind = enough ? indicators(bars) : null;
+  const action = enough ? priceAction(bars, spec) : null;
+  const vol = enough ? volumeMomentum(bars) : null;
+
+  // Composite score fed into the shared projection engine — the same trend,
+  // momentum and volume evidence the rest of SOLIQ scores on.
+  const score = (() => {
+    if (!ind || !action) return 50;
+    let s = 50;
+    s += Math.max(-14, Math.min(14, (action.changePct ?? 0) * 1.2));
+    s += ind.rsi14 > 55 ? 6 : ind.rsi14 < 45 ? -6 : 0;
+    s += ind.macdHist > 0 ? 6 : -6;
+    s += action.last > ind.ema50 ? 6 : -6;
+    s += (vol?.relVolume ?? 1) > 1.2 ? 4 : 0;
+    return Math.max(0, Math.min(100, s));
+  })();
+
+  const projection = enough
+    ? projectSeries({
+        closes: bars.map((b) => b.close),
+        timestamps: bars.map((b) => b.t),
+        ...(action ? { current: action.last } : {}),
+        score,
+        trendStrength: ind ? Math.min(100, Math.abs(ind.macdHist / Math.max(1e-9, ind.ema50)) * 4000 + 40) : 50,
+        projectable: true,
+        drivers: [
+          ind ? `RSI ${ind.rsi14.toFixed(0)}` : "",
+          ind ? `EMA50 ${ind.ema50 > 0 ? ind.ema50.toFixed(2) : "—"}` : "",
+          ind ? (ind.macdHist > 0 ? "MACD bullish" : "MACD bearish") : "",
+          vol ? `rel volume ${vol.relVolume.toFixed(2)}x` : "",
+          action ? `${action.changePct >= 0 ? "up" : "down"} ${Math.abs(action.changePct).toFixed(2)}% on session` : "",
+        ].filter(Boolean),
+      })
+    : null;
+
   return {
     market,
     symbol: upstream,
@@ -296,9 +347,9 @@ export async function loadSymbolDashboard(
     timeframe: tf,
     source,
     bars,
-    action: enough ? priceAction(bars, spec) : null,
-    indicators: enough ? indicators(bars) : null,
-    volume: enough ? volumeMomentum(bars) : null,
+    action,
+    indicators: ind,
+    volume: vol,
     levels: enough
       ? (() => {
           const a = priceAction(bars, spec);
@@ -314,6 +365,7 @@ export async function loadSymbolDashboard(
       : [],
     news,
     fundamentals,
+    projection,
     notes,
     updatedAt: Date.now(),
   };

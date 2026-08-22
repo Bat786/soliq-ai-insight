@@ -56,19 +56,43 @@ const MEMES = new Set([
   "LADYS", "WOJAK", "BOBO", "BAN", "GIGA", "APU", "ANDY", "SIGMA", "DADDY",
 ]);
 
-const MEME_PATTERN = /(doge|inu|shib|pepe|floki|meme|wojak|cat|kitty|frog|moon|elon|chad|wif|bonk|baby|fart|poop|trump|hodl)/i;
+/**
+ * Meme words matched on WORD boundaries only. Substring matching produced false
+ * positives (Moonwell/Moonbeam on "moon", SwiftCoin on "wif", Melon on "elon"),
+ * so each candidate name is tokenized first.
+ */
+const MEME_WORDS = new Set([
+  "doge", "dogecoin", "inu", "shiba", "shib", "pepe", "floki", "meme", "memecoin", "wojak", "chad", "gigachad",
+  "frog", "wif", "dogwifhat", "bonk", "fart", "fartcoin", "hodl", "moon", "cat", "kitty", "elon", "trump",
+  "pump", "ape", "wen", "andy", "brett", "popcat", "mog", "turbo", "pnut", "peanut", "goat", "banana", "chill",
+]);
+
+const tokenize = (text: string): string[] =>
+  text
+    .toLowerCase()
+    .replace(/([a-z])([A-Z])/g, "$1 $2")
+    .split(/[^a-z0-9]+/)
+    .filter(Boolean);
+
+const looksMeme = (symbol: string, name: string): boolean => {
+  const words = tokenize(name);
+  if (words.some((w) => MEME_WORDS.has(w))) return true;
+  // Suffixed meme conventions: "…inu", "…doge", "…pepe", "…cat".
+  if (words.some((w) => /(inu|doge|pepe)$/.test(w) && w.length > 3)) return true;
+  return MEME_WORDS.has(symbol.toLowerCase());
+};
+
 const STABLE_PATTERN = /^(us[d]?[a-z0-9]{0,3}|eur[a-z0-9]{0,2})$/i;
 
 /** Category for a base symbol + instrument name. Used by every crypto surface. */
 export function classifyCryptoSymbol(symbol: string, name = ""): MassiveCryptoCategory {
   const s = symbol.toUpperCase();
-  const label = `${s} ${name}`;
   if (STABLES.has(s)) return "stablecoin";
   if (/\b(stable|pegged)\b/i.test(name)) return "stablecoin";
   // A "USD-ish" ticker with a dollar/euro instrument name is a fiat token.
   if (STABLE_PATTERN.test(s) && /(dollar|euro|usd|eur)/i.test(name) && !/index|future/i.test(name)) return "stablecoin";
   if (MEMES.has(s)) return "memecoin";
-  if (MEME_PATTERN.test(label)) return "memecoin";
+  if (looksMeme(s, name)) return "memecoin";
   return "crypto";
 }
 
@@ -111,13 +135,41 @@ export type MassiveCryptoUniverse = {
 };
 
 let memo: { at: number; value: MassiveCryptoUniverse } | null = null;
+let refreshing: Promise<void> | null = null;
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 /**
  * The USD-quoted Massive crypto universe with its latest daily session.
- * Cached for 10 minutes on top of the client's own caches.
+ *
+ * A populated universe is cached for 10 minutes. An empty one is not: the
+ * Massive per-minute allowance is shared with every other desk, so a cold
+ * cache on a busy page can be throttled out. When that happens a single
+ * background retry loop keeps trying across the next few minute windows and
+ * the next poll of any desk picks up the filled universe.
  */
 export async function loadMassiveCryptoUniverse(): Promise<MassiveCryptoUniverse> {
-  if (memo && Date.now() - memo.at < 600_000) return memo.value;
+  const fresh = memo && Date.now() - memo.at < 600_000 && memo.value.priced > 0;
+  if (fresh) return memo!.value;
+
+  const built = await buildUniverse();
+  if (built.priced > 0) return built;
+
+  // Throttled or not answered yet — retry quietly in the background.
+  if (!refreshing) {
+    refreshing = (async () => {
+      for (let attempt = 0; attempt < 4; attempt++) {
+        await sleep(20_000);
+        const retry = await buildUniverse().catch(() => null);
+        if (retry && retry.priced > 0) break;
+      }
+      refreshing = null;
+    })();
+  }
+  return built;
+}
+
+async function buildUniverse(): Promise<MassiveCryptoUniverse> {
   const notes: string[] = [];
   if (!massiveConfigured()) {
     const empty: MassiveCryptoUniverse = {
@@ -137,12 +189,16 @@ export async function loadMassiveCryptoUniverse(): Promise<MassiveCryptoUniverse
     { ttl: 24 * 3600_000, scope: "reference:crypto-universe" },
   );
   const daysPromise = Promise.all(
-    [1, 2, 3, 4, 5].map((offset) => groupedDay("crypto", offset).catch(() => new Map<string, Bar>())),
+    // Three sessions is enough for a 24h change plus a short trend, and keeps
+    // this loader inside the Massive per-minute request allowance on a cold cache.
+    [1, 2, 3].map((offset) => groupedDay("crypto", offset).catch(() => new Map<string, Bar>())),
   );
   const [reference, days] = await Promise.all([referencePromise, daysPromise]);
 
   const sessions = days.filter((d) => d.size > 0);
-  if (sessions.length === 0) notes.push("No closed Massive crypto session answered yet — prices will fill in shortly.");
+  if (sessions.length === 0) {
+    notes.push("Massive crypto sessions are throttled right now — the tape fills in on the next refresh.");
+  }
 
   const identity = new Map<string, { name: string; base: string; quote: string }>();
   for (const r of reference?.results ?? []) {
@@ -155,7 +211,7 @@ export async function loadMassiveCryptoUniverse(): Promise<MassiveCryptoUniverse
       quote: parts.quote,
     });
   }
-  if (identity.size === 0) notes.push("Massive crypto reference list unavailable on the current plan.");
+  if (identity.size === 0) notes.push("Massive crypto reference list not answered yet — retrying in the background.");
 
   // Any ticker present in a session but absent from the reference list still
   // counts — the tape is the source of truth for what is actually trading.
@@ -216,8 +272,8 @@ export async function loadMassiveCryptoUniverse(): Promise<MassiveCryptoUniverse
     notes,
     updatedAt: Date.now(),
   };
-  memo = { at: Date.now(), value };
-  return value;
+  if (priced > 0 || !memo) memo = { at: Date.now(), value };
+  return priced > 0 ? value : (memo?.value ?? value);
 }
 
 /** Universe slice for one category. */

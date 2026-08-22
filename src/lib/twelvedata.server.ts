@@ -143,7 +143,8 @@ export async function twelveDataQuotes(symbols: string[]): Promise<Map<string, T
   if (!json) return out;
 
   // One symbol → a flat object; many symbols → keyed by symbol.
-  const entries = list.length === 1 ? [[list[0] as string, json]] : Object.entries(json);
+  const entries: [string, unknown][] =
+    list.length === 1 ? [[list[0] as string, json]] : (Object.entries(json) as [string, unknown][]);
   for (const [symbolKey, value] of entries) {
     if (!value || typeof value !== "object") continue;
     const quote = toQuote({ symbol: symbolKey, ...(value as Record<string, unknown>) });

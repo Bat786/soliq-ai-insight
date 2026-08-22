@@ -265,6 +265,37 @@ export function CryptoDesk() {
         </div>
       )}
 
+      {(data?.listed.length ?? 0) > 0 && (
+        <div className="space-y-2">
+          <SectionTitle
+            title="Listed memecoins"
+            subtitle="Massive-tape memecoins — centralized venue pricing alongside the on-chain flow above"
+          />
+          <div className="panel divide-y divide-border/60 p-2">
+            {data?.listed.slice(0, 24).map((r) => (
+              <div key={`listed-${r.ticker}`} className="flex items-center gap-3 px-2 py-2 text-[11px]">
+                <div className="min-w-0 flex-1">
+                  <p className="num font-semibold">{r.symbol}</p>
+                  <p className="truncate text-muted-foreground">{r.name}</p>
+                </div>
+                <p className="num w-20 text-right">{px(r.price)}</p>
+                <p className="num w-24 text-right text-muted-foreground">vol {compact(r.volume24h)}</p>
+                <p className="num w-28 text-right text-muted-foreground">
+                  {px(r.low24h)}–{px(r.high24h)}
+                </p>
+                <div className="w-16 text-right">
+                  <Delta value={r.change24h} />
+                </div>
+              </div>
+            ))}
+          </div>
+          <p className="text-[11px] text-muted-foreground">
+            Memecoins keep momentum, liquidity, sentiment and risk analytics — SOLIQ publishes no price projection for
+            them by design.
+          </p>
+        </div>
+      )}
+
       {((data?.pools.length ?? 0) > 0 || (data?.newPools.length ?? 0) > 0) && (
         <div className="space-y-2">
           <SectionTitle
