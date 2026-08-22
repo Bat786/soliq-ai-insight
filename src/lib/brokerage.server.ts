@@ -17,12 +17,15 @@ import {
   refreshConnection,
   registerSnapUser,
   snaptradeConfigured,
+  placeEquityOrder,
   type BrokerAccount,
   type BrokerConnection,
   type PortalOptions,
   type BrokerActivity,
   type BrokerPosition,
   type SnapUser,
+  type EquityOrder,
+  type EquityOrderResult,
 } from "@/lib/snaptrade.server";
 
 const PROVIDER = "snaptrade";
@@ -321,4 +324,13 @@ async function persist(
   } catch {
     // Persistence is advisory — never block the live desk.
   }
+}
+
+/** Place a market order for the member (Elite-only; gated in the server fn). */
+export async function placeBrokerageOrder(userId: string, order: EquityOrder): Promise<EquityOrderResult> {
+  if (!snaptradeConfigured()) {
+    return { ok: false, orderId: null, status: null, error: "Brokerage trading is not configured on this deployment." };
+  }
+  const user = await snapUser(userId);
+  return placeEquityOrder(user, order);
 }
