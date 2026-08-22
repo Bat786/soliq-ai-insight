@@ -34,6 +34,8 @@ async function get<T>(path: string, ttl = 10 * 60_000): Promise<T | null> {
   }
 }
 
+import type { TdStatistics } from "@/lib/twelvedata.server";
+
 const num = (v: unknown): number | null => (typeof v === "number" && Number.isFinite(v) ? v : null);
 
 /* --------------------------------- profile -------------------------------- */
@@ -226,6 +228,8 @@ export type EquityResearch = {
   quarterly: FinancialPeriod[];
   annual: FinancialPeriod[];
   options: OptionsChain;
+  /** Valuation stats — Twelve Data fills these when the primary plan cannot. */
+  stats: TdStatistics | null;
   notes: string[];
 };
 
@@ -251,10 +255,26 @@ export async function loadEquityResearch(ticker: string): Promise<EquityResearch
     ),
   ]);
   const notes: string[] = [];
-  if (!profile) notes.push("Corporate profile unavailable for this symbol.");
+
+  // Twelve Data valuation stats: always useful, and the only source for market
+  // cap / share count when the primary reference slice comes back empty.
+  const { twelveDataStatistics } = await import("@/lib/twelvedata.server");
+  const stats = await twelveDataStatistics(ticker.trim().toUpperCase()).catch(() => null);
+
+  const merged: CompanyProfile | null =
+    profile && stats
+      ? {
+          ...profile,
+          marketCap: profile.marketCap ?? stats.marketCap,
+          shares: profile.shares ?? stats.sharesOutstanding,
+        }
+      : profile;
+
+  if (!profile && stats) notes.push("Corporate profile unavailable; valuation stats served by Twelve Data.");
+  if (!profile && !stats) notes.push("Corporate profile unavailable for this symbol.");
   if (!quarterly.length && !annual.length) notes.push("Filed financial statements are not available on the current data plan.");
   if (!options.available) notes.push("Live options chain is not available for this symbol on the current data plan.");
-  return { profile, quarterly, annual, options, notes };
+  return { profile: merged, quarterly, annual, options, stats, notes };
 }
 
 /* -------------------------------- universe -------------------------------- */
